@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -18,6 +18,7 @@ import { spacing, radius, shadow } from '../../theme';
 import { Text } from '../../components/Typography';
 import { Header } from '../../components/common/Header';
 import { useThemedAlert } from '../../components/common/ThemedAlert';
+import { ThemedDropdown } from '../../components/common/ThemedDropdown';
 import {
   PasswordStrengthMeter,
   evaluatePasswordStrength,
@@ -84,6 +85,8 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
   // Step 2: Location & Gamer Tag
   const [selectedCountryName, setSelectedCountryName] = useState('South Africa');
   const [selectedProvince, setSelectedProvince] = useState('Gauteng');
+  const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
+  const [isProvinceDropdownOpen, setIsProvinceDropdownOpen] = useState(false);
   const [town, setTown] = useState('');
   const [gamerTag, setGamerTag] = useState('');
 
@@ -102,6 +105,14 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
         setShowCountryPicker(false);
         return true;
       }
+      if (isCountryDropdownOpen) {
+        setIsCountryDropdownOpen(false);
+        return true;
+      }
+      if (isProvinceDropdownOpen) {
+        setIsProvinceDropdownOpen(false);
+        return true;
+      }
       if (currentStep > 1) {
         setCurrentStep((prev) => ((prev - 1) as any));
         return true;
@@ -115,11 +126,55 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
 
     const backSub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
     return () => backSub.remove();
-  }, [currentStep, onNavigateBack, showCountryPicker]);
+  }, [currentStep, onNavigateBack, showCountryPicker, isCountryDropdownOpen, isProvinceDropdownOpen]);
 
   const currentCountry =
     SOUTHERN_AFRICAN_COUNTRIES.find((c) => c.name === selectedCountryName) ||
     SOUTHERN_AFRICAN_COUNTRIES[0];
+
+  const countryDropdownOptions = useMemo(
+    () =>
+      SOUTHERN_AFRICAN_COUNTRIES.map((c) => ({
+        label: c.name,
+        value: c.name,
+        subLabel: c.dialCode,
+        badge: c.code,
+      })),
+    []
+  );
+
+  const provinceDropdownOptions = useMemo(
+    () =>
+      currentCountry.provinces.map((p) => ({
+        label: p.name,
+        value: p.name,
+        subLabel: `${p.towns.length} towns`,
+      })),
+    [currentCountry]
+  );
+
+  const handleCountrySelect = (countryName: string) => {
+    setSelectedCountryName(countryName);
+    const found = SOUTHERN_AFRICAN_COUNTRIES.find((c) => c.name === countryName);
+    if (found) {
+      setDialCode(found.dialCode);
+      setSelectedProvince(found.provinces[0]?.name || '');
+    }
+  };
+
+  const handleProvinceSelect = (provinceName: string) => {
+    setSelectedProvince(provinceName);
+  };
+
+  const toggleCountryDropdown = () => {
+    setIsProvinceDropdownOpen(false);
+    setIsCountryDropdownOpen((prev) => !prev);
+  };
+
+  const toggleProvinceDropdown = () => {
+    setIsCountryDropdownOpen(false);
+    setIsProvinceDropdownOpen((prev) => !prev);
+  };
 
   // Real-time zero-stripping phone handler
   const handlePhoneChange = (val: string) => {
@@ -427,71 +482,27 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
         {/* STEP 2: Location & Gamer Tag */}
         {currentStep === 2 && (
           <View style={styles.stepContentSection}>
-            <View style={styles.inputGroup}>
-              <Text variant="caption" weight="700" color={colors.textSecondary} style={styles.inputLabel}>
-                COUNTRY
-              </Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.chipsScroll}
-              >
-                {SOUTHERN_AFRICAN_COUNTRIES.map((c) => (
-                  <TouchableOpacity
-                    key={c.code}
-                    onPress={() => {
-                      setSelectedCountryName(c.name);
-                      setDialCode(c.dialCode);
-                      setSelectedProvince(c.provinces[0]?.name || '');
-                    }}
-                    style={[
-                      styles.selectorChip,
-                      selectedCountryName === c.name && styles.selectorChipActive,
-                      shadow.sm,
-                    ]}
-                  >
-                    <Text
-                      variant="body"
-                      weight={selectedCountryName === c.name ? '700' : '500'}
-                      color={selectedCountryName === c.name ? colors.accentHover : colors.textSecondary}
-                    >
-                      {c.name} ({c.dialCode})
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
+            <ThemedDropdown
+              label="COUNTRY"
+              placeholder="Select Country..."
+              options={countryDropdownOptions}
+              selectedValue={selectedCountryName}
+              onSelect={handleCountrySelect}
+              isOpen={isCountryDropdownOpen}
+              onToggle={toggleCountryDropdown}
+              hint="Select your Southern African region"
+            />
 
-            <View style={styles.inputGroup}>
-              <Text variant="caption" weight="700" color={colors.textSecondary} style={styles.inputLabel}>
-                PROVINCE / REGION
-              </Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.chipsScroll}
-              >
-                {currentCountry.provinces.map((p) => (
-                  <TouchableOpacity
-                    key={p.name}
-                    onPress={() => setSelectedProvince(p.name)}
-                    style={[
-                      styles.selectorChip,
-                      selectedProvince === p.name && styles.selectorChipActive,
-                      shadow.sm,
-                    ]}
-                  >
-                    <Text
-                      variant="body"
-                      weight={selectedProvince === p.name ? '700' : '500'}
-                      color={selectedProvince === p.name ? colors.accentHover : colors.textSecondary}
-                    >
-                      {p.name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
+            <ThemedDropdown
+              label="PROVINCE / REGION"
+              placeholder="Select Province / Region..."
+              options={provinceDropdownOptions}
+              selectedValue={selectedProvince}
+              onSelect={handleProvinceSelect}
+              isOpen={isProvinceDropdownOpen}
+              onToggle={toggleProvinceDropdown}
+              hint={`Provinces in ${selectedCountryName}`}
+            />
 
             <View style={styles.inputGroup}>
               <Text variant="caption" weight="700" color={colors.textSecondary} style={styles.inputLabel}>
