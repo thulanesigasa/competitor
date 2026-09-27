@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TextInput,
   TouchableOpacity,
@@ -11,8 +10,9 @@ import {
   Modal,
   BackHandler,
 } from 'react-native';
-import { COLORS, METRICS, SPACING } from '../../constants/theme';
-import { SOUTHERN_AFRICAN_COUNTRIES } from '../../constants/regions';
+import { colors } from '../../theme/colors';
+import { spacing, radius, shadow } from '../../theme';
+import { Text } from '../../components/Typography';
 import { Header } from '../../components/common/Header';
 import { useThemedAlert } from '../../components/common/ThemedAlert';
 import {
@@ -21,6 +21,7 @@ import {
 } from '../../components/common/PasswordStrengthMeter';
 import { UserProfile } from '../../types/auth';
 import { saveUserProfile } from '../../store/gameStore';
+import { SOUTHERN_AFRICAN_COUNTRIES } from '../../constants/regions';
 
 interface SignUpScreenProps {
   onSignUpSuccess: (user: UserProfile) => void;
@@ -55,6 +56,8 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
   const [confirmEmail, setConfirmEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Hardware Back Handler: return to previous step, or back to onboarding if on step 1
   useEffect(() => {
@@ -82,7 +85,14 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
     SOUTHERN_AFRICAN_COUNTRIES.find((c) => c.name === selectedCountryName) ||
     SOUTHERN_AFRICAN_COUNTRIES[0];
 
-  // Step 1 Validation with automatic zero sanitization
+  // Real-time zero-stripping phone handler
+  const handlePhoneChange = (val: string) => {
+    const digitsOnly = val.replace(/[^\d]/g, '');
+    const clean = digitsOnly.replace(/^0+/, '');
+    setCellphone(clean);
+  };
+
+  // Step 1 Validation
   const handleNextStep1 = () => {
     if (!name.trim()) {
       showAlert({ title: 'Required Field', message: 'Please enter your first name.' });
@@ -96,10 +106,8 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
       showAlert({ title: 'Required Field', message: 'Please enter your date of birth (YYYY-MM-DD).' });
       return;
     }
-    const cleanDigits = cellphone.replace(/\D/g, '');
-    const sanitizedNumber = cleanDigits.replace(/^0+/, '');
-    if (!sanitizedNumber || sanitizedNumber.length < 7) {
-      showAlert({ title: 'Invalid Number', message: 'Please enter a valid cellphone number (e.g. 082 123 4567 or 82 123 4567).' });
+    if (!cellphone || cellphone.length < 7) {
+      showAlert({ title: 'Invalid Number', message: 'Please enter a valid cellphone number.' });
       return;
     }
     setCurrentStep(2);
@@ -126,7 +134,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
     setCurrentStep(3);
   };
 
-  // Step 3 Validation & Final Submission with zero sanitizer
+  // Step 3 Validation & Final Submission
   const handleFinalSubmit = async () => {
     if (!email.trim() || !email.includes('@')) {
       showAlert({ title: 'Invalid Email', message: 'Please enter a valid email address.' });
@@ -151,16 +159,12 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
       return;
     }
 
-    // Automatically strip leading zero(s) so backend/database stores clean regional number
-    const cleanDigits = cellphone.replace(/\D/g, '');
-    const sanitizedPhone = cleanDigits.replace(/^0+/, '');
-
     const newUser: UserProfile = {
       id: `user_${Date.now()}`,
       name: name.trim(),
       surname: surname.trim(),
       dob: dob.trim(),
-      cellphone: `${dialCode} ${sanitizedPhone}`,
+      cellphone: `${dialCode} ${cellphone}`,
       country: selectedCountryName,
       countryCode: currentCountry.code,
       province: selectedProvince,
@@ -176,7 +180,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
       <Header
         title="PLAYER REGISTRATION"
         subtitle={`STEP ${currentStep} OF 3`}
@@ -195,268 +199,401 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        {/* Step Indicator */}
-        <View style={styles.stepHeader}>
-          {[1, 2, 3].map((step) => {
-            const isCompleted = step < currentStep;
-            const isCurrent = step === currentStep;
-            return (
-              <View key={step} style={styles.stepTrackItem}>
-                <View
-                  style={[
-                    styles.stepBadge,
-                    isCurrent && styles.stepBadgeCurrent,
-                    isCompleted && styles.stepBadgeCompleted,
-                  ]}
-                >
-                  <Text
+        {/* Step Indicator Section matching bible_fun_facts reference */}
+        <View style={styles.stepIndicatorSection}>
+          <View style={styles.stepPillsRow}>
+            {[1, 2, 3].map((s) => {
+              const isPassed = currentStep > s;
+              const isCurrent = currentStep === s;
+              return (
+                <View key={s} style={styles.stepPillItem}>
+                  <View
                     style={[
-                      styles.stepNumber,
-                      (isCurrent || isCompleted) && styles.stepNumberActive,
-                      isCompleted && styles.stepNumberCompleted,
+                      styles.stepCircle,
+                      isPassed && styles.stepCircleCompleted,
+                      isCurrent && styles.stepCircleActive,
                     ]}
                   >
-                    {isCompleted ? '✓' : `0${step}`}
-                  </Text>
+                    {isPassed ? (
+                      <Text variant="caption" weight="800" color="#FFFFFF">
+                        ✓
+                      </Text>
+                    ) : (
+                      <Text
+                        variant="caption"
+                        weight="700"
+                        style={[
+                          styles.stepCircleText,
+                          isCurrent && styles.stepCircleTextActive,
+                        ]}
+                      >
+                        {s}
+                      </Text>
+                    )}
+                  </View>
+                  {s < 3 && (
+                    <View
+                      style={[
+                        styles.stepConnectorLine,
+                        isPassed && styles.stepConnectorLineActive,
+                      ]}
+                    />
+                  )}
                 </View>
-                <Text
-                  style={[
-                    styles.stepLabel,
-                    isCurrent && styles.stepLabelActive,
-                  ]}
-                >
-                  {step === 1 ? 'Personal' : step === 2 ? 'Location' : 'Security'}
-                </Text>
-              </View>
-            );
-          })}
+              );
+            })}
+          </View>
+
+          <View style={styles.stepTitleContainer}>
+            <Text variant="caption" weight="700" color={colors.accent}>
+              STEP {currentStep} OF 3
+            </Text>
+            <Text variant="h3" style={styles.stepHeading}>
+              {currentStep === 1 && 'Personal Identity & Contact'}
+              {currentStep === 2 && 'Regional Location & Gamer Tag'}
+              {currentStep === 3 && 'Security & Password Credentials'}
+            </Text>
+          </View>
         </View>
 
         {/* STEP 1: Personal Details */}
         {currentStep === 1 && (
-          <View style={styles.formSection}>
-            <Text style={styles.sectionTitle}>PERSONAL DETAILS</Text>
-            <Text style={styles.sectionSubtitle}>
-              Please enter your full legal identity for regional esports compliance.
-            </Text>
-
-            <Text style={styles.fieldLabel}>FIRST NAME</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. Sipho"
-              placeholderTextColor={COLORS.textMuted}
-              value={name}
-              onChangeText={setName}
-            />
-
-            <Text style={styles.fieldLabel}>SURNAME</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. Dlamini"
-              placeholderTextColor={COLORS.textMuted}
-              value={surname}
-              onChangeText={setSurname}
-            />
-
-            <Text style={styles.fieldLabel}>DATE OF BIRTH (YYYY-MM-DD)</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. 2002-08-15"
-              placeholderTextColor={COLORS.textMuted}
-              value={dob}
-              onChangeText={setDob}
-            />
-
-            {/* Split Country Code Dropdown + Cellphone Input */}
-            <Text style={styles.fieldLabel}>CELLPHONE NUMBER</Text>
-            <View style={styles.phoneSplitRow}>
-              <TouchableOpacity
-                style={styles.countryPickerButton}
-                activeOpacity={0.7}
-                onPress={() => setShowCountryPicker(true)}
-              >
-                <Text style={styles.countryPickerButtonText}>{dialCode} ▼</Text>
-              </TouchableOpacity>
-              <TextInput
-                style={styles.phoneInput}
-                placeholder="e.g. 082 123 4567 or 82 123 4567"
-                placeholderTextColor={COLORS.textMuted}
-                keyboardType="phone-pad"
-                value={cellphone}
-                onChangeText={setCellphone}
-              />
+          <View style={styles.stepContentSection}>
+            <View style={styles.inputGroup}>
+              <Text variant="caption" weight="700" color={colors.textSecondary} style={styles.inputLabel}>
+                FIRST NAME
+              </Text>
+              <View style={[styles.inputWrapper, shadow.sm]}>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="e.g. Sipho"
+                  placeholderTextColor="#94A3B8"
+                  value={name}
+                  onChangeText={setName}
+                />
+              </View>
             </View>
-            <Text style={styles.phoneHelperText}>
-              Leading zero will be automatically formatted for database storage.
-            </Text>
+
+            <View style={styles.inputGroup}>
+              <Text variant="caption" weight="700" color={colors.textSecondary} style={styles.inputLabel}>
+                SURNAME / LAST NAME
+              </Text>
+              <View style={[styles.inputWrapper, shadow.sm]}>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="e.g. Dlamini"
+                  placeholderTextColor="#94A3B8"
+                  value={surname}
+                  onChangeText={setSurname}
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text variant="caption" weight="700" color={colors.textSecondary} style={styles.inputLabel}>
+                DATE OF BIRTH (YYYY-MM-DD)
+              </Text>
+              <View style={[styles.inputWrapper, shadow.sm]}>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="e.g. 2002-08-15"
+                  placeholderTextColor="#94A3B8"
+                  value={dob}
+                  onChangeText={setDob}
+                />
+              </View>
+            </View>
+
+            {/* Split Country Code + Phone with real-time zero stripper */}
+            <View style={styles.inputGroup}>
+              <Text variant="caption" weight="700" color={colors.textSecondary} style={styles.inputLabel}>
+                CELLPHONE NUMBER
+              </Text>
+              <View style={styles.phoneRow}>
+                <TouchableOpacity
+                  style={[styles.countryCodeBtn, shadow.sm]}
+                  onPress={() => setShowCountryPicker(true)}
+                  activeOpacity={0.8}
+                >
+                  <Text variant="body" weight="700" color={colors.textPrimary}>
+                    {dialCode}
+                  </Text>
+                  <Text variant="caption" weight="700" color="#94A3B8">
+                    ▼
+                  </Text>
+                </TouchableOpacity>
+
+                <View style={[styles.phoneInputWrapper, shadow.sm]}>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="82 123 4567"
+                    placeholderTextColor="#94A3B8"
+                    value={cellphone}
+                    onChangeText={handlePhoneChange}
+                    keyboardType="phone-pad"
+                  />
+                  {cellphone.length >= 7 && (
+                    <Text variant="body" weight="800" color={colors.accent}>
+                      ✓
+                    </Text>
+                  )}
+                </View>
+              </View>
+              <Text variant="caption" color={colors.textSecondary} style={styles.phoneHint}>
+                Leading zero (0) will be automatically excluded.
+              </Text>
+            </View>
 
             <TouchableOpacity
-              style={styles.primaryButton}
-              activeOpacity={0.8}
+              style={[styles.primaryBtn, shadow.sm]}
+              activeOpacity={0.85}
               onPress={handleNextStep1}
             >
-              <Text style={styles.primaryButtonText}>Continue to Location →</Text>
+              <Text variant="h3" style={styles.primaryBtnText}>
+                Continue to Location →
+              </Text>
             </TouchableOpacity>
           </View>
         )}
 
         {/* STEP 2: Location & Gamer Tag */}
         {currentStep === 2 && (
-          <View style={styles.formSection}>
-            <Text style={styles.sectionTitle}>SOUTHERN AFRICAN LOCATION</Text>
-            <Text style={styles.sectionSubtitle}>
-              Catering strictly for Southern Africa to foster local community competition.
-            </Text>
-
-            <Text style={styles.fieldLabel}>COUNTRY</Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.chipsScroll}
-            >
-              {SOUTHERN_AFRICAN_COUNTRIES.map((c) => (
-                <TouchableOpacity
-                  key={c.code}
-                  onPress={() => {
-                    setSelectedCountryName(c.name);
-                    setDialCode(c.dialCode);
-                    setSelectedProvince(c.provinces[0]?.name || '');
-                  }}
-                  style={[
-                    styles.selectorChip,
-                    selectedCountryName === c.name && styles.selectorChipActive,
-                  ]}
-                >
-                  <Text
+          <View style={styles.stepContentSection}>
+            <View style={styles.inputGroup}>
+              <Text variant="caption" weight="700" color={colors.textSecondary} style={styles.inputLabel}>
+                COUNTRY
+              </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.chipsScroll}
+              >
+                {SOUTHERN_AFRICAN_COUNTRIES.map((c) => (
+                  <TouchableOpacity
+                    key={c.code}
+                    onPress={() => {
+                      setSelectedCountryName(c.name);
+                      setDialCode(c.dialCode);
+                      setSelectedProvince(c.provinces[0]?.name || '');
+                    }}
                     style={[
-                      styles.chipText,
-                      selectedCountryName === c.name && styles.chipTextActive,
+                      styles.selectorChip,
+                      selectedCountryName === c.name && styles.selectorChipActive,
+                      shadow.sm,
                     ]}
                   >
-                    {c.name} ({c.dialCode})
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+                    <Text
+                      variant="body"
+                      weight={selectedCountryName === c.name ? '700' : '500'}
+                      color={selectedCountryName === c.name ? colors.accentHover : colors.textSecondary}
+                    >
+                      {c.name} ({c.dialCode})
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
 
-            <Text style={styles.fieldLabel}>PROVINCE / REGION</Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.chipsScroll}
-            >
-              {currentCountry.provinces.map((p) => (
-                <TouchableOpacity
-                  key={p.name}
-                  onPress={() => setSelectedProvince(p.name)}
-                  style={[
-                    styles.selectorChip,
-                    selectedProvince === p.name && styles.selectorChipActive,
-                  ]}
-                >
-                  <Text
+            <View style={styles.inputGroup}>
+              <Text variant="caption" weight="700" color={colors.textSecondary} style={styles.inputLabel}>
+                PROVINCE / REGION
+              </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.chipsScroll}
+              >
+                {currentCountry.provinces.map((p) => (
+                  <TouchableOpacity
+                    key={p.name}
+                    onPress={() => setSelectedProvince(p.name)}
                     style={[
-                      styles.chipText,
-                      selectedProvince === p.name && styles.chipTextActive,
+                      styles.selectorChip,
+                      selectedProvince === p.name && styles.selectorChipActive,
+                      shadow.sm,
                     ]}
                   >
-                    {p.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+                    <Text
+                      variant="body"
+                      weight={selectedProvince === p.name ? '700' : '500'}
+                      color={selectedProvince === p.name ? colors.accentHover : colors.textSecondary}
+                    >
+                      {p.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
 
-            <Text style={styles.fieldLabel}>TOWN / CITY</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. Soweto, Mutare, Gaborone..."
-              placeholderTextColor={COLORS.textMuted}
-              value={town}
-              onChangeText={setTown}
-            />
+            <View style={styles.inputGroup}>
+              <Text variant="caption" weight="700" color={colors.textSecondary} style={styles.inputLabel}>
+                TOWN / CITY
+              </Text>
+              <View style={[styles.inputWrapper, shadow.sm]}>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="e.g. Soweto, Mutare, Gaborone..."
+                  placeholderTextColor="#94A3B8"
+                  value={town}
+                  onChangeText={setTown}
+                />
+              </View>
+            </View>
 
-            <Text style={styles.fieldLabel}>GAMER TAG (ONLINE ALIAS)</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. KlipKing_01"
-              placeholderTextColor={COLORS.textMuted}
-              autoCapitalize="none"
-              value={gamerTag}
-              onChangeText={setGamerTag}
-            />
-            <Text style={styles.hintText}>
-              Your Gamer Tag is visible to opponents in the Wi-Fi Battleground and Leaderboard.
-            </Text>
+            <View style={styles.inputGroup}>
+              <Text variant="caption" weight="700" color={colors.textSecondary} style={styles.inputLabel}>
+                GAMER TAG (ONLINE ALIAS)
+              </Text>
+              <View style={[styles.inputWrapper, shadow.sm]}>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="e.g. KlipKing_01"
+                  placeholderTextColor="#94A3B8"
+                  autoCapitalize="none"
+                  value={gamerTag}
+                  onChangeText={setGamerTag}
+                />
+              </View>
+              <Text variant="caption" color={colors.textSecondary} style={styles.phoneHint}>
+                Your Gamer Tag is visible to opponents in the Wi-Fi Battleground and Leaderboard.
+              </Text>
+            </View>
 
-            <TouchableOpacity
-              style={styles.primaryButton}
-              activeOpacity={0.8}
-              onPress={handleNextStep2}
-            >
-              <Text style={styles.primaryButtonText}>Continue to Security →</Text>
-            </TouchableOpacity>
+            <View style={styles.stepBtnRow}>
+              <TouchableOpacity
+                style={[styles.secondaryBtn, shadow.sm]}
+                onPress={() => setCurrentStep(1)}
+                activeOpacity={0.8}
+              >
+                <Text variant="h3" style={styles.secondaryBtnText}>
+                  ← Back
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.primaryBtnFlex, shadow.sm]}
+                activeOpacity={0.85}
+                onPress={handleNextStep2}
+              >
+                <Text variant="h3" style={styles.primaryBtnText}>
+                  Continue to Security →
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 
         {/* STEP 3: Security & Credentials */}
         {currentStep === 3 && (
-          <View style={styles.formSection}>
-            <Text style={styles.sectionTitle}>SECURITY & CREDENTIALS</Text>
-            <Text style={styles.sectionSubtitle}>
-              Protect your gamer profile with 8+ character password validation.
-            </Text>
+          <View style={styles.stepContentSection}>
+            <View style={styles.inputGroup}>
+              <Text variant="caption" weight="700" color={colors.textSecondary} style={styles.inputLabel}>
+                EMAIL ADDRESS
+              </Text>
+              <View style={[styles.inputWrapper, shadow.sm]}>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="gamer@morabaraba.africa"
+                  placeholderTextColor="#94A3B8"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={email}
+                  onChangeText={setEmail}
+                />
+              </View>
+            </View>
 
-            <Text style={styles.fieldLabel}>EMAIL ADDRESS</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="gamer@morabaraba.africa"
-              placeholderTextColor={COLORS.textMuted}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              onChangeText={setEmail}
-            />
+            <View style={styles.inputGroup}>
+              <Text variant="caption" weight="700" color={colors.textSecondary} style={styles.inputLabel}>
+                CONFIRM EMAIL ADDRESS
+              </Text>
+              <View style={[styles.inputWrapper, shadow.sm]}>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Re-enter your email"
+                  placeholderTextColor="#94A3B8"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={confirmEmail}
+                  onChangeText={setConfirmEmail}
+                />
+              </View>
+            </View>
 
-            <Text style={styles.fieldLabel}>CONFIRM EMAIL ADDRESS</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Re-enter your email"
-              placeholderTextColor={COLORS.textMuted}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={confirmEmail}
-              onChangeText={setConfirmEmail}
-            />
+            <View style={styles.inputGroup}>
+              <Text variant="caption" weight="700" color={colors.textSecondary} style={styles.inputLabel}>
+                PASSWORD (8+ CHARACTERS)
+              </Text>
+              <View style={[styles.inputWrapper, shadow.sm]}>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Minimum 8 letters & numbers"
+                  placeholderTextColor="#94A3B8"
+                  secureTextEntry={!showPassword}
+                  value={password}
+                  onChangeText={setPassword}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  activeOpacity={0.7}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Text variant="label" weight="700" color={colors.textSecondary}>
+                    {showPassword ? 'HIDE' : 'SHOW'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <PasswordStrengthMeter password={password} />
+            </View>
 
-            <Text style={styles.fieldLabel}>PASSWORD (8+ CHARACTERS)</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Minimum 8 letters & numbers"
-              placeholderTextColor={COLORS.textMuted}
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-            />
-            <PasswordStrengthMeter password={password} />
+            <View style={styles.inputGroup}>
+              <Text variant="caption" weight="700" color={colors.textSecondary} style={styles.inputLabel}>
+                CONFIRM PASSWORD
+              </Text>
+              <View style={[styles.inputWrapper, shadow.sm]}>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Re-enter your password"
+                  placeholderTextColor="#94A3B8"
+                  secureTextEntry={!showConfirmPassword}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  activeOpacity={0.7}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Text variant="label" weight="700" color={colors.textSecondary}>
+                    {showConfirmPassword ? 'HIDE' : 'SHOW'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
 
-            <Text style={styles.fieldLabel}>CONFIRM PASSWORD</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Re-enter your password"
-              placeholderTextColor={COLORS.textMuted}
-              secureTextEntry
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-            />
+            <View style={styles.stepBtnRow}>
+              <TouchableOpacity
+                style={[styles.secondaryBtn, shadow.sm]}
+                onPress={() => setCurrentStep(2)}
+                activeOpacity={0.8}
+              >
+                <Text variant="h3" style={styles.secondaryBtnText}>
+                  ← Back
+                </Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.primaryButton}
-              activeOpacity={0.8}
-              onPress={handleFinalSubmit}
-            >
-              <Text style={styles.primaryButtonText}>Create Gamer Account</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.primaryBtnFlex, shadow.sm]}
+                activeOpacity={0.85}
+                onPress={handleFinalSubmit}
+              >
+                <Text variant="h3" style={styles.primaryBtnText}>
+                  Create Account ✓
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 
@@ -466,13 +603,16 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
           onPress={onNavigateToLogin}
           activeOpacity={0.7}
         >
-          <Text style={styles.switchAuthText}>
-            Already registered? <Text style={styles.switchAuthLink}>Sign In</Text>
+          <Text variant="body" color={colors.textSecondary} align="center">
+            Already registered?{' '}
+            <Text variant="body" color={colors.accent} weight="700">
+              Sign In
+            </Text>
           </Text>
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Split Country Code Picker Modal */}
+      {/* Country Code Modal matching bible_fun_facts reference */}
       <Modal
         visible={showCountryPicker}
         transparent
@@ -484,12 +624,15 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
           activeOpacity={1}
           onPress={() => setShowCountryPicker(false)}
         >
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>SELECT COUNTRY CODE</Text>
-            <Text style={styles.modalSubtitle}>
+          <View style={[styles.modalCard, shadow.lg]}>
+            <Text variant="h2" align="center" style={styles.modalTitle}>
+              Select Country Code
+            </Text>
+            <Text variant="caption" align="center" color={colors.textSecondary} style={styles.modalSubtitle}>
               Select your Southern African regional dialing code.
             </Text>
-            <ScrollView style={styles.countryModalScroll}>
+
+            <ScrollView style={styles.countryModalScroll} showsVerticalScrollIndicator={false}>
               {SOUTHERN_AFRICAN_COUNTRIES.map((c) => {
                 const isSelected = dialCode === c.dialCode;
                 return (
@@ -505,23 +648,24 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                       setSelectedProvince(c.provinces[0]?.name || '');
                       setShowCountryPicker(false);
                     }}
+                    activeOpacity={0.7}
                   >
                     <View>
                       <Text
-                        style={[
-                          styles.countryModalName,
-                          isSelected && styles.countryModalNameActive,
-                        ]}
+                        variant="body"
+                        weight={isSelected ? '700' : '500'}
+                        color={isSelected ? colors.accentHover : colors.textPrimary}
                       >
                         {c.name}
                       </Text>
-                      <Text style={styles.countryModalCode}>Region: {c.code}</Text>
+                      <Text variant="caption" color={colors.textSecondary}>
+                        Region: {c.code}
+                      </Text>
                     </View>
                     <Text
-                      style={[
-                        styles.countryModalDial,
-                        isSelected && styles.countryModalDialActive,
-                      ]}
+                      variant="h3"
+                      weight="800"
+                      color={isSelected ? colors.accentHover : colors.textPrimary}
                     >
                       {c.dialCode}
                     </Text>
@@ -529,11 +673,15 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                 );
               })}
             </ScrollView>
+
             <TouchableOpacity
-              style={styles.modalCloseBtn}
+              style={[styles.modalCloseBtn, shadow.sm]}
               onPress={() => setShowCountryPicker(false)}
+              activeOpacity={0.8}
             >
-              <Text style={styles.modalCloseBtnText}>Close</Text>
+              <Text variant="body" weight="700" color={colors.textPrimary}>
+                Done
+              </Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -545,226 +693,220 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   scrollContent: {
-    padding: SPACING.md,
+    padding: spacing.md,
+    paddingBottom: spacing.xxl,
   },
-  stepHeader: {
+  stepIndicatorSection: {
+    marginBottom: spacing.lg,
+  },
+  stepPillsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: SPACING.xs,
-    marginBottom: SPACING.md,
-  },
-  stepTrackItem: {
     alignItems: 'center',
-    flex: 1,
+    justifyContent: 'center',
+    marginBottom: spacing.md,
   },
-  stepBadge: {
+  stepPillItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  stepCircle: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: COLORS.surface,
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: 'rgba(15, 23, 42, 0.12)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.1)',
   },
-  stepBadgeCurrent: {
-    borderColor: COLORS.accent,
+  stepCircleActive: {
+    borderColor: colors.accent,
     backgroundColor: 'rgba(229, 169, 60, 0.12)',
   },
-  stepBadgeCompleted: {
-    backgroundColor: COLORS.accent,
-    borderColor: COLORS.accent,
+  stepCircleCompleted: {
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
-  stepNumber: {
-    color: COLORS.textMuted,
+  stepCircleText: {
+    color: colors.textSecondary,
     fontSize: 12,
-    fontWeight: '700',
   },
-  stepNumberActive: {
-    color: COLORS.accentHover,
+  stepCircleTextActive: {
+    color: colors.accentHover,
   },
-  stepNumberCompleted: {
-    color: COLORS.white,
+  stepConnectorLine: {
+    width: 36,
+    height: 2,
+    backgroundColor: 'rgba(15, 23, 42, 0.08)',
+    marginHorizontal: 4,
   },
-  stepLabel: {
-    color: COLORS.textMuted,
-    fontSize: 11,
-    fontWeight: '500',
+  stepConnectorLineActive: {
+    backgroundColor: colors.accent,
   },
-  stepLabelActive: {
-    color: COLORS.textPrimary,
-    fontWeight: '700',
-  },
-  formSection: {
-    marginBottom: SPACING.lg,
-  },
-  sectionTitle: {
-    color: COLORS.textPrimary,
-    fontSize: 18,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-    marginBottom: 4,
-  },
-  sectionSubtitle: {
-    color: COLORS.textSecondary,
-    fontSize: 13,
-    lineHeight: 18,
-    marginBottom: SPACING.md,
-  },
-  fieldLabel: {
-    color: COLORS.textSecondary,
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    marginBottom: 6,
-    marginTop: SPACING.xs,
-  },
-  input: {
-    backgroundColor: COLORS.surface,
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.1)',
-    borderRadius: 12,
-    height: 48,
-    paddingHorizontal: SPACING.sm,
-    color: COLORS.textPrimary,
-    fontSize: 14,
-    marginBottom: SPACING.xs,
-  },
-  phoneSplitRow: {
-    flexDirection: 'row',
-    gap: 8,
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  countryPickerButton: {
-    height: 48,
-    paddingHorizontal: 14,
-    backgroundColor: COLORS.surface,
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.1)',
-    borderRadius: 12,
-    justifyContent: 'center',
+  stepTitleContainer: {
     alignItems: 'center',
   },
-  countryPickerButtonText: {
-    color: COLORS.textPrimary,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  phoneInput: {
-    flex: 1,
-    height: 48,
-    backgroundColor: COLORS.surface,
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.1)',
-    borderRadius: 12,
-    paddingHorizontal: SPACING.sm,
-    color: COLORS.textPrimary,
-    fontSize: 14,
-  },
-  phoneHelperText: {
-    color: COLORS.textMuted,
-    fontSize: 11,
+  stepHeading: {
+    color: colors.textPrimary,
     marginTop: 2,
-    marginBottom: SPACING.sm,
+  },
+  stepContentSection: {
+    width: '100%',
+  },
+  inputGroup: {
+    marginBottom: spacing.md,
+  },
+  inputLabel: {
+    marginBottom: 6,
+    letterSpacing: 0.5,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 48,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+  },
+  inputIcon: {
+    marginRight: 10,
+  },
+  textInput: {
+    flex: 1,
+    height: '100%',
+    color: colors.textPrimary,
+    fontSize: 14,
+  },
+  phoneRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  countryCodeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    height: 48,
+    paddingHorizontal: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  countryChevron: {
+    transform: [{ rotate: '90deg' }],
+  },
+  phoneInputWrapper: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 48,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+  },
+  phoneHint: {
+    marginTop: 4,
+    paddingHorizontal: 4,
   },
   chipsScroll: {
     flexGrow: 0,
-    marginBottom: SPACING.xs,
+    marginTop: 4,
   },
   selectorChip: {
     paddingVertical: 8,
     paddingHorizontal: 12,
-    borderRadius: 10,
-    backgroundColor: COLORS.surface,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.1)',
+    borderColor: colors.border,
     marginRight: 8,
   },
   selectorChipActive: {
-    borderColor: COLORS.accent,
+    borderColor: colors.accent,
     backgroundColor: 'rgba(229, 169, 60, 0.12)',
   },
-  chipText: {
-    color: COLORS.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  chipTextActive: {
-    color: COLORS.accentHover,
-    fontWeight: '700',
-  },
-  hintText: {
-    color: COLORS.textMuted,
-    fontSize: 11,
-    marginTop: 2,
-    marginBottom: SPACING.sm,
-  },
-  primaryButton: {
-    backgroundColor: COLORS.accent,
+  primaryBtn: {
+    flexDirection: 'row',
+    backgroundColor: colors.accent,
     height: 50,
-    borderRadius: 25,
+    borderRadius: radius.xl,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: SPACING.md,
+    marginTop: spacing.sm,
+    gap: 8,
   },
-  primaryButtonText: {
-    color: COLORS.white,
-    fontSize: 14,
+  primaryBtnFlex: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: colors.accent,
+    height: 50,
+    borderRadius: radius.xl,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+  },
+  primaryBtnText: {
+    color: '#FFFFFF',
     fontWeight: '800',
-    letterSpacing: 0.5,
+  },
+  stepBtnRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  secondaryBtn: {
+    flexDirection: 'row',
+    height: 50,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.xl,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+  },
+  secondaryBtnText: {
+    color: colors.textPrimary,
+    fontWeight: '700',
   },
   switchAuth: {
     alignSelf: 'center',
-    paddingVertical: SPACING.md,
-  },
-  switchAuthText: {
-    color: COLORS.textSecondary,
-    fontSize: 13,
-  },
-  switchAuthLink: {
-    color: COLORS.accent,
-    fontWeight: '700',
+    paddingVertical: spacing.lg,
   },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: SPACING.md,
+    padding: spacing.md,
   },
   modalCard: {
     width: '100%',
     maxWidth: 340,
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: SPACING.md,
+    borderRadius: radius.xl,
+    padding: spacing.lg,
     borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.1)',
+    borderColor: colors.border,
     maxHeight: '75%',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
   },
   modalTitle: {
-    color: COLORS.textPrimary,
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-    textAlign: 'center',
+    color: colors.textPrimary,
     marginBottom: 4,
   },
   modalSubtitle: {
-    color: COLORS.textSecondary,
-    fontSize: 12,
-    textAlign: 'center',
-    marginBottom: SPACING.sm,
+    marginBottom: spacing.md,
   },
   countryModalScroll: {
     maxHeight: 280,
@@ -775,48 +917,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 12,
-    borderRadius: 10,
+    borderRadius: radius.md,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(15, 23, 42, 0.06)',
+    borderBottomColor: 'rgba(15, 23, 42, 0.04)',
   },
   countryModalItemActive: {
     backgroundColor: 'rgba(229, 169, 60, 0.1)',
   },
-  countryModalName: {
-    color: COLORS.textPrimary,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  countryModalNameActive: {
-    color: COLORS.accentHover,
-    fontWeight: '700',
-  },
-  countryModalCode: {
-    color: COLORS.textMuted,
-    fontSize: 11,
-  },
-  countryModalDial: {
-    color: COLORS.textPrimary,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  countryModalDialActive: {
-    color: COLORS.accentHover,
-    fontWeight: '800',
-  },
   modalCloseBtn: {
-    backgroundColor: COLORS.surface,
-    marginTop: SPACING.sm,
+    backgroundColor: colors.surfaceSecondary,
+    marginTop: spacing.md,
     height: 44,
-    borderRadius: 12,
+    borderRadius: radius.md,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.1)',
-  },
-  modalCloseBtnText: {
-    color: COLORS.textPrimary,
-    fontSize: 13,
-    fontWeight: '700',
+    borderColor: colors.border,
   },
 });

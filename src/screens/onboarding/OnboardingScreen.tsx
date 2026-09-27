@@ -1,18 +1,22 @@
-import React, { useRef, useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
-  FlatList,
-  useWindowDimensions,
   TouchableOpacity,
+  Image,
+  Animated,
+  PanResponder,
+  useWindowDimensions,
+  Platform,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
   SafeAreaView,
   StatusBar,
-  Image,
   ImageSourcePropType,
 } from 'react-native';
-import { COLORS, METRICS, SPACING } from '../../constants/theme';
-import { SwipeToSignUp } from '../../components/common/SwipeToSignUp';
+import { colors } from '../../theme/colors';
+import { spacing, radius, shadow } from '../../theme';
+import { Text } from '../../components/Typography';
 
 interface Slide {
   id: string;
@@ -53,6 +57,115 @@ const ONBOARDING_SLIDES: Slide[] = [
   },
 ];
 
+interface SwipeToStartButtonProps {
+  onComplete: () => void;
+  resetTrigger?: number;
+}
+
+/**
+ * Interactive Swipe-to-Start Button with PanResponder, text fade-out,
+ * and animated flowing progress fill matching the bible_fun_facts reference.
+ */
+function SwipeToStartButton({ onComplete, resetTrigger }: SwipeToStartButtonProps) {
+  const panX = useRef(new Animated.Value(0)).current;
+  const trackWidth = 220;
+  const thumbSize = 44;
+  const maxDrag = trackWidth - thumbSize - 8;
+
+  useEffect(() => {
+    panX.setValue(0);
+  }, [resetTrigger, panX]);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dx > 0) {
+          const clamped = Math.min(gestureState.dx, maxDrag);
+          panX.setValue(clamped);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dx > maxDrag * 0.55) {
+          Animated.timing(panX, {
+            toValue: maxDrag,
+            duration: 120,
+            useNativeDriver: false,
+          }).start(() => {
+            onComplete();
+            setTimeout(() => panX.setValue(0), 400);
+          });
+        } else {
+          Animated.spring(panX, {
+            toValue: 0,
+            useNativeDriver: false,
+            bounciness: 8,
+          }).start();
+        }
+      },
+    })
+  ).current;
+
+  const textOpacity = panX.interpolate({
+    inputRange: [0, maxDrag * 0.45],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
+
+  const fillWidth = panX.interpolate({
+    inputRange: [0, maxDrag],
+    outputRange: [thumbSize + 8, trackWidth],
+    extrapolate: 'clamp',
+  });
+
+  return (
+    <View style={[styles.swipeTrack, shadow.sm]}>
+      <Animated.View
+        style={[
+          styles.swipeProgressFill,
+          { width: fillWidth },
+        ]}
+      />
+
+      <Animated.View style={{ opacity: textOpacity }}>
+        <Text
+          variant="caption"
+          weight="700"
+          color={colors.textSecondary}
+          style={styles.swipeTrackText}
+        >
+          Swipe to start »
+        </Text>
+      </Animated.View>
+
+      <Animated.View
+        {...panResponder.panHandlers}
+        style={[
+          styles.swipeThumb,
+          shadow.md,
+          {
+            transform: [{ translateX: panX }],
+          },
+        ]}
+      >
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => {
+            onComplete();
+            panX.setValue(0);
+          }}
+          style={styles.swipeThumbTouchable}
+        >
+          <Text variant="h3" weight="800" color="#FFFFFF" style={styles.arrowText}>
+            →
+          </Text>
+        </TouchableOpacity>
+      </Animated.View>
+    </View>
+  );
+}
+
 interface OnboardingScreenProps {
   onSwipeToSignUp: () => void;
   onNavigateToLogin: () => void;
@@ -64,117 +177,218 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
 }) => {
   const { width } = useWindowDimensions();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const flatListRef = useRef<FlatList>(null);
+  const flatListRef = useRef<any>(null);
+  const scrollX = useRef(new Animated.Value(0)).current;
+  const [resetTrigger, setResetTrigger] = useState(0);
 
-  const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
-    if (viewableItems.length > 0) {
-      setCurrentIndex(viewableItems[0].index || 0);
+  const artWidth = Math.min(width - spacing.xl * 2, 320);
+  const artHeight = 220;
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetX = event.nativeEvent.contentOffset.x;
+    const index = Math.round(offsetX / width);
+    if (index !== currentIndex && index >= 0 && index < ONBOARDING_SLIDES.length) {
+      setCurrentIndex(index);
     }
-  }).current;
+  };
+
+  const handleNext = () => {
+    if (currentIndex < ONBOARDING_SLIDES.length - 1) {
+      flatListRef.current?.scrollToIndex({
+        index: currentIndex + 1,
+        animated: true,
+      });
+    } else {
+      onSwipeToSignUp();
+    }
+  };
+
+  // Sliding tab locator interpolation across 3 stationary slots
+  const pillTranslateX = scrollX.interpolate({
+    inputRange: [0, width, 2 * width],
+    outputRange: [0, 16, 32],
+    extrapolate: 'clamp',
+  });
+
+  const pillWidth = scrollX.interpolate({
+    inputRange: [0, width * 0.5, width, width * 1.5, 2 * width],
+    outputRange: [22, 28, 22, 28, 22],
+    extrapolate: 'clamp',
+  });
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
-      {/* Top Brand Bar */}
-      <View style={styles.topBar}>
-        <Image
-          source={require('../../../assets/icon.png')}
-          style={styles.logo}
-          resizeMode="cover"
-        />
-        <Text style={styles.brandTitle}>MORABARABA</Text>
-      </View>
-
-      {/* Full-Bleed Carousel */}
-      <FlatList
-        ref={flatListRef}
-        data={ONBOARDING_SLIDES}
-        keyExtractor={(item) => item.id}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={{ viewAreaCoveragePercentThreshold: 50 }}
-        renderItem={({ item }) => (
-          <View style={[styles.slideContainer, { width }]}>
-            <View style={styles.imageContainer}>
-              <Image
-                source={item.image}
-                style={styles.slideImage}
-                resizeMode="cover"
-              />
-            </View>
-            <View style={styles.textContent}>
-              <Text style={styles.stepBadge}>{item.step}</Text>
-              <Text style={styles.slideTitle}>{item.title}</Text>
-              <Text style={styles.slideHighlight}>{item.highlight}</Text>
-              <Text style={styles.slideDescription}>{item.description}</Text>
-            </View>
-          </View>
-        )}
-      />
-
-      {/* Bottom Navigation & Actions */}
-      <View style={styles.bottomArea}>
-        {/* Pagination Dots */}
-        <View style={styles.paginationRow}>
-          {ONBOARDING_SLIDES.map((_, idx) => (
-            <View
-              key={idx}
-              style={[
-                styles.dot,
-                currentIndex === idx ? styles.activeDot : styles.inactiveDot,
-              ]}
-            />
-          ))}
+      {/* Top Header Row */}
+      <View style={styles.headerRow}>
+        <View style={styles.brandRow}>
+          <Image
+            source={require('../../../assets/icon.png')}
+            style={styles.headerLogo}
+            resizeMode="contain"
+          />
+          <Text style={styles.brandTitle}>MORABARABA</Text>
         </View>
 
-        {/* Action Controls */}
-        {currentIndex === 2 ? (
-          <View style={styles.actionBlock}>
-            <SwipeToSignUp
-              onSwipeComplete={onSwipeToSignUp}
-              label="Swipe to Sign Up →"
+        {currentIndex < ONBOARDING_SLIDES.length - 1 ? (
+          <TouchableOpacity
+            style={styles.skipButton}
+            onPress={onSwipeToSignUp}
+            activeOpacity={0.7}
+          >
+            <Text variant="label" color={colors.textSecondary} weight="700">
+              Skip
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.skipPlaceholder} />
+        )}
+      </View>
+
+      {/* Main Slide Content Area */}
+      <View style={styles.mainContent}>
+        {/* Pure Crossfade Shared Art Canvas (Zero scale pop) */}
+        <View style={[styles.sharedArtContainer, { width: artWidth, height: artHeight }]}>
+          {ONBOARDING_SLIDES.map((slide, index) => {
+            const inputRange = [
+              (index - 1) * width,
+              index * width,
+              (index + 1) * width,
+            ];
+
+            const opacity = scrollX.interpolate({
+              inputRange,
+              outputRange: [0, 1, 0],
+              extrapolate: 'clamp',
+            });
+
+            return (
+              <Animated.View
+                key={slide.id}
+                pointerEvents="none"
+                style={[
+                  styles.sharedArtSlide,
+                  { width: artWidth, height: artHeight, opacity },
+                ]}
+              >
+                <Image
+                  source={slide.image}
+                  style={styles.artImage}
+                  resizeMode="cover"
+                />
+              </Animated.View>
+            );
+          })}
+        </View>
+
+        {/* Paging Text Content */}
+        <Animated.FlatList
+          ref={flatListRef}
+          data={ONBOARDING_SLIDES}
+          keyExtractor={(item) => item.id}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          bounces={false}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+            {
+              useNativeDriver: false,
+              listener: handleScroll,
+            }
+          )}
+          scrollEventThrottle={16}
+          renderItem={({ item }) => (
+            <View style={[styles.slideTextContainer, { width }]}>
+              <View style={styles.textWrapper}>
+                <Text variant="label" color={colors.accent} weight="700" style={styles.stepBadge}>
+                  {item.step}
+                </Text>
+
+                <Text variant="h1" align="center" style={styles.slideTitle}>
+                  {item.title}
+                </Text>
+
+                <Text
+                  variant="caption"
+                  align="center"
+                  color={colors.accentHover}
+                  weight="700"
+                  style={styles.slideHighlight}
+                >
+                  {item.highlight}
+                </Text>
+
+                <Text
+                  variant="body"
+                  align="center"
+                  color={colors.textSecondary}
+                  style={styles.slideDescription}
+                >
+                  {item.description}
+                </Text>
+              </View>
+            </View>
+          )}
+        />
+      </View>
+
+      {/* Persistent Bottom Controls Area */}
+      <View style={styles.bottomArea}>
+        <View style={styles.controlsRow}>
+          {/* Sliding Liquid Pill Locator */}
+          <View style={styles.indicatorContainer}>
+            <View style={styles.trackDotSlots}>
+              {ONBOARDING_SLIDES.map((_, i) => (
+                <View key={i} style={styles.indicatorTrackDot} />
+              ))}
+            </View>
+
+            <Animated.View
+              style={[
+                styles.slidingPill,
+                {
+                  transform: [{ translateX: pillTranslateX }],
+                  width: pillWidth,
+                },
+              ]}
             />
+          </View>
+
+          {/* Action button on right */}
+          {currentIndex < ONBOARDING_SLIDES.length - 1 ? (
             <TouchableOpacity
-              style={styles.loginLink}
-              onPress={onNavigateToLogin}
-              activeOpacity={0.7}
+              style={[styles.nextCircleBtn, shadow.md]}
+              onPress={handleNext}
+              activeOpacity={0.85}
+              accessibilityLabel="Next slide"
             >
-              <Text style={styles.loginPrompt}>
-                Already have an account?{' '}
-                <Text style={styles.loginAction}>Sign In</Text>
+              <Text variant="h3" weight="800" color="#FFFFFF" style={styles.arrowText}>
+                →
               </Text>
             </TouchableOpacity>
-          </View>
-        ) : (
-          <View style={styles.actionBlock}>
-            <TouchableOpacity
-              style={styles.nextButton}
-              activeOpacity={0.8}
-              onPress={() => {
-                flatListRef.current?.scrollToIndex({
-                  index: currentIndex + 1,
-                  animated: true,
-                });
-              }}
-            >
-              <Text style={styles.nextButtonText}>Next →</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.skipButton}
-              onPress={() => {
-                flatListRef.current?.scrollToIndex({
-                  index: 2,
-                  animated: true,
-                });
-              }}
-            >
-              <Text style={styles.skipText}>Skip</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+          ) : (
+            <SwipeToStartButton
+              onComplete={onSwipeToSignUp}
+              resetTrigger={resetTrigger}
+            />
+          )}
+        </View>
+
+        {/* Secondary Link: Sign In */}
+        <TouchableOpacity
+          style={styles.signInLink}
+          onPress={onNavigateToLogin}
+          activeOpacity={0.7}
+        >
+          <Text variant="body" color={colors.textSecondary} align="center">
+            Already have an account?{' '}
+            <Text variant="body" color={colors.accent} weight="700">
+              Sign In
+            </Text>
+          </Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -183,134 +397,184 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
-    justifyContent: 'space-between',
+    backgroundColor: colors.background,
   },
-  topBar: {
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.sm,
+  },
+  brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: SPACING.md,
-    paddingTop: SPACING.sm,
-    gap: 12,
   },
-  logo: {
-    width: METRICS.brandLogoAuth,
-    height: METRICS.brandLogoAuth,
+  headerLogo: {
+    width: 24,
+    height: 24,
+    marginRight: spacing.sm,
     borderRadius: 0,
   },
   brandTitle: {
-    color: COLORS.textPrimary,
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 1.5,
+    fontWeight: 'bold',
+    color: colors.textPrimary,
+    fontSize: 18,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'SpaceMono',
   },
-  slideContainer: {
+  skipButton: {
+    paddingVertical: 6,
+    paddingHorizontal: spacing.sm,
+  },
+  skipPlaceholder: {
+    width: 48,
+  },
+  mainContent: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: SPACING.md,
+    alignItems: 'center',
   },
-  imageContainer: {
-    width: '100%',
-    height: 230,
-    backgroundColor: COLORS.surface,
-    borderRadius: 20,
+  sharedArtContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.sm,
+    marginBottom: spacing.md,
+    borderRadius: radius.lg,
     overflow: 'hidden',
-    marginBottom: SPACING.md,
+    backgroundColor: colors.surfaceSecondary,
     borderWidth: 1,
     borderColor: 'rgba(15, 23, 42, 0.08)',
   },
-  slideImage: {
+  sharedArtSlide: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.lg,
+    overflow: 'hidden',
+  },
+  artImage: {
     width: '100%',
     height: '100%',
   },
-  textContent: {
-    paddingHorizontal: 4,
+  slideTextContainer: {
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingHorizontal: spacing.xl,
+  },
+  textWrapper: {
+    width: '100%',
+    alignItems: 'center',
   },
   stepBadge: {
-    color: COLORS.accent,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 1.5,
-    marginBottom: 6,
+    marginBottom: 4,
+    letterSpacing: 1.2,
   },
   slideTitle: {
-    color: COLORS.textPrimary,
-    fontSize: 22,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-    lineHeight: 28,
     marginBottom: 4,
   },
   slideHighlight: {
-    color: COLORS.accentHover,
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    marginBottom: SPACING.xs,
+    marginBottom: spacing.sm,
   },
   slideDescription: {
-    color: COLORS.textSecondary,
-    fontSize: 14,
-    lineHeight: 22,
+    paddingHorizontal: spacing.sm,
   },
   bottomArea: {
-    paddingBottom: SPACING.lg,
-  },
-  paginationRow: {
-    flexDirection: 'row',
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
+    minHeight: 120,
     justifyContent: 'center',
+  },
+  controlsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: SPACING.md,
-    gap: 8,
+    height: 56,
+    marginBottom: spacing.sm,
   },
-  dot: {
-    height: 4,
-    borderRadius: 2,
+  indicatorContainer: {
+    width: 56,
+    height: 16,
+    justifyContent: 'center',
+    position: 'relative',
   },
-  activeDot: {
-    width: 24,
-    backgroundColor: COLORS.accent,
+  trackDotSlots: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
-  inactiveDot: {
-    width: 8,
-    backgroundColor: 'rgba(15, 23, 42, 0.12)',
+  indicatorTrackDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(15, 23, 42, 0.16)',
   },
-  actionBlock: {
-    gap: SPACING.xs,
+  slidingPill: {
+    position: 'absolute',
+    left: 0,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.accent,
   },
-  nextButton: {
-    backgroundColor: COLORS.accent,
-    marginHorizontal: SPACING.md,
+  nextCircleBtn: {
+    width: 52,
     height: 52,
     borderRadius: 26,
+    backgroundColor: colors.accent,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  nextButtonText: {
-    color: COLORS.white,
-    fontSize: 15,
-    fontWeight: '800',
+  swipeTrack: {
+    width: 220,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: 'rgba(15, 23, 42, 0.08)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    paddingHorizontal: 4,
+    overflow: 'hidden',
+  },
+  swipeProgressFill: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(229, 169, 60, 0.16)',
+    borderRadius: 26,
+  },
+  swipeTrackText: {
+    fontSize: 12,
     letterSpacing: 0.5,
+    marginLeft: 32,
   },
-  skipButton: {
-    alignSelf: 'center',
-    paddingVertical: SPACING.xs,
+  swipeThumb: {
+    position: 'absolute',
+    left: 4,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.accent,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  skipText: {
-    color: COLORS.textMuted,
-    fontSize: 13,
-    fontWeight: '600',
+  swipeThumbTouchable: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  loginLink: {
-    alignSelf: 'center',
-    paddingVertical: SPACING.xs,
+  signInLink: {
+    paddingVertical: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  loginPrompt: {
-    color: COLORS.textSecondary,
-    fontSize: 13,
-  },
-  loginAction: {
-    color: COLORS.accent,
-    fontWeight: '700',
+  arrowText: {
+    fontSize: 18,
+    lineHeight: 22,
   },
 });

@@ -86,17 +86,22 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 
 ---
 
-## Design System (Strict 60-30-10 & Zero SVG Icons)
+## Design System & Theme Architecture (Strict 60-30-10 & Zero SVG Icons)
+
+[![Colors](https://img.shields.io/badge/60--30--10-Background_%23FFFFFF_|_Surface_%23FFFFFF_|_Accent_%23E5A93C-E5A93C)](https://shields.io/)
+[![Typography](https://img.shields.io/badge/Typography-Custom_Type_Scale-0F172A)](https://shields.io/)
+[![Iconography](https://img.shields.io/badge/Iconography-Zero_SVGs_|_Pure_Typographic-10B981)](https://shields.io/)
 
 - **60% Dominant Background:** Crisp Pure White (`#FFFFFF`) providing a clean, high-contrast, modern application canvas.
-- **30% Panel & Surface:** Soft Slate Surface (`#F8FAFC` / `#F1F5F9`) for interactive inputs, board surface, and tab navigation.
+- **30% Panel & Surface:** Pure White (`#FFFFFF`) & Soft Slate Surface (`#F8FAFC`) with hairline borders (`rgba(15, 23, 42, 0.08)`) and subtle elevation shadows (`shadow.sm`, `shadow.md`, `shadow.pill`).
 - **10% Accent:** Radiant Gold / Orange (`#E5A93C` / `#D97706`) strictly reserved for active states, primary CTAs, and winning moves.
-- **Contrast Typography:** Deep Dark Slate (`#0F172A`) for crisp, readable typography on the white canvas.
-- **Zero Card/Div Boxes:** Content flows directly on the full-bleed body canvas for onboarding, authentication, and screens.
-- **Zero SVG Icons:** Clean typographic indicators, geometric board coordinates, and native rendering without external SVG icon fonts or icon libraries.
-- **Themed Popup System:** All user dialogs, errors, and victory prompts are rendered via custom `ThemedAlert` modals matching the 60-30-10 palette rather than unstyled system alerts.
+- **Typography Component (`Typography.tsx`):** Standardized `<Text>` abstraction with variants (`h1`, `h2`, `h3`, `body`, `caption`, `label`), font weights (`400`, `500`, `600`, `700`, `800`, `900`), and automatic color defaults.
+- **Zero SVG Icons:** Clean typographic indicators (`→`, `←`, `▼`, `✓`), geometric board coordinates, and native rendering without external SVG icon fonts or icon libraries.
+- **Multiples-of-8 Spacing (Rule 15):** Strict `spacing` system (`sm: 8`, `md: 16`, `lg: 24`, `xl: 32`, `xxl: 48`, `nav: 56`, `huge: 64`).
+- **Zero Card/Div Box Wrappers:** Onboarding and authentication content flows directly on the full-bleed body canvas.
+- **Themed Popup System:** All user dialogs, errors, and alerts are rendered via custom `ThemedAlert` modals matching the 60-30-10 palette.
 - **Unrounded Brand Logos:** All app brand logo displays maintain sharp, unrounded geometry (`borderRadius: 0`) across all screens and modals.
-- **Floating Pill Bottom Navigation:** Rule 20 compliant floating curved bottom navigation bar with dynamically centered geometry, compact height, and focused indicator dots.
+- **Floating Pill Bottom Navigation:** Rule 20 compliant floating curved bottom navigation bar with dynamically centered geometry (`width: 280`), compact height (`50px`), and focused indicator dots.
 
 ---
 
@@ -118,6 +123,8 @@ competitor/
 |   `-- generate_assets.py             # Rule 15/19 asset calibration generator
 |-- src/
 |   |-- components/
+|   |   |-- Card.tsx                   # Surface card with shadow.sm and radius tokens
+|   |   |-- Typography.tsx             # Standardized Text component with variants & weights
 |   |   |-- common/
 |   |   |   |-- Header.tsx             # Standard header with 24x24 brand logo (0 border radius)
 |   |   |   |-- PasswordStrengthMeter.tsx # 4-segment 8+ char password validator
@@ -128,7 +135,7 @@ competitor/
 |   |       `-- MorabarabaBoard.tsx    # 24-vertex board layout and interactive pieces
 |   |-- constants/
 |   |   |-- regions.ts                 # Southern African countries, provinces, and towns
-|   |   `-- theme.ts                   # Strict 60-30-10 palette and layout metrics
+|   |   `-- theme.ts                   # Legacy theme metrics re-exported to src/theme
 |   |-- engine/
 |   |   |-- ai.ts                      # Heuristic & Minimax AI across 3 difficulties
 |   |   `-- morabaraba.ts              # Mathematical board model and rule validator
@@ -137,8 +144,8 @@ competitor/
 |   |   `-- TabNavigator.tsx           # Rule 20 floating pill bottom navigation
 |   |-- screens/
 |   |   |-- auth/
-|   |   |   |-- LoginScreen.tsx        # Gamer Tag/Email credential sign in
-|   |   |   `-- SignUpScreen.tsx       # 3-step progressive Southern African registration
+|   |   |   |-- LoginScreen.tsx        # Gamer Tag/Email credential sign in with Typography
+|   |   |   `-- SignUpScreen.tsx       # 3-step progressive Southern African registration with step connectors
 |   |   |-- battleground/
 |   |   |   `-- BattlegroundScreen.tsx # 2-Player Pass & Play and Wi-Fi match setup
 |   |   |-- leaderboard/
@@ -146,11 +153,14 @@ competitor/
 |   |   |-- offline/
 |   |   |   `-- OfflineScreen.tsx      # Solo 1P vs CPU AI arena
 |   |   |-- onboarding/
-|   |   |   `-- OnboardingScreen.tsx   # 3-slide introduction with swipe trigger
+|   |   |   `-- OnboardingScreen.tsx   # 3-slide crossfade art canvas, liquid sliding pill & SwipeToStartButton
 |   |   `-- profile/
 |   |       `-- ProfileScreen.tsx      # Gamer Tag career stats and settings
 |   |-- store/
 |   |   `-- gameStore.ts               # Local persistence via AsyncStorage
+|   |-- theme/
+|   |   |-- colors.ts                  # 60-30-10 color palette tokens
+|   |   `-- index.ts                   # Spacing (multiples of 8), platformSpecs, radius, shadow
 |   `-- types/
 |       |-- auth.ts                    # User profile and registration models
 |       `-- game.ts                    # Game state, phase, player, and board types

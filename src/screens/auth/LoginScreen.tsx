@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TextInput,
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
   Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from 'react-native';
-import { COLORS, METRICS, SPACING } from '../../constants/theme';
+import { colors } from '../../theme/colors';
+import { spacing, radius, shadow } from '../../theme';
+import { Text } from '../../components/Typography';
 import { Header } from '../../components/common/Header';
 import { useThemedAlert } from '../../components/common/ThemedAlert';
 import { getUserProfile, saveUserProfile } from '../../store/gameStore';
@@ -27,6 +31,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const { showAlert } = useThemedAlert();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
     if (!identifier.trim()) {
@@ -71,64 +76,104 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
       <Header
         title="SIGN IN"
         showBack
         onBack={onNavigateToSignUp}
       />
 
-      <View style={styles.content}>
-        <View style={styles.brandBox}>
-          <Image
-            source={require('../../../assets/icon.png')}
-            style={styles.logo}
-            resizeMode="cover"
-          />
-          <Text style={styles.brandTitle}>MORABARABA</Text>
-          <Text style={styles.brandSubtitle}>ENTER THE COMPETITIVE ARENA</Text>
-        </View>
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoid}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.brandBox}>
+            <Image
+              source={require('../../../assets/icon.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+            <Text variant="h2" weight="900" style={styles.brandTitle}>
+              MORABARABA
+            </Text>
+            <Text variant="caption" weight="700" color={colors.accentHover} style={styles.brandSubtitle}>
+              ENTER THE COMPETITIVE ARENA
+            </Text>
+          </View>
 
-        <View style={styles.formContainer}>
-          <Text style={styles.fieldLabel}>GAMER TAG OR EMAIL</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g. KlipKing_01 or email@domain.com"
-            placeholderTextColor={COLORS.textMuted}
-            autoCapitalize="none"
-            value={identifier}
-            onChangeText={setIdentifier}
-          />
+          <View style={styles.formContainer}>
+            <View style={styles.inputGroup}>
+              <Text variant="caption" weight="700" color={colors.textSecondary} style={styles.inputLabel}>
+                GAMER TAG OR EMAIL
+              </Text>
+              <View style={[styles.inputWrapper, shadow.sm]}>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="e.g. KlipKing_01 or email@domain.com"
+                  placeholderTextColor="#94A3B8"
+                  autoCapitalize="none"
+                  value={identifier}
+                  onChangeText={setIdentifier}
+                />
+              </View>
+            </View>
 
-          <Text style={styles.fieldLabel}>PASSWORD</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your 8+ character password"
-            placeholderTextColor={COLORS.textMuted}
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
+            <View style={styles.inputGroup}>
+              <Text variant="caption" weight="700" color={colors.textSecondary} style={styles.inputLabel}>
+                PASSWORD
+              </Text>
+              <View style={[styles.inputWrapper, shadow.sm]}>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Enter your 8+ character password"
+                  placeholderTextColor="#94A3B8"
+                  secureTextEntry={!showPassword}
+                  value={password}
+                  onChangeText={setPassword}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  activeOpacity={0.7}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  style={styles.toggleVisibilityBtn}
+                >
+                  <Text variant="label" weight="700" color={colors.textSecondary}>
+                    {showPassword ? 'HIDE' : 'SHOW'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.primaryBtn, shadow.sm]}
+              activeOpacity={0.8}
+              onPress={handleLogin}
+            >
+              <Text variant="body" weight="800" color="#FFFFFF">
+                Sign In to Arena →
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
-            style={styles.primaryButton}
-            activeOpacity={0.8}
-            onPress={handleLogin}
+            style={styles.switchAuth}
+            onPress={onNavigateToSignUp}
+            activeOpacity={0.7}
           >
-            <Text style={styles.primaryButtonText}>Sign In to Arena →</Text>
+            <Text variant="body" color={colors.textSecondary}>
+              New competitor?{' '}
+              <Text variant="body" weight="700" color={colors.accent}>
+                Register Now
+              </Text>
+            </Text>
           </TouchableOpacity>
-        </View>
-
-        <TouchableOpacity
-          style={styles.switchAuth}
-          onPress={onNavigateToSignUp}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.switchAuthText}>
-            New competitor? <Text style={styles.switchAuthLink}>Register Now</Text>
-          </Text>
-        </TouchableOpacity>
-      </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -136,83 +181,77 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
-  content: {
+  keyboardAvoid: {
     flex: 1,
-    padding: SPACING.md,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: spacing.md,
     justifyContent: 'center',
   },
   brandBox: {
     alignItems: 'center',
-    marginBottom: SPACING.lg,
+    marginBottom: spacing.xl,
   },
   logo: {
-    width: METRICS.brandLogoModal,
-    height: METRICS.brandLogoModal,
+    width: 28,
+    height: 28,
     borderRadius: 0,
-    marginBottom: SPACING.xs,
+    marginBottom: spacing.sm,
   },
   brandTitle: {
-    color: COLORS.textPrimary,
-    fontSize: 22,
-    fontWeight: '900',
+    color: colors.textPrimary,
     letterSpacing: 2,
   },
   brandSubtitle: {
-    color: COLORS.accentHover,
-    fontSize: 11,
-    fontWeight: '700',
     letterSpacing: 1,
     marginTop: 4,
   },
   formContainer: {
     width: '100%',
-    marginBottom: SPACING.md,
   },
-  fieldLabel: {
-    color: COLORS.textSecondary,
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.5,
+  inputGroup: {
+    marginBottom: spacing.md,
+  },
+  inputLabel: {
     marginBottom: 6,
-    marginTop: SPACING.xs,
+    letterSpacing: 0.5,
   },
-  input: {
-    backgroundColor: COLORS.surface,
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.1)',
-    borderRadius: 12,
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
     height: 48,
-    paddingHorizontal: SPACING.sm,
-    color: COLORS.textPrimary,
-    fontSize: 14,
-    marginBottom: SPACING.xs,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
   },
-  primaryButton: {
-    backgroundColor: COLORS.accent,
+  toggleVisibilityBtn: {
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+  },
+  textInput: {
+    flex: 1,
+    height: '100%',
+    color: colors.textPrimary,
+    fontSize: 14,
+  },
+  primaryBtn: {
+    flexDirection: 'row',
+    backgroundColor: colors.accent,
     height: 50,
-    borderRadius: 25,
+    borderRadius: radius.xl,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: SPACING.md,
-  },
-  primaryButtonText: {
-    color: COLORS.white,
-    fontSize: 14,
-    fontWeight: '800',
-    letterSpacing: 0.5,
+    marginTop: spacing.md,
+    gap: 8,
   },
   switchAuth: {
     alignSelf: 'center',
-    paddingVertical: SPACING.lg,
-  },
-  switchAuthText: {
-    color: COLORS.textSecondary,
-    fontSize: 13,
-  },
-  switchAuthLink: {
-    color: COLORS.accent,
-    fontWeight: '700',
+    paddingVertical: spacing.lg,
   },
 });
+

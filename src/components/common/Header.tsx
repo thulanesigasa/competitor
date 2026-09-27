@@ -1,6 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Platform, StatusBar } from 'react-native';
-import { COLORS, METRICS, SPACING } from '../../constants/theme';
+import { View, StyleSheet, Image, TouchableOpacity, Platform, StatusBar } from 'react-native';
+import { colors } from '../../theme/colors';
+import { spacing } from '../../theme';
+import { Text } from '../Typography';
 
 interface HeaderProps {
   title: string;
@@ -29,7 +31,9 @@ export const Header: React.FC<HeaderProps> = ({
             activeOpacity={0.7}
             accessibilityLabel="Go back"
           >
-            <Text style={styles.backText}>← Back</Text>
+            <Text variant="body" weight="700" color={colors.accentHover} style={styles.backText}>
+              ← Back
+            </Text>
           </TouchableOpacity>
         ) : (
           <Image
@@ -40,11 +44,11 @@ export const Header: React.FC<HeaderProps> = ({
         )}
 
         <View style={styles.titleContainer}>
-          <Text style={styles.title} numberOfLines={1}>
+          <Text variant="body" weight="800" color={colors.textPrimary} style={styles.title} numberOfLines={1}>
             {title}
           </Text>
           {subtitle ? (
-            <Text style={styles.subtitle} numberOfLines={1}>
+            <Text variant="caption" weight="600" color={colors.textMuted} numberOfLines={1}>
               {subtitle}
             </Text>
           ) : null}
@@ -56,7 +60,9 @@ export const Header: React.FC<HeaderProps> = ({
             onPress={onRightAction}
             activeOpacity={0.7}
           >
-            <Text style={styles.rightButtonText}>{rightActionLabel}</Text>
+            <Text variant="caption" weight="700" color={colors.accentHover}>
+              {rightActionLabel}
+            </Text>
           </TouchableOpacity>
         ) : (
           <View style={styles.placeholder} />
@@ -79,51 +85,38 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: SPACING.sm,
+    paddingHorizontal: spacing.sm,
   },
   brandLogo: {
-    width: METRICS.brandLogoHeader,
-    height: METRICS.brandLogoHeader,
+    width: 24,
+    height: 24,
     borderRadius: 0,
   },
   backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 6,
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
+    gap: 2,
   },
   backText: {
-    color: COLORS.accentHover,
-    fontSize: 14,
-    fontWeight: '700',
     letterSpacing: 0.3,
   },
   titleContainer: {
     flex: 1,
     alignItems: 'center',
-    marginHorizontal: SPACING.xs,
+    marginHorizontal: spacing.sm / 2,
   },
   title: {
-    color: COLORS.textPrimary,
-    fontSize: 16,
-    fontWeight: '800',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
-  },
-  subtitle: {
-    color: COLORS.textMuted,
-    fontSize: 10,
-    marginTop: 2,
-    fontWeight: '600',
   },
   rightButton: {
     paddingVertical: 6,
     paddingHorizontal: 8,
   },
-  rightButtonText: {
-    color: COLORS.accentHover,
-    fontSize: 13,
-    fontWeight: '700',
-  },
   placeholder: {
-    width: METRICS.brandLogoHeader,
+    width: 24,
   },
 });
+
