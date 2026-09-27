@@ -71,7 +71,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.surface} />
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <Header
         title="SIGN IN"
         showBack
@@ -89,12 +89,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           <Text style={styles.brandSubtitle}>ENTER THE COMPETITIVE ARENA</Text>
         </View>
 
-        <View style={styles.card}>
+        <View style={styles.formContainer}>
           <Text style={styles.fieldLabel}>GAMER TAG OR EMAIL</Text>
           <TextInput
             style={styles.input}
             placeholder="e.g. KlipKing_01 or email@domain.com"
-            placeholderTextColor={COLORS.textSecondary}
+            placeholderTextColor={COLORS.textMuted}
             autoCapitalize="none"
             value={identifier}
             onChangeText={setIdentifier}
@@ -104,7 +104,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           <TextInput
             style={styles.input}
             placeholder="Enter your 8+ character password"
-            placeholderTextColor={COLORS.textSecondary}
+            placeholderTextColor={COLORS.textMuted}
             secureTextEntry
             value={password}
             onChangeText={setPassword}
@@ -154,27 +154,24 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xs,
   },
   brandTitle: {
-    color: COLORS.white,
+    color: COLORS.textPrimary,
     fontSize: 22,
     fontWeight: '900',
     letterSpacing: 2,
   },
   brandSubtitle: {
-    color: COLORS.accent,
+    color: COLORS.accentHover,
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 1,
     marginTop: 4,
   },
-  card: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 20,
-    padding: SPACING.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+  formContainer: {
+    width: '100%',
+    marginBottom: SPACING.md,
   },
   fieldLabel: {
-    color: COLORS.textMuted,
+    color: COLORS.textSecondary,
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.5,
@@ -182,13 +179,13 @@ const styles = StyleSheet.create({
     marginTop: SPACING.xs,
   },
   input: {
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(15, 23, 42, 0.1)',
     borderRadius: 12,
     height: 48,
     paddingHorizontal: SPACING.sm,
-    color: COLORS.white,
+    color: COLORS.textPrimary,
     fontSize: 14,
     marginBottom: SPACING.xs,
   },
@@ -201,7 +198,7 @@ const styles = StyleSheet.create({
     marginTop: SPACING.md,
   },
   primaryButtonText: {
-    color: COLORS.background,
+    color: COLORS.white,
     fontSize: 14,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -211,7 +208,7 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.lg,
   },
   switchAuthText: {
-    color: COLORS.textMuted,
+    color: COLORS.textSecondary,
     fontSize: 13,
   },
   switchAuthLink: {

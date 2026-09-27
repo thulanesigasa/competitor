@@ -22,8 +22,8 @@ interface TabNavigatorProps {
 
 export const TabNavigator: React.FC<TabNavigatorProps> = ({ onLogout }) => {
   const { width } = useWindowDimensions();
-  const pillWidth = Math.min(width - 32, 330);
-  const horizontalMargin = (width - pillWidth) / 2;
+  const pillWidth = 280;
+  const horizontalMargin = (width - 280) / 2;
 
   return (
     <Tab.Navigator
@@ -36,20 +36,19 @@ export const TabNavigator: React.FC<TabNavigatorProps> = ({ onLogout }) => {
           bottom: Platform.OS === 'ios' ? 28 : 24,
           left: horizontalMargin,
           right: horizontalMargin,
-          width: pillWidth,
-          height: 52,
+          width: 280,
+          height: 50,
           paddingTop: 4,
           paddingBottom: 4,
           borderRadius: 16,
-          backgroundColor: COLORS.surface,
+          backgroundColor: '#FFFFFF',
           borderWidth: 1,
-          borderColor: COLORS.border,
-          borderTopWidth: 1,
-          borderTopColor: COLORS.border,
+          borderColor: 'rgba(15, 23, 42, 0.08)',
+          borderTopWidth: 0,
           elevation: 5,
-          shadowColor: '#000000',
+          shadowColor: '#0F172A',
           shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.25,
+          shadowOpacity: 0.08,
           shadowRadius: 12,
         },
       }}
@@ -117,8 +116,8 @@ const TabPillButton: React.FC<TabPillButtonProps> = ({
         style={[
           styles.tabLabel,
           {
-            color: focused ? COLORS.accent : COLORS.textMuted,
-            fontWeight: focused ? '800' : '600',
+            color: focused ? COLORS.accent : '#64748B',
+            fontWeight: focused ? '700' : '500',
           },
         ]}
       >
@@ -137,19 +136,19 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   tabLabel: {
-    fontSize: 9.5,
-    letterSpacing: 0.8,
+    fontSize: 8.5,
+    letterSpacing: 0.6,
   },
   focusedDot: {
     width: 4,
     height: 4,
     borderRadius: 2,
     backgroundColor: COLORS.accent,
-    marginTop: 3,
+    marginTop: 2,
   },
   dotPlaceholder: {
     width: 4,
     height: 4,
-    marginTop: 3,
+    marginTop: 2,
   },
 });

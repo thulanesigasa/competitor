@@ -67,13 +67,16 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 - **Same-Device Pass & Play:** Interactive tabletop mode for direct head-to-head dueling on one screen.
 - **Local Wi-Fi Match:** Direct peer room creation with 4-digit PIN exchange over local Wi-Fi or mobile hotspots without cloud dependencies.
 
-### 4. 3-Screen Onboarding & Gesture Slider
-- Visual introduction to heritage, zero-data competitive modes, and regional ranking.
+### 4. Full-Bleed 3-Screen Onboarding & Gesture Slider
+- High-impact visual introduction to heritage, zero-data competitive modes, and regional ranking rendered directly on the pure white body canvas without card/div box wrappers.
 - Custom interactive **Swipe to Sign Up** gesture slider with pan tracking.
 - Seamless authentication toggle leading to direct Sign In.
 
-### 5. Multi-Step Southern African Registration
-- **Step 1 (Personal Details):** Name, surname, date of birth, and cellphone with dial codes (+27, +263, +260, +267, +265, +266, +268).
+### 5. Multi-Step Registration with Split Phone Input & Zero Sanitizer
+- **Step 1 (Personal Details):** Name, surname, date of birth, and split cellphone input group:
+  - Left dedicated dropdown button (`+27 ▼`) opening a modal picker of Southern African regional codes.
+  - Automatic leading zero sanitization (`082 123 4567` automatically converted to clean regional format `821234567` for storage without duplicate zeros).
+  - Navigation stack preservation ensuring back button on Step 1 takes the competitor back to onboarding screens without closing the app.
 - **Step 2 (Location & Gamer Tag):** Country selector, dynamically populated regional province selector, town/city input, and unique Gamer Tag.
 - **Step 3 (Security & Credentials):** Email verification and real-time password strength meter requiring 8+ characters with alphanumeric/symbol requirements.
 
@@ -85,13 +88,14 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 
 ## Design System (Strict 60-30-10 & Zero SVG Icons)
 
-- **60% Dominant Background:** Obsidian Midnight (`#0A0E17`) providing an immersive, battery-efficient dark canvas.
-- **30% Panel & Surface:** Deep Slate Navy (`#161F30`) for cards, boards, inputs, and tab navigation.
-- **10% Accent:** Radiant Gold / Ochre (`#E5A93C`) strictly reserved for active states, primary CTAs, and winning moves.
+- **60% Dominant Background:** Crisp Pure White (`#FFFFFF`) providing a clean, high-contrast, modern application canvas.
+- **30% Panel & Surface:** Soft Slate Surface (`#F8FAFC` / `#F1F5F9`) for interactive inputs, board surface, and tab navigation.
+- **10% Accent:** Radiant Gold / Orange (`#E5A93C` / `#D97706`) strictly reserved for active states, primary CTAs, and winning moves.
+- **Contrast Typography:** Deep Dark Slate (`#0F172A`) for crisp, readable typography on the white canvas.
+- **Zero Card/Div Boxes:** Content flows directly on the full-bleed body canvas for onboarding, authentication, and screens.
 - **Zero SVG Icons:** Clean typographic indicators, geometric board coordinates, and native rendering without external SVG icon fonts or icon libraries.
 - **Themed Popup System:** All user dialogs, errors, and victory prompts are rendered via custom `ThemedAlert` modals matching the 60-30-10 palette rather than unstyled system alerts.
 - **Unrounded Brand Logos:** All app brand logo displays maintain sharp, unrounded geometry (`borderRadius: 0`) across all screens and modals.
-- **No Div Clutter & No Pill Badges:** Full-bleed body canvas, seamless surfaces, and zero status badges or chips.
 - **Floating Pill Bottom Navigation:** Rule 20 compliant floating curved bottom navigation bar with dynamically centered geometry, compact height, and focused indicator dots.
 
 ---

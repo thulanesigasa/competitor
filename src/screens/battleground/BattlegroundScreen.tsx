@@ -317,7 +317,7 @@ export const BattlegroundScreen: React.FC = () => {
                 <Text style={styles.vsText}>VS</Text>
               </View>
               <View style={[styles.playerInfo, { alignItems: 'flex-end' }]}>
-                <Text style={styles.playerName}>P2 (IVORY)</Text>
+                <Text style={styles.playerName}>P2 (CHARCOAL)</Text>
                 <Text style={styles.cowCount}>
                   Hand: {gameState.unplacedCows.player2} • Board: {gameState.activeCows.player2}
                 </Text>
@@ -355,17 +355,17 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(15, 23, 42, 0.08)',
   },
   cardTitle: {
-    color: COLORS.white,
+    color: COLORS.textPrimary,
     fontSize: 16,
     fontWeight: '800',
     letterSpacing: 0.5,
     marginBottom: 4,
   },
   cardDesc: {
-    color: COLORS.textMuted,
+    color: COLORS.textSecondary,
     fontSize: 13,
     lineHeight: 20,
   },
@@ -374,23 +374,23 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(15, 23, 42, 0.08)',
   },
   actionTitle: {
-    color: COLORS.white,
+    color: COLORS.textPrimary,
     fontSize: 15,
     fontWeight: '800',
     letterSpacing: 0.5,
     marginBottom: 4,
   },
   actionDesc: {
-    color: COLORS.textMuted,
+    color: COLORS.textSecondary,
     fontSize: 12,
     lineHeight: 18,
     marginBottom: 8,
   },
   actionTag: {
-    color: COLORS.accent,
+    color: COLORS.accentHover,
     fontSize: 13,
     fontWeight: '700',
   },
@@ -399,23 +399,23 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(15, 23, 42, 0.08)',
     alignItems: 'center',
   },
   dialogTitle: {
-    color: COLORS.white,
+    color: COLORS.textPrimary,
     fontSize: 18,
     fontWeight: '800',
     marginBottom: 6,
   },
   dialogDesc: {
-    color: COLORS.textMuted,
+    color: COLORS.textSecondary,
     fontSize: 13,
     textAlign: 'center',
     marginBottom: SPACING.md,
   },
   pinDisplay: {
-    backgroundColor: COLORS.background,
+    backgroundColor: '#FFFFFF',
     paddingVertical: 14,
     paddingHorizontal: 32,
     borderRadius: 16,
@@ -424,13 +424,13 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
   },
   pinText: {
-    color: COLORS.accent,
+    color: COLORS.accentHover,
     fontSize: 32,
     fontWeight: '900',
     letterSpacing: 8,
   },
   pinInput: {
-    backgroundColor: COLORS.background,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: COLORS.accent,
     borderRadius: 14,
@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
     height: 52,
     fontSize: 24,
     textAlign: 'center',
-    color: COLORS.white,
+    color: COLORS.textPrimary,
     letterSpacing: 6,
     marginBottom: SPACING.lg,
   },
@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   primaryButtonText: {
-    color: COLORS.background,
+    color: COLORS.white,
     fontSize: 14,
     fontWeight: '800',
   },
@@ -460,21 +460,21 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: SPACING.sm,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(15, 23, 42, 0.08)',
     marginBottom: SPACING.xs,
     alignItems: 'center',
   },
   statusTurn: {
-    color: COLORS.accent,
+    color: COLORS.accentHover,
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 1,
     marginBottom: 2,
   },
   statusMessage: {
-    color: COLORS.white,
+    color: COLORS.textPrimary,
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: '600',
     textAlign: 'center',
   },
   scoreRow: {
@@ -485,23 +485,23 @@ const styles = StyleSheet.create({
     padding: SPACING.sm,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(15, 23, 42, 0.08)',
   },
   playerInfo: {
     flex: 1,
   },
   playerName: {
-    color: COLORS.white,
+    color: COLORS.textPrimary,
     fontSize: 12,
     fontWeight: '800',
   },
   cowCount: {
-    color: COLORS.textMuted,
+    color: COLORS.textSecondary,
     fontSize: 11,
     marginTop: 2,
   },
   phaseLabel: {
-    color: COLORS.accent,
+    color: COLORS.accentHover,
     fontSize: 10,
     fontWeight: '700',
     marginTop: 2,
@@ -510,7 +510,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   vsText: {
-    color: COLORS.accent,
+    color: COLORS.accentHover,
     fontSize: 12,
     fontWeight: '900',
   },

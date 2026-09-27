@@ -68,9 +68,10 @@ export const Header: React.FC<HeaderProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: 'rgba(15, 23, 42, 0.08)',
+    elevation: 0,
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || 24 : 12,
   },
   content: {
@@ -90,9 +91,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   backText: {
-    color: COLORS.accent,
+    color: COLORS.accentHover,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
     letterSpacing: 0.3,
   },
   titleContainer: {
@@ -101,9 +102,9 @@ const styles = StyleSheet.create({
     marginHorizontal: SPACING.xs,
   },
   title: {
-    color: COLORS.white,
+    color: COLORS.textPrimary,
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
@@ -111,16 +112,16 @@ const styles = StyleSheet.create({
     color: COLORS.textMuted,
     fontSize: 10,
     marginTop: 2,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   rightButton: {
     paddingVertical: 6,
     paddingHorizontal: 8,
   },
   rightButtonText: {
-    color: COLORS.accent,
+    color: COLORS.accentHover,
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   placeholder: {
     width: METRICS.brandLogoHeader,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
   ScrollView,
   SafeAreaView,
   StatusBar,
+  Modal,
+  BackHandler,
 } from 'react-native';
 import { COLORS, METRICS, SPACING } from '../../constants/theme';
 import { SOUTHERN_AFRICAN_COUNTRIES } from '../../constants/regions';
@@ -23,11 +25,13 @@ import { saveUserProfile } from '../../store/gameStore';
 interface SignUpScreenProps {
   onSignUpSuccess: (user: UserProfile) => void;
   onNavigateToLogin: () => void;
+  onNavigateBack?: () => void;
 }
 
 export const SignUpScreen: React.FC<SignUpScreenProps> = ({
   onSignUpSuccess,
   onNavigateToLogin,
+  onNavigateBack,
 }) => {
   const { showAlert } = useThemedAlert();
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
@@ -38,6 +42,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
   const [dob, setDob] = useState('');
   const [dialCode, setDialCode] = useState('+27');
   const [cellphone, setCellphone] = useState('');
+  const [showCountryPicker, setShowCountryPicker] = useState(false);
 
   // Step 2: Location & Gamer Tag
   const [selectedCountryName, setSelectedCountryName] = useState('South Africa');
@@ -51,11 +56,33 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
+  // Hardware Back Handler: return to previous step, or back to onboarding if on step 1
+  useEffect(() => {
+    const onBackPress = () => {
+      if (showCountryPicker) {
+        setShowCountryPicker(false);
+        return true;
+      }
+      if (currentStep > 1) {
+        setCurrentStep((prev) => ((prev - 1) as any));
+        return true;
+      }
+      if (onNavigateBack) {
+        onNavigateBack();
+        return true;
+      }
+      return false;
+    };
+
+    const backSub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => backSub.remove();
+  }, [currentStep, onNavigateBack, showCountryPicker]);
+
   const currentCountry =
     SOUTHERN_AFRICAN_COUNTRIES.find((c) => c.name === selectedCountryName) ||
     SOUTHERN_AFRICAN_COUNTRIES[0];
 
-  // Step 1 Validation
+  // Step 1 Validation with automatic zero sanitization
   const handleNextStep1 = () => {
     if (!name.trim()) {
       showAlert({ title: 'Required Field', message: 'Please enter your first name.' });
@@ -69,8 +96,10 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
       showAlert({ title: 'Required Field', message: 'Please enter your date of birth (YYYY-MM-DD).' });
       return;
     }
-    if (!cellphone.trim() || cellphone.trim().length < 7) {
-      showAlert({ title: 'Invalid Number', message: 'Please enter a valid cellphone number.' });
+    const cleanDigits = cellphone.replace(/\D/g, '');
+    const sanitizedNumber = cleanDigits.replace(/^0+/, '');
+    if (!sanitizedNumber || sanitizedNumber.length < 7) {
+      showAlert({ title: 'Invalid Number', message: 'Please enter a valid cellphone number (e.g. 082 123 4567 or 82 123 4567).' });
       return;
     }
     setCurrentStep(2);
@@ -97,7 +126,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
     setCurrentStep(3);
   };
 
-  // Step 3 Validation & Final Submission
+  // Step 3 Validation & Final Submission with zero sanitizer
   const handleFinalSubmit = async () => {
     if (!email.trim() || !email.includes('@')) {
       showAlert({ title: 'Invalid Email', message: 'Please enter a valid email address.' });
@@ -122,12 +151,16 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
       return;
     }
 
+    // Automatically strip leading zero(s) so backend/database stores clean regional number
+    const cleanDigits = cellphone.replace(/\D/g, '');
+    const sanitizedPhone = cleanDigits.replace(/^0+/, '');
+
     const newUser: UserProfile = {
       id: `user_${Date.now()}`,
       name: name.trim(),
       surname: surname.trim(),
       dob: dob.trim(),
-      cellphone: `${dialCode} ${cellphone.trim()}`,
+      cellphone: `${dialCode} ${sanitizedPhone}`,
       country: selectedCountryName,
       countryCode: currentCountry.code,
       province: selectedProvince,
@@ -143,12 +176,20 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.surface} />
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <Header
         title="PLAYER REGISTRATION"
         subtitle={`STEP ${currentStep} OF 3`}
-        showBack={currentStep > 1}
-        onBack={() => setCurrentStep((prev) => (prev > 1 ? ((prev - 1) as any) : 1))}
+        showBack={true}
+        onBack={() => {
+          if (currentStep > 1) {
+            setCurrentStep((prev) => ((prev - 1) as any));
+          } else if (onNavigateBack) {
+            onNavigateBack();
+          } else {
+            onNavigateToLogin();
+          }
+        }}
       />
 
       <ScrollView
@@ -173,6 +214,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                     style={[
                       styles.stepNumber,
                       (isCurrent || isCompleted) && styles.stepNumberActive,
+                      isCompleted && styles.stepNumberCompleted,
                     ]}
                   >
                     {isCompleted ? '✓' : `0${step}`}
@@ -203,7 +245,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
             <TextInput
               style={styles.input}
               placeholder="e.g. Sipho"
-              placeholderTextColor={COLORS.textSecondary}
+              placeholderTextColor={COLORS.textMuted}
               value={name}
               onChangeText={setName}
             />
@@ -212,7 +254,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
             <TextInput
               style={styles.input}
               placeholder="e.g. Dlamini"
-              placeholderTextColor={COLORS.textSecondary}
+              placeholderTextColor={COLORS.textMuted}
               value={surname}
               onChangeText={setSurname}
             />
@@ -221,49 +263,33 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
             <TextInput
               style={styles.input}
               placeholder="e.g. 2002-08-15"
-              placeholderTextColor={COLORS.textSecondary}
+              placeholderTextColor={COLORS.textMuted}
               value={dob}
               onChangeText={setDob}
             />
 
+            {/* Split Country Code Dropdown + Cellphone Input */}
             <Text style={styles.fieldLabel}>CELLPHONE NUMBER</Text>
-            <View style={styles.phoneRow}>
-              {/* Dial Code Selector Buttons */}
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.dialCodeScroll}
+            <View style={styles.phoneSplitRow}>
+              <TouchableOpacity
+                style={styles.countryPickerButton}
+                activeOpacity={0.7}
+                onPress={() => setShowCountryPicker(true)}
               >
-                {SOUTHERN_AFRICAN_COUNTRIES.map((c) => (
-                  <TouchableOpacity
-                    key={c.code}
-                    onPress={() => setDialCode(c.dialCode)}
-                    style={[
-                      styles.dialCodeOption,
-                      dialCode === c.dialCode && styles.dialCodeOptionActive,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.dialCodeText,
-                        dialCode === c.dialCode && styles.dialCodeTextActive,
-                      ]}
-                    >
-                      {c.code} {c.dialCode}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+                <Text style={styles.countryPickerButtonText}>{dialCode} ▼</Text>
+              </TouchableOpacity>
+              <TextInput
+                style={styles.phoneInput}
+                placeholder="e.g. 082 123 4567 or 82 123 4567"
+                placeholderTextColor={COLORS.textMuted}
+                keyboardType="phone-pad"
+                value={cellphone}
+                onChangeText={setCellphone}
+              />
             </View>
-
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. 821234567"
-              placeholderTextColor={COLORS.textSecondary}
-              keyboardType="phone-pad"
-              value={cellphone}
-              onChangeText={setCellphone}
-            />
+            <Text style={styles.phoneHelperText}>
+              Leading zero will be automatically formatted for database storage.
+            </Text>
 
             <TouchableOpacity
               style={styles.primaryButton}
@@ -294,6 +320,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                   key={c.code}
                   onPress={() => {
                     setSelectedCountryName(c.name);
+                    setDialCode(c.dialCode);
                     setSelectedProvince(c.provinces[0]?.name || '');
                   }}
                   style={[
@@ -307,7 +334,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                       selectedCountryName === c.name && styles.chipTextActive,
                     ]}
                   >
-                    {c.name}
+                    {c.name} ({c.dialCode})
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -344,7 +371,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
             <TextInput
               style={styles.input}
               placeholder="e.g. Soweto, Mutare, Gaborone..."
-              placeholderTextColor={COLORS.textSecondary}
+              placeholderTextColor={COLORS.textMuted}
               value={town}
               onChangeText={setTown}
             />
@@ -353,7 +380,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
             <TextInput
               style={styles.input}
               placeholder="e.g. KlipKing_01"
-              placeholderTextColor={COLORS.textSecondary}
+              placeholderTextColor={COLORS.textMuted}
               autoCapitalize="none"
               value={gamerTag}
               onChangeText={setGamerTag}
@@ -384,7 +411,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
             <TextInput
               style={styles.input}
               placeholder="gamer@morabaraba.africa"
-              placeholderTextColor={COLORS.textSecondary}
+              placeholderTextColor={COLORS.textMuted}
               keyboardType="email-address"
               autoCapitalize="none"
               value={email}
@@ -395,7 +422,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
             <TextInput
               style={styles.input}
               placeholder="Re-enter your email"
-              placeholderTextColor={COLORS.textSecondary}
+              placeholderTextColor={COLORS.textMuted}
               keyboardType="email-address"
               autoCapitalize="none"
               value={confirmEmail}
@@ -406,7 +433,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
             <TextInput
               style={styles.input}
               placeholder="Minimum 8 letters & numbers"
-              placeholderTextColor={COLORS.textSecondary}
+              placeholderTextColor={COLORS.textMuted}
               secureTextEntry
               value={password}
               onChangeText={setPassword}
@@ -417,7 +444,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
             <TextInput
               style={styles.input}
               placeholder="Re-enter your password"
-              placeholderTextColor={COLORS.textSecondary}
+              placeholderTextColor={COLORS.textMuted}
               secureTextEntry
               value={confirmPassword}
               onChangeText={setConfirmPassword}
@@ -444,6 +471,73 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
           </Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Split Country Code Picker Modal */}
+      <Modal
+        visible={showCountryPicker}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowCountryPicker(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowCountryPicker(false)}
+        >
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>SELECT COUNTRY CODE</Text>
+            <Text style={styles.modalSubtitle}>
+              Select your Southern African regional dialing code.
+            </Text>
+            <ScrollView style={styles.countryModalScroll}>
+              {SOUTHERN_AFRICAN_COUNTRIES.map((c) => {
+                const isSelected = dialCode === c.dialCode;
+                return (
+                  <TouchableOpacity
+                    key={c.code}
+                    style={[
+                      styles.countryModalItem,
+                      isSelected && styles.countryModalItemActive,
+                    ]}
+                    onPress={() => {
+                      setDialCode(c.dialCode);
+                      setSelectedCountryName(c.name);
+                      setSelectedProvince(c.provinces[0]?.name || '');
+                      setShowCountryPicker(false);
+                    }}
+                  >
+                    <View>
+                      <Text
+                        style={[
+                          styles.countryModalName,
+                          isSelected && styles.countryModalNameActive,
+                        ]}
+                      >
+                        {c.name}
+                      </Text>
+                      <Text style={styles.countryModalCode}>Region: {c.code}</Text>
+                    </View>
+                    <Text
+                      style={[
+                        styles.countryModalDial,
+                        isSelected && styles.countryModalDialActive,
+                      ]}
+                    >
+                      {c.dialCode}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+            <TouchableOpacity
+              style={styles.modalCloseBtn}
+              onPress={() => setShowCountryPicker(false)}
+            >
+              <Text style={styles.modalCloseBtnText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -459,11 +553,7 @@ const styles = StyleSheet.create({
   stepHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: COLORS.surface,
-    padding: SPACING.md,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    paddingVertical: SPACING.xs,
     marginBottom: SPACING.md,
   },
   stepTrackItem: {
@@ -474,16 +564,16 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: COLORS.surfaceLight,
+    backgroundColor: COLORS.surface,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 4,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(15, 23, 42, 0.1)',
   },
   stepBadgeCurrent: {
     borderColor: COLORS.accent,
-    backgroundColor: COLORS.surface,
+    backgroundColor: 'rgba(229, 169, 60, 0.12)',
   },
   stepBadgeCompleted: {
     backgroundColor: COLORS.accent,
@@ -495,6 +585,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   stepNumberActive: {
+    color: COLORS.accentHover,
+  },
+  stepNumberCompleted: {
     color: COLORS.white,
   },
   stepLabel: {
@@ -503,31 +596,27 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   stepLabelActive: {
-    color: COLORS.accent,
+    color: COLORS.textPrimary,
     fontWeight: '700',
   },
   formSection: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 20,
-    padding: SPACING.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    marginBottom: SPACING.lg,
   },
   sectionTitle: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 0.8,
+    color: COLORS.textPrimary,
+    fontSize: 18,
+    fontWeight: '900',
+    letterSpacing: 0.5,
     marginBottom: 4,
   },
   sectionSubtitle: {
-    color: COLORS.textMuted,
-    fontSize: 12,
+    color: COLORS.textSecondary,
+    fontSize: 13,
     lineHeight: 18,
     marginBottom: SPACING.md,
   },
   fieldLabel: {
-    color: COLORS.textMuted,
+    color: COLORS.textSecondary,
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.5,
@@ -535,43 +624,53 @@ const styles = StyleSheet.create({
     marginTop: SPACING.xs,
   },
   input: {
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(15, 23, 42, 0.1)',
     borderRadius: 12,
     height: 48,
     paddingHorizontal: SPACING.sm,
-    color: COLORS.white,
+    color: COLORS.textPrimary,
     fontSize: 14,
     marginBottom: SPACING.xs,
   },
-  phoneRow: {
-    marginBottom: 6,
-  },
-  dialCodeScroll: {
-    flexGrow: 0,
+  phoneSplitRow: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
     marginBottom: 4,
   },
-  dialCodeOption: {
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    backgroundColor: COLORS.background,
+  countryPickerButton: {
+    height: 48,
+    paddingHorizontal: 14,
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    marginRight: 6,
+    borderColor: 'rgba(15, 23, 42, 0.1)',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  dialCodeOptionActive: {
-    borderColor: COLORS.accent,
-    backgroundColor: COLORS.surfaceLight,
+  countryPickerButtonText: {
+    color: COLORS.textPrimary,
+    fontSize: 14,
+    fontWeight: '700',
   },
-  dialCodeText: {
+  phoneInput: {
+    flex: 1,
+    height: 48,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: 'rgba(15, 23, 42, 0.1)',
+    borderRadius: 12,
+    paddingHorizontal: SPACING.sm,
+    color: COLORS.textPrimary,
+    fontSize: 14,
+  },
+  phoneHelperText: {
     color: COLORS.textMuted,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  dialCodeTextActive: {
-    color: COLORS.accent,
+    fontSize: 11,
+    marginTop: 2,
+    marginBottom: SPACING.sm,
   },
   chipsScroll: {
     flexGrow: 0,
@@ -581,22 +680,22 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 10,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(15, 23, 42, 0.1)',
     marginRight: 8,
   },
   selectorChipActive: {
     borderColor: COLORS.accent,
-    backgroundColor: COLORS.surfaceLight,
+    backgroundColor: 'rgba(229, 169, 60, 0.12)',
   },
   chipText: {
-    color: COLORS.textMuted,
+    color: COLORS.textSecondary,
     fontSize: 12,
     fontWeight: '600',
   },
   chipTextActive: {
-    color: COLORS.accent,
+    color: COLORS.accentHover,
     fontWeight: '700',
   },
   hintText: {
@@ -614,7 +713,7 @@ const styles = StyleSheet.create({
     marginTop: SPACING.md,
   },
   primaryButtonText: {
-    color: COLORS.background,
+    color: COLORS.white,
     fontSize: 14,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -624,11 +723,100 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.md,
   },
   switchAuthText: {
-    color: COLORS.textMuted,
+    color: COLORS.textSecondary,
     fontSize: 13,
   },
   switchAuthLink: {
     color: COLORS.accent,
+    fontWeight: '700',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: SPACING.md,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 340,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: SPACING.md,
+    borderWidth: 1,
+    borderColor: 'rgba(15, 23, 42, 0.1)',
+    maxHeight: '75%',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  modalTitle: {
+    color: COLORS.textPrimary,
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  modalSubtitle: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
+    textAlign: 'center',
+    marginBottom: SPACING.sm,
+  },
+  countryModalScroll: {
+    maxHeight: 280,
+  },
+  countryModalItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(15, 23, 42, 0.06)',
+  },
+  countryModalItemActive: {
+    backgroundColor: 'rgba(229, 169, 60, 0.1)',
+  },
+  countryModalName: {
+    color: COLORS.textPrimary,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  countryModalNameActive: {
+    color: COLORS.accentHover,
+    fontWeight: '700',
+  },
+  countryModalCode: {
+    color: COLORS.textMuted,
+    fontSize: 11,
+  },
+  countryModalDial: {
+    color: COLORS.textPrimary,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  countryModalDialActive: {
+    color: COLORS.accentHover,
+    fontWeight: '800',
+  },
+  modalCloseBtn: {
+    backgroundColor: COLORS.surface,
+    marginTop: SPACING.sm,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(15, 23, 42, 0.1)',
+  },
+  modalCloseBtnText: {
+    color: COLORS.textPrimary,
+    fontSize: 13,
     fontWeight: '700',
   },
 });

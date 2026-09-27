@@ -131,20 +131,20 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     maxWidth: 320,
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: SPACING.lg,
     borderWidth: 1,
-    borderColor: COLORS.borderActive,
+    borderColor: 'rgba(15, 23, 42, 0.1)',
     alignItems: 'center',
-    shadowColor: '#000000',
+    shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
+    shadowOpacity: 0.18,
     shadowRadius: 16,
     elevation: 8,
   },
   title: {
-    color: COLORS.white,
+    color: COLORS.textPrimary,
     fontSize: 16,
     fontWeight: '800',
     letterSpacing: 1,
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   message: {
-    color: COLORS.textMuted,
+    color: COLORS.textSecondary,
     fontSize: 13,
     lineHeight: 20,
     textAlign: 'center',
@@ -173,9 +173,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.accent,
   },
   buttonSecondary: {
-    backgroundColor: COLORS.surfaceLight,
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(15, 23, 42, 0.1)',
   },
   buttonText: {
     fontSize: 13,
@@ -183,10 +183,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   buttonTextPrimary: {
-    color: COLORS.background,
+    color: COLORS.white,
   },
   buttonTextCancel: {
-    color: COLORS.textMuted,
+    color: COLORS.textSecondary,
   },
   buttonTextDestructive: {
     color: '#EF4444',

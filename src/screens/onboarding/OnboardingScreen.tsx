@@ -74,7 +74,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
 
       {/* Top Brand Bar */}
       <View style={styles.topBar}>
@@ -86,7 +86,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
         <Text style={styles.brandTitle}>MORABARABA</Text>
       </View>
 
-      {/* Carousel */}
+      {/* Full-Bleed Carousel */}
       <FlatList
         ref={flatListRef}
         data={ONBOARDING_SLIDES}
@@ -98,14 +98,14 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
         viewabilityConfig={{ viewAreaCoveragePercentThreshold: 50 }}
         renderItem={({ item }) => (
           <View style={[styles.slideContainer, { width }]}>
-            <View style={styles.slideCard}>
-              <View style={styles.imageContainer}>
-                <Image
-                  source={item.image}
-                  style={styles.slideImage}
-                  resizeMode="cover"
-                />
-              </View>
+            <View style={styles.imageContainer}>
+              <Image
+                source={item.image}
+                style={styles.slideImage}
+                resizeMode="cover"
+              />
+            </View>
+            <View style={styles.textContent}>
               <Text style={styles.stepBadge}>{item.step}</Text>
               <Text style={styles.slideTitle}>{item.title}</Text>
               <Text style={styles.slideHighlight}>{item.highlight}</Text>
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     borderRadius: 0,
   },
   brandTitle: {
-    color: COLORS.white,
+    color: COLORS.textPrimary,
     fontSize: 16,
     fontWeight: '800',
     letterSpacing: 1.5,
@@ -209,53 +209,49 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: SPACING.md,
   },
-  slideCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 24,
-    padding: SPACING.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
   imageContainer: {
     width: '100%',
-    height: 180,
-    backgroundColor: COLORS.background,
-    borderRadius: 16,
+    height: 230,
+    backgroundColor: COLORS.surface,
+    borderRadius: 20,
     overflow: 'hidden',
-    marginBottom: SPACING.sm,
+    marginBottom: SPACING.md,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(15, 23, 42, 0.08)',
   },
   slideImage: {
     width: '100%',
     height: '100%',
   },
+  textContent: {
+    paddingHorizontal: 4,
+  },
   stepBadge: {
     color: COLORS.accent,
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1.2,
-    marginBottom: 4,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+    marginBottom: 6,
   },
   slideTitle: {
-    color: COLORS.white,
-    fontSize: 20,
+    color: COLORS.textPrimary,
+    fontSize: 22,
     fontWeight: '900',
     letterSpacing: 0.5,
-    lineHeight: 26,
-    marginBottom: 2,
+    lineHeight: 28,
+    marginBottom: 4,
   },
   slideHighlight: {
-    color: COLORS.accent,
-    fontSize: 12,
-    fontWeight: '600',
+    color: COLORS.accentHover,
+    fontSize: 13,
+    fontWeight: '700',
     letterSpacing: 0.5,
     marginBottom: SPACING.xs,
   },
   slideDescription: {
-    color: COLORS.textMuted,
-    fontSize: 13,
-    lineHeight: 20,
+    color: COLORS.textSecondary,
+    fontSize: 14,
+    lineHeight: 22,
   },
   bottomArea: {
     paddingBottom: SPACING.lg,
@@ -277,7 +273,7 @@ const styles = StyleSheet.create({
   },
   inactiveDot: {
     width: 8,
-    backgroundColor: COLORS.surfaceLight,
+    backgroundColor: 'rgba(15, 23, 42, 0.12)',
   },
   actionBlock: {
     gap: SPACING.xs,
@@ -291,7 +287,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   nextButtonText: {
-    color: COLORS.background,
+    color: COLORS.white,
     fontSize: 15,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -303,14 +299,14 @@ const styles = StyleSheet.create({
   skipText: {
     color: COLORS.textMuted,
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   loginLink: {
     alignSelf: 'center',
     paddingVertical: SPACING.xs,
   },
   loginPrompt: {
-    color: COLORS.textMuted,
+    color: COLORS.textSecondary,
     fontSize: 13,
   },
   loginAction: {

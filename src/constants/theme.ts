@@ -1,28 +1,31 @@
 // Strict 60-30-10 Design System & Rule 15 Spacing
 export const COLORS = {
-  // 60% Dominant Background
-  background: '#0A0E17',
+  // 60% Dominant Background (Crisp White Canvas)
+  background: '#FFFFFF',
   
   // 30% Surface / Panel / Board
-  surface: '#161F30',
-  surfaceLight: '#1E2C44',
-  border: 'rgba(255, 255, 255, 0.08)',
-  borderActive: 'rgba(229, 169, 60, 0.4)',
+  surface: '#F8FAFC',
+  surfaceLight: '#F1F5F9',
+  border: 'rgba(15, 23, 42, 0.08)',
+  borderActive: '#E5A93C',
 
-  // 10% Accent (Radiant Gold / Ochre)
+  // 10% Accent (Radiant Gold / Orange)
   accent: '#E5A93C',
-  accentHover: '#F5B84C',
-  accentSubtle: 'rgba(229, 169, 60, 0.15)',
+  accentHover: '#D97706',
+  accentSubtle: 'rgba(229, 169, 60, 0.12)',
 
   // Contrast & Typography
   white: '#FFFFFF',
-  textMuted: '#8B9BB4',
-  textSecondary: '#64748B',
+  textPrimary: '#0F172A',
+  textSecondary: '#475569',
+  textMuted: '#64748B',
 
-  // Pieces
+  // Board & Pieces
+  boardBackground: '#F8FAFC',
+  boardLines: '#94A3B8',
   player1: '#E5A93C',      // Gold / Ochre Cows
-  player2: '#FFFFFF',      // Pure Ivory White Cows
-  vertexEmpty: '#24324D',  // Board intersection ring
+  player2: '#0F172A',      // Dark Slate / Charcoal Cows (High contrast on white board)
+  vertexEmpty: '#E2E8F0',  // Empty board intersection ring
 } as const;
 
 export const SPACING = {

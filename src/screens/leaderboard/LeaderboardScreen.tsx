@@ -136,20 +136,20 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(15, 23, 42, 0.08)',
     marginRight: 8,
   },
   filterChipActive: {
-    backgroundColor: COLORS.surfaceLight,
+    backgroundColor: 'rgba(229, 169, 60, 0.12)',
     borderColor: COLORS.accent,
   },
   filterText: {
-    color: COLORS.textMuted,
+    color: COLORS.textSecondary,
     fontSize: 12,
     fontWeight: '600',
   },
   filterTextActive: {
-    color: COLORS.accent,
+    color: COLORS.accentHover,
     fontWeight: '800',
   },
   rankingsList: {
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: SPACING.sm,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(15, 23, 42, 0.08)',
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   rankNumberTop: {
-    color: COLORS.background,
+    color: COLORS.white,
   },
   playerDetails: {
     flex: 1,
@@ -199,18 +199,18 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   gamerTag: {
-    color: COLORS.white,
+    color: COLORS.textPrimary,
     fontSize: 14,
     fontWeight: '800',
     letterSpacing: 0.3,
   },
   countryCode: {
-    color: COLORS.accent,
+    color: COLORS.accentHover,
     fontSize: 11,
     fontWeight: '700',
   },
   locationText: {
-    color: COLORS.textMuted,
+    color: COLORS.textSecondary,
     fontSize: 11,
     marginTop: 2,
   },
@@ -218,12 +218,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   eloScore: {
-    color: COLORS.accent,
+    color: COLORS.accentHover,
     fontSize: 14,
     fontWeight: '900',
   },
   winRate: {
-    color: COLORS.textMuted,
+    color: COLORS.textSecondary,
     fontSize: 11,
     marginTop: 2,
   },
