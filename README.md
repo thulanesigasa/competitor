@@ -1,0 +1,202 @@
+# Morabaraba
+
+[![React Native](https://img.shields.io/badge/React_Native-0.86.3-61DAFB?logo=react&logoColor=black)](https://reactnative.dev/)
+[![Expo](https://img.shields.io/badge/Expo_SDK-~57.0.24-000020?logo=expo&logoColor=white)](https://expo.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9.2-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Design System](https://img.shields.io/badge/Design_System-60--30--10_Rule-E5A93C)](https://shields.io/)
+[![Market](https://img.shields.io/badge/Target_Market-Southern_Africa-10B981)](https://shields.io/)
+[![CI/CD](https://img.shields.io/badge/GitHub_Actions-Direct_Native_APK-2088FF?logo=githubactions&logoColor=white)](https://github.com/thulanesigasa/competitor/actions)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+Morabaraba is a premier competitive two-player mobile strategy game built with React Native, Expo (managed workflow), and TypeScript. Steeped in centuries of authentic Southern African tactical heritage (known as Morabaraba or Mbalavala), the game is completely safe from IP/copyright infringements while delivering high-stakes tactical gameplay across South Africa, Zimbabwe, Zambia, Botswana, Malawi, Lesotho, and Eswatini.
+
+---
+
+## Architecture & System Overview
+
+```
+                                +-----------------------------------+
+                                |            Morabaraba             |
+                                +-----------------------------------+
+                                                  |
+                  +-------------------------------+-------------------------------+
+                  |                                                               |
+    +---------------------------+                                   +---------------------------+
+    |   Onboarding & Identity   |                                   |     Core Game Engine      |
+    +---------------------------+                                   +---------------------------+
+    | * 3-Screen Carousel       |                                   | * 24-Vertex Graph         |
+    | * Swipe-to-Sign-Up Slider |                                   | * 20 Collinear Mills      |
+    | * 3-Step Wizard           |                                   | * Phase 1: Placing        |
+    | * 8+ Char Password Meter  |                                   | * Phase 2: Moving         |
+    | * Southern African Regs   |                                   | * Phase 3: Flying (3 cows)|
+    +---------------------------+                                   +---------------------------+
+                  |                                                               |
+                  +-------------------------------+-------------------------------+
+                                                  |
+                                    +---------------------------+
+                                    |     Main Navigation       |
+                                    +---------------------------+
+                                    | * Battleground (2P Local) |
+                                    | * Offline Arena (vs CPU)  |
+                                    | * Regional Leaderboard    |
+                                    | * Gamer Tag Profile       |
+                                    +---------------------------+
+```
+
+---
+
+## Key Features
+
+### 1. Authentic Morabaraba Game Engine
+- **Mathematical Board Modeling:** 24 vertices spanning three concentric squares connected by orthogonal and diagonal lines.
+- **20 Mill Triplets:** Full automated detection of 3-in-a-row mills (*umphahlo*).
+- **Three Progressive Phases:**
+  - **Placing Phase:** 12 cows per player placed sequentially; forming a mill unlocks immediate cow shooting.
+  - **Moving Phase:** Sliding cows along connected lines to adjacent open vertices.
+  - **Flying Phase (*Ku-fofa*):** When a competitor is reduced to 3 cows, their cows gain the ability to fly to any empty board intersection.
+- **Victory Evaluation:** A player wins when the opponent has fewer than 3 cows in the moving phase or has zero legal moves available.
+
+### 2. Intelligent Offline AI Arena (Solo Mode)
+- **Heuristic & Minimax Engine:**
+  - **Novice (*Dumela*):** Balanced learning AI that recognizes basic mills with casual play.
+  - **Warrior (*Inkosi*):** 2-ply search minimax evaluating material advantage, mill potential, and blocking traps.
+  - **Grandmaster (*Isangoma*):** Deep alpha-beta pruning minimax with tactical board dominance evaluation.
+- **Zero Internet Requirement:** Completely operational offline without consuming cellular data.
+
+### 3. Zero-Data Local Battleground (2-Player Duel)
+- **Same-Device Pass & Play:** Interactive tabletop mode for direct head-to-head dueling on one screen.
+- **Local Wi-Fi Match:** Direct peer room creation with 4-digit PIN exchange over local Wi-Fi or mobile hotspots without cloud dependencies.
+
+### 4. 3-Screen Onboarding & Gesture Slider
+- Visual introduction to heritage, zero-data competitive modes, and regional ranking.
+- Custom interactive **Swipe to Sign Up** gesture slider with pan tracking.
+- Seamless authentication toggle leading to direct Sign In.
+
+### 5. Multi-Step Southern African Registration
+- **Step 1 (Personal Details):** Name, surname, date of birth, and cellphone with dial codes (+27, +263, +260, +267, +265, +266, +268).
+- **Step 2 (Location & Gamer Tag):** Country selector, dynamically populated regional province selector, town/city input, and unique Gamer Tag.
+- **Step 3 (Security & Credentials):** Email verification and real-time password strength meter requiring 8+ characters with alphanumeric/symbol requirements.
+
+### 6. Regional Leaderboard & Gamer Profile
+- Southern African regional ranking filterable across all 7 nations.
+- Gamer Tag identity card tracking matches played, victories, win rate percentage, mills formed, cows captured, and Elo rating.
+
+---
+
+## Design System (Strict 60-30-10 & Zero SVG Icons)
+
+- **60% Dominant Background:** Obsidian Midnight (`#0A0E17`) providing an immersive, battery-efficient dark canvas.
+- **30% Panel & Surface:** Deep Slate Navy (`#161F30`) for cards, boards, inputs, and tab navigation.
+- **10% Accent:** Radiant Gold / Ochre (`#E5A93C`) strictly reserved for active states, primary CTAs, and winning moves.
+- **Zero SVG Icons:** Clean typographic indicators, geometric board coordinates, and native rendering without external SVG icon fonts or icon libraries.
+- **No Div Clutter & No Pill Badges:** Full-bleed body canvas, seamless surfaces, and zero status badges or chips.
+- **Floating Pill Bottom Navigation:** Rule 20 compliant floating curved bottom navigation bar with dynamically centered geometry, compact height, and focused indicator dots.
+
+---
+
+## Directory Structure
+
+```text
+competitor/
+|-- .github/
+|   `-- workflows/
+|       |-- build-native-apk.yml       # Direct GitHub Actions runner APK compilation
+|       `-- eas-ota-update.yml         # Dual-channel EAS OTA workflow
+|-- assets/
+|   |-- android-icon-foreground.png    # 512x512 canvas with 96px centered glyph (Rule 15/19)
+|   |-- favicon.png                    # Web favicon
+|   |-- icon.png                       # 1024x1024 canvas with 800px brand emblem
+|   `-- splash.png                     # Cohesive dark splash screen
+|-- scripts/
+|   `-- generate_assets.py             # Rule 15/19 asset calibration generator
+|-- src/
+|   |-- components/
+|   |   |-- common/
+|   |   |   |-- Header.tsx             # Standard header with 24x24 brand logo
+|   |   |   |-- PasswordStrengthMeter.tsx # 4-segment 8+ char password validator
+|   |   |   |-- SwipeToSignUp.tsx      # Custom pan-responder swipe slider
+|   |   |   `-- UpdateModal.tsx        # Rule 21 dual-action OTA update modal
+|   |   `-- game/
+|   |       `-- MorabarabaBoard.tsx    # 24-vertex board layout and interactive pieces
+|   |-- constants/
+|   |   |-- regions.ts                 # Southern African countries, provinces, and towns
+|   |   `-- theme.ts                   # Strict 60-30-10 palette and layout metrics
+|   |-- engine/
+|   |   |-- ai.ts                      # Heuristic & Minimax AI across 3 difficulties
+|   |   `-- morabaraba.ts              # Mathematical board model and rule validator
+|   |-- navigation/
+|   |   |-- RootNavigator.tsx          # Auth stack and main app coordinator
+|   |   `-- TabNavigator.tsx           # Rule 20 floating pill bottom navigation
+|   |-- screens/
+|   |   |-- auth/
+|   |   |   |-- LoginScreen.tsx        # Gamer Tag/Email credential sign in
+|   |   |   `-- SignUpScreen.tsx       # 3-step progressive Southern African registration
+|   |   |-- battleground/
+|   |   |   `-- BattlegroundScreen.tsx # 2-Player Pass & Play and Wi-Fi match setup
+|   |   |-- leaderboard/
+|   |   |   `-- LeaderboardScreen.tsx  # Regional Southern African rankings
+|   |   |-- offline/
+|   |   |   `-- OfflineScreen.tsx      # Solo 1P vs CPU AI arena
+|   |   |-- onboarding/
+|   |   |   `-- OnboardingScreen.tsx   # 3-slide introduction with swipe trigger
+|   |   `-- profile/
+|   |       `-- ProfileScreen.tsx      # Gamer Tag career stats and settings
+|   |-- store/
+|   |   `-- gameStore.ts               # Local persistence via AsyncStorage
+|   `-- types/
+|       |-- auth.ts                    # User profile and registration models
+|       `-- game.ts                    # Game state, phase, player, and board types
+|-- .gitignore                         # Excludes .agents, node_modules, android/
+|-- .npmrc                             # legacy-peer-deps=true (Rule 21)
+|-- app.json                           # Locked runtimeVersion 1.0.0, dynamic versionCode
+|-- App.tsx                            # Root application entry with SafeAreaProvider
+|-- index.ts                           # Expo root registration
+|-- package.json                       # Dependencies and pinned port 8082 dev scripts
+|-- tsconfig.json                      # Extends expo/tsconfig.base.json (Rule 21)
+`-- README.md                          # Architecture, shields.io badges, and specifications
+```
+
+---
+
+## Development Setup
+
+### Prerequisites
+- Node.js 22 LTS or newer
+- npm 11 or newer
+
+### Installation
+```bash
+# Clone the repository
+git clone https://github.com/thulanesigasa/competitor.git
+cd competitor
+
+# Install dependencies using pinned peer dependencies flag
+npm install --legacy-peer-deps --prefer-offline --no-audit
+```
+
+### Running Locally
+```bash
+# Start with concurrently on pinned port 8082 (Rule 15)
+npm run dev
+
+# Or start directly
+npm start
+```
+
+---
+
+## CI/CD & Native Compilation (Rule 21)
+
+### Direct GitHub Actions Native Compilation
+Native Android APK binaries compile directly on GitHub Actions runners without consuming cloud build credits:
+- **Runner Environment:** `ubuntu-latest`
+- **JDK:** Eclipse Temurin Java 17 (`actions/setup-java@v4`)
+- **Android SDK:** Command-line tools and build-tools (`android-actions/setup-android@v3`)
+- **Prebuild:** `npx expo prebuild --platform android --no-install`
+- **Gradle:** `./gradlew assembleRelease -x lint -x test --no-daemon`
+- **Release Distribution:** Automatically uploads compiled APK to GitHub Releases via `gh release upload` and saves CI build artifacts.
+
+### Dual-Channel Over-The-Air (OTA) Updates
+- **EAS CLI:** Strictly reserved for OTA JavaScript bundle updates (`eas update`).
+- **Channels:** `production` and `preview`.
+- **In-App Modal:** Dual-action update prompt with 30-minute snooze timestamp stored in `AsyncStorage`.

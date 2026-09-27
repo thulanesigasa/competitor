@@ -1,0 +1,45 @@
+name: Dual-Channel EAS OTA Updates
+
+on:
+  push:
+    branches:
+      - main
+      - preview
+  workflow_dispatch:
+
+jobs:
+  ota-update:
+    name: Publish Over-The-Air Update
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install --legacy-peer-deps --prefer-offline --no-audit
+
+      - name: Determine Update Channel
+        id: channel
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "channel=production" >> $GITHUB_OUTPUT
+          else
+            echo "channel=preview" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Publish EAS OTA Update
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -n "$EXPO_TOKEN" ]; then
+            npx eas-cli update --branch ${{ steps.channel.outputs.channel }} --message "OTA update for commit ${{ github.sha }}" --non-interactive
+          else
+            echo "EXPO_TOKEN not set in repository secrets; skipping EAS update publish."
+          fi

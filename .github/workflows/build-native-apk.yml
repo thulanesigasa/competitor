@@ -1,0 +1,75 @@
+name: Compile Native Android APK & Release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    name: Build Android APK (GitHub Actions Runner)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Setup Java 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Dependencies
+        run: npm install --legacy-peer-deps --prefer-offline --no-audit
+
+      - name: Inject Dynamic Version Code
+        run: |
+          node -e "
+            const fs = require('fs');
+            const app = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+            app.expo.android = app.expo.android || {};
+            app.expo.android.versionCode = ${{ github.run_number }};
+            fs.writeFileSync('app.json', JSON.stringify(app, null, 2));
+          "
+
+      - name: Prebuild Native Android Project
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Compile Release APK
+        working-directory: android
+        run: ./gradlew assembleRelease -x lint -x test --no-daemon
+
+      - name: Rename APK Asset
+        run: |
+          mkdir -p build-output
+          cp android/app/build/outputs/apk/release/app-release-unsigned.apk build-output/morabaraba-v1.0.0-b${{ github.run_number }}.apk || cp android/app/build/outputs/apk/release/*.apk build-output/morabaraba-v1.0.0-b${{ github.run_number }}.apk
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: morabaraba-android-apk
+          path: build-output/*.apk
+          retention-days: 14
+
+      - name: Publish GitHub Release Asset
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RELEASE_TAG="v1.0.0-build${{ github.run_number }}"
+          gh release create "$RELEASE_TAG" build-output/*.apk \
+            --title "Morabaraba Release $RELEASE_TAG" \
+            --notes "Automated native Android release build compiled directly on GitHub Actions runner." \
+            --clobber || gh release upload "$RELEASE_TAG" build-output/*.apk --clobber

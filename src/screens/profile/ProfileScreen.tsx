@@ -1,0 +1,268 @@
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  SafeAreaView,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
+import { COLORS, SPACING } from '../../constants/theme';
+import { Header } from '../../components/common/Header';
+import { UserProfile } from '../../types/auth';
+import { UserCareerStats } from '../../types/game';
+import {
+  clearUserProfile,
+  getCareerStats,
+  getUserProfile,
+} from '../../store/gameStore';
+
+interface ProfileScreenProps {
+  onLogout: () => void;
+}
+
+export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [stats, setStats] = useState<UserCareerStats | null>(null);
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    const profile = await getUserProfile();
+    const career = await getCareerStats();
+    setUser(profile);
+    setStats(career);
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out of this competitor profile?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            await clearUserProfile();
+            onLogout();
+          },
+        },
+      ]
+    );
+  };
+
+  const winRate =
+    stats && stats.gamesPlayed > 0
+      ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100)
+      : 0;
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <Header
+        title="GAMER PROFILE"
+        rightActionLabel="Sign Out"
+        onRightAction={handleLogout}
+      />
+
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Profile Card */}
+        <View style={styles.profileCard}>
+          <View style={styles.avatarCircle}>
+            <Text style={styles.avatarInitial}>
+              {user?.gamerTag ? user.gamerTag.charAt(0).toUpperCase() : 'M'}
+            </Text>
+          </View>
+          <Text style={styles.gamerTag}>{user?.gamerTag || 'Morabaraba Warrior'}</Text>
+          <Text style={styles.fullName}>
+            {user?.name || 'Local'} {user?.surname || 'Competitor'}
+          </Text>
+          <Text style={styles.location}>
+            {user?.town || 'Johannesburg'}, {user?.province || 'Gauteng'} •{' '}
+            {user?.country || 'South Africa'}
+          </Text>
+          <View style={styles.eloPill}>
+            <Text style={styles.eloText}>{stats?.eloRating || 1200} ELO</Text>
+          </View>
+        </View>
+
+        {/* Career Stats Grid */}
+        <Text style={styles.sectionTitle}>CAREER PERFORMANCE</Text>
+        <View style={styles.statsGrid}>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{stats?.gamesPlayed || 0}</Text>
+            <Text style={styles.statLabel}>MATCHES</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{stats?.gamesWon || 0}</Text>
+            <Text style={styles.statLabel}>VICTORIES</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{winRate}%</Text>
+            <Text style={styles.statLabel}>WIN RATE</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{stats?.millsFormed || 0}</Text>
+            <Text style={styles.statLabel}>MILLS FORMED</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{stats?.cowsCaptured || 0}</Text>
+            <Text style={styles.statLabel}>COWS CAPTURED</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{stats?.winStreak || 0}</Text>
+            <Text style={styles.statLabel}>WIN STREAK</Text>
+          </View>
+        </View>
+
+        {/* Identity Details */}
+        <Text style={styles.sectionTitle}>GAMER DETAILS</Text>
+        <View style={styles.detailsCard}>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailKey}>Email</Text>
+            <Text style={styles.detailValue}>{user?.email || 'N/A'}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailKey}>Cellphone</Text>
+            <Text style={styles.detailValue}>{user?.cellphone || 'N/A'}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailKey}>Date of Birth</Text>
+            <Text style={styles.detailValue}>{user?.dob || 'N/A'}</Text>
+          </View>
+          <View style={[styles.detailRow, { borderBottomWidth: 0 }]}>
+            <Text style={styles.detailKey}>Region Code</Text>
+            <Text style={styles.detailValue}>{user?.countryCode || 'ZA'}</Text>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  scrollContent: {
+    padding: SPACING.md,
+    paddingBottom: 90,
+  },
+  profileCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 24,
+    padding: SPACING.lg,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: 'center',
+    marginBottom: SPACING.lg,
+  },
+  avatarCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: COLORS.surfaceLight,
+    borderWidth: 2,
+    borderColor: COLORS.accent,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: SPACING.xs,
+  },
+  avatarInitial: {
+    color: COLORS.accent,
+    fontSize: 28,
+    fontWeight: '900',
+  },
+  gamerTag: {
+    color: COLORS.white,
+    fontSize: 20,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  fullName: {
+    color: COLORS.textMuted,
+    fontSize: 13,
+    marginTop: 2,
+  },
+  location: {
+    color: COLORS.accent,
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  eloPill: {
+    marginTop: 10,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    backgroundColor: COLORS.surfaceLight,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  eloText: {
+    color: COLORS.accent,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  sectionTitle: {
+    color: COLORS.white,
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    marginBottom: SPACING.xs,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: SPACING.lg,
+  },
+  statBox: {
+    width: '31%',
+    backgroundColor: COLORS.surface,
+    borderRadius: 14,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  statValue: {
+    color: COLORS.accent,
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  statLabel: {
+    color: COLORS.textMuted,
+    fontSize: 9,
+    fontWeight: '700',
+    marginTop: 4,
+  },
+  detailsCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 18,
+    padding: SPACING.sm,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  detailKey: {
+    color: COLORS.textMuted,
+    fontSize: 12,
+  },
+  detailValue: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+});
