@@ -108,7 +108,8 @@ competitor/
 |   |-- android-icon-foreground.png    # 512x512 canvas with 96px centered glyph (Rule 15/19)
 |   |-- favicon.png                    # Web favicon
 |   |-- icon.png                       # 1024x1024 canvas with 800px brand emblem
-|   `-- splash.png                     # Cohesive dark splash screen
+|   |-- splash.png                     # Cohesive dark splash screen
+|   `-- onboarding/                    # 3D illustration cards (Welcome, Earn, Enjoy)
 |-- scripts/
 |   `-- generate_assets.py             # Rule 15/19 asset calibration generator
 |-- src/
