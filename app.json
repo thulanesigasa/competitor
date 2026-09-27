@@ -9,6 +9,7 @@
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "updates": {
+      "url": "https://u.expo.dev/b8b21744-2bd2-44f3-81c1-aa86ffe2c250",
       "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 0,
       "requestHeaders": {
