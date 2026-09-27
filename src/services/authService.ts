@@ -256,4 +256,81 @@ export const authService = {
 
     return await getLocalProfile();
   },
+
+  /**
+   * Update gamer tag in Supabase and local store.
+   */
+  async updateGamerTag(newTag: string): Promise<{ success: boolean; error: string | null }> {
+    try {
+      const trimmed = newTag.trim();
+      if (!trimmed || trimmed.length < 3) {
+        return { success: false, error: 'Gamer tag must be at least 3 characters.' };
+      }
+
+      const current = await authService.getCurrentProfile();
+      if (!current) {
+        return { success: false, error: 'No active profile found.' };
+      }
+
+      // Check uniqueness in Supabase if online
+      const { data: existing } = await supabase
+        .from('profiles')
+        .select('id')
+        .ilike('gamer_tag', trimmed)
+        .neq('id', current.id)
+        .maybeSingle();
+
+      if (existing) {
+        return { success: false, error: 'This gamer tag is already taken by another competitor.' };
+      }
+
+      // Update in Supabase
+      await supabase
+        .from('profiles')
+        .update({ gamer_tag: trimmed })
+        .eq('id', current.id);
+
+      // Update in local store
+      const updatedProfile: UserProfile = { ...current, gamerTag: trimmed };
+      await saveLocalProfile(updatedProfile);
+
+      return { success: true, error: null };
+    } catch (e: any) {
+      return { success: false, error: e?.message || 'Failed to update gamer tag.' };
+    }
+  },
+
+  /**
+   * Update profile fields (e.g. province, town) in Supabase and local store.
+   */
+  async updateProfile(updates: Partial<UserProfile>): Promise<{ success: boolean; error: string | null }> {
+    try {
+      const current = await authService.getCurrentProfile();
+      if (!current) {
+        return { success: false, error: 'No active profile found.' };
+      }
+
+      const dbUpdates: Record<string, any> = {};
+      if (updates.name) dbUpdates.name = updates.name;
+      if (updates.surname) dbUpdates.surname = updates.surname;
+      if (updates.province) dbUpdates.province = updates.province;
+      if (updates.town) dbUpdates.town = updates.town;
+      if (updates.gamerTag) dbUpdates.gamer_tag = updates.gamerTag;
+
+      if (Object.keys(dbUpdates).length > 0) {
+        await supabase
+          .from('profiles')
+          .update(dbUpdates)
+          .eq('id', current.id);
+      }
+
+      const updatedProfile: UserProfile = { ...current, ...updates };
+      await saveLocalProfile(updatedProfile);
+
+      return { success: true, error: null };
+    } catch (e: any) {
+      return { success: false, error: e?.message || 'Failed to update profile.' };
+    }
+  },
 };
+

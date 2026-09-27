@@ -3,7 +3,7 @@
 [![React Native](https://img.shields.io/badge/React_Native-0.86.3-61DAFB?logo=react&logoColor=black)](https://reactnative.dev/)
 [![Expo](https://img.shields.io/badge/Expo_SDK-~57.0.24-000020?logo=expo&logoColor=white)](https://expo.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9.2-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Native Version](https://img.shields.io/badge/Native_Version-1.0.2-E5A93C)](https://github.com/thulanesigasa/competitor/releases)
+[![Native Version](https://img.shields.io/badge/Native_Version-1.0.3-E5A93C)](https://github.com/thulanesigasa/competitor/releases)
 [![Runtime Version](https://img.shields.io/badge/Runtime_Version-1.0.0-0F172A)](https://expo.dev/)
 [![Design System](https://img.shields.io/badge/Design_System-60--30--10_Rule-E5A93C)](https://shields.io/)
 [![Market](https://img.shields.io/badge/Target_Market-Southern_Africa-10B981)](https://shields.io/)
@@ -141,6 +141,32 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 - **Automated ELO & Stats Stored Procedure (`handle_match_completion`):** Automatically computes win rate, updates win streaks, and recalculates ELO ratings upon match completion.
 - **Automated Profile Initializer (`handle_new_user`):** Automatically provisions a profile and career statistics record when a user signs up.
 
+### 9. Settings, Privacy & Security Enclave Architecture (`v1.0.3`)
+- **Gamer Tag & Challenge Arena Customization (`ProfileScreen.tsx`):**
+  - **Dynamic Gamer Tag Editing:** Competitors can update their public handle with real-time uniqueness validation against PostgreSQL `profiles.gamer_tag` and local store synchronization.
+  - **Target Challenge Arena (Province & City/Town):** Competitors can declare their preferred regional battleground arena (e.g. Gauteng - Johannesburg) separately from their residential location, enabling targeted regional challenges.
+- **Privacy & Safety Settings (`PrivacyScreen.tsx`, `BlockedUsersScreen.tsx`):**
+  - **Private Matchmaking Mode (Incognito):** Masks competitor gamer tags during casual public battles to prevent targeted scouting.
+  - **Public Leaderboard Discoverability:** Controls public visibility in regional rankings.
+  - **Public Career Statistics:** Toggles public visibility of win rates %, victories, and mill formation counts on profile cards.
+  - **Blocked Competitors Management:** Restricts specific competitors from challenging the player or entering hosted battle rooms, with quick unblock actions.
+- **Access Controls & Terminal Security (`SecurityScreen.tsx`, `SecurityPinScreen.tsx`, `InactivityLockScreen.tsx`):**
+  - **4-Digit Security PIN Enclave:** Pure TypeScript SHA-256 (FIPS 180-4) with 256-bit pseudo-random salt. Features interactive keypad, dot indicators, consecutive-digit validation, and brute-force lockout safeguards (5 failed attempts = 30s lockout, 10 failed attempts = 5m lockout).
+  - **Inactivity Auto-Lock:** Configurable timeout (Immediate, 1 Minute, 5 Minutes, 15 Minutes, 30 Minutes, Never) triggering security verification when unattended.
+  - **Fingerprint / Biometric Unlock:** Biometric authentication toggle for instantaneous hardware unlocking.
+  - **App Switcher Privacy Shield (`AppSwitcherShield.tsx`):** Multitasking AppState listener that overlays a clean, branded privacy shield when the user switches apps or minimizes to background, concealing board states and private metrics.
+- **Data Ownership & Cryptography (`ExportDataScreen.tsx`, `encryptionService.ts`):**
+  - **Hardware-Encrypted (AES-256-CBC) Backup:** Pure TypeScript implementation of FIPS 197 standard AES-256-CBC with PKCS#7 padding and SHA-256 HMAC integrity verification, zero native compiler dependencies.
+  - **Standard Open JSON Export:** Human-readable ECMA-404 JSON archive of profile and career statistics.
+- **Device Sessions & Security Audit (`DeviceSessionsScreen.tsx`, `sessionSecurityService.ts`):**
+  - **Active Terminal Session Info:** Inspects current hardware model, operating system, app build, and session token.
+  - **Remote Session Revocation:** Terminate all remote competitor sessions with one tap.
+  - **Immutable Security Audit Trail:** Persistent log tracking PIN events, data exports, challenge region updates, and session revocations.
+- **Permanent Account Deletion (`DeleteAccountScreen.tsx`):**
+  - POPIA and GDPR Article 17 (Right to Erasure) compliant data purge requiring explicit checkbox acknowledgment and typing "DELETE" to verify.
+- **Legal & Fair Play Standards (`PrivacyPolicyScreen.tsx`, `TermsOfServiceScreen.tsx`):**
+  - Dedicated transparent screens for Privacy Policy and Terms of Service covering traditional Morabaraba rules, anti-cheating, disconnection forfeits, and sportsmanship.
+
 ---
 
 ## Design System & Theme Architecture (Strict 60-30-10 & Tab-Only SVGs)
@@ -190,15 +216,18 @@ competitor/
 |   |-- components/
 |   |   |-- Typography.tsx             # Standardized Text component with variants & weights
 |   |   |-- common/
+|   |   |   |-- AppSwitcherShield.tsx  # Multitasking privacy shield with Morabaraba branding
 |   |   |   |-- ErrorBoundary.tsx      # Graceful crash shield with reload & cache reset actions
 |   |   |   |-- Header.tsx             # Standard header with 24x24 brand logo (0 border radius)
 |   |   |   |-- PasswordStrengthMeter.tsx # 4-segment 8+ char password validator
+|   |   |   |-- SvgIcons.tsx           # Pure SVG icon suite for Settings, Security, and Legal
 |   |   |   |-- SwipeToSignUp.tsx      # Custom pan-responder swipe slider
 |   |   |   |-- ThemedAlert.tsx        # 60-30-10 modal alert system replacing OS alerts
 |   |   |   |-- ThemedDropdown.tsx     # Reusable 60-30-10 dropdown with SVG indicators
+|   |   |   |-- UiverseSwitch.tsx      # 60-30-10 animated toggle switch
 |   |   |   `-- UpdateModal.tsx        # Rule 21 dual-action on-demand OTA update modal
 |   |   |-- game/
-|   |   |   |-- CoinTossModal.tsx      # Fair animated 3D coin toss turn decider
+|   |   |   |-- CoinTossModal.tsx      # Fair animated 3D coin toss turn decider (alternates H/T)
 |   |   |   |-- CompetitorProfileCard.tsx # 60-30-10 player profile inspection card with stats & actions
 |   |   |   |-- MorabarabaBoard.tsx    # 24-vertex pure line intersection board layout
 |   |   |   `-- MorabarabaPiece.tsx    # Authentic concentric carved African tokens
@@ -223,19 +252,34 @@ competitor/
 |   |   |   `-- BattlegroundScreen.tsx # 2-Player Pass & Play and Wi-Fi match setup
 |   |   |-- leaderboard/
 |   |   |   `-- LeaderboardScreen.tsx  # Regional Southern African rankings
+|   |   |-- legal/
+|   |   |   |-- PrivacyPolicyScreen.tsx # Comprehensive POPIA/GDPR data rights & telemetry policy
+|   |   |   `-- TermsOfServiceScreen.tsx # Authentic Morabaraba rules, anti-cheating & fair play
 |   |   |-- offline/
 |   |   |   `-- OfflineScreen.tsx      # Solo 1P vs CPU AI and 2-Player Pass & Play arena with route syncing
 |   |   |-- onboarding/
 |   |   |   `-- OnboardingScreen.tsx   # 3-slide crossfade art canvas, liquid sliding pill & SwipeToStartButton
-|   |   `-- profile/
-|   |       `-- ProfileScreen.tsx      # Gamer Tag career stats and settings
+|   |   |-- profile/
+|   |   |   `-- ProfileScreen.tsx      # Gamer Tag career stats and settings body rows
+|   |   `-- settings/
+|   |       |-- BlockedUsersScreen.tsx # Manage and unblock restricted competitors
+|   |       |-- DeleteAccountScreen.tsx # POPIA / GDPR irreversible account purge
+|   |       |-- DeviceSessionsScreen.tsx # Terminal hardware specs & security audit trail
+|   |       |-- ExportDataScreen.tsx   # Hardware-encrypted AES-256 backup & open JSON export
+|   |       |-- InactivityLockScreen.tsx # Inactivity lockout timer configuration
+|   |       |-- PrivacyScreen.tsx      # Incognito matchmaking & public discoverability controls
+|   |       `-- SecurityPinScreen.tsx  # 4-digit security PIN setup, change, and remove flows
 |   |-- lib/
 |   |   `-- supabase.ts                # Supabase client with AsyncStorage session persistence (anon key only)
 |   |-- services/
-|   |   |-- authService.ts             # Direct authentication with gamer tag / email credential login
+|   |   |-- authService.ts             # Direct authentication with gamer tag / email credential login & updates
+|   |   |-- encryptionService.ts       # Pure TypeScript FIPS 197 AES-256-CBC hardware encryption engine
+|   |   |-- gameSyncService.ts         # High-frequency WebSocket match move & coin call broadcasting
 |   |   |-- leaderboardService.ts      # Live regional Southern African leaderboard queries & stats
-|   |   |-- battlegroundService.ts     # Public & private battle room creation & lobby discovery
-|   |   `-- gameSyncService.ts         # High-frequency WebSocket match move & coin call broadcasting
+|   |   |-- pinSecurityService.ts      # Pure TypeScript SHA-256 PIN hashing with brute-force lockout
+|   |   |-- privacyService.ts          # Matchmaking privacy, discovery, blocked accounts, and challenge regions
+|   |   |-- sessionSecurityService.ts  # Device session specs, audit logging, and remote session revocation
+|   |   `-- battlegroundService.ts     # Public & private battle room creation & lobby discovery
 |   |-- store/
 |   |   `-- gameStore.ts               # Local persistence via AsyncStorage
 |   |-- theme/

@@ -25,7 +25,7 @@ export const TabNavigator: React.FC<TabNavigatorProps> = ({ onLogout }) => {
       <Tab.Screen name="Offline" component={OfflineScreen} />
       <Tab.Screen name="Leaderboard" component={LeaderboardScreen} />
       <Tab.Screen name="Profile">
-        {() => <ProfileScreen onLogout={onLogout} />}
+        {(props) => <ProfileScreen {...props} onLogout={onLogout} />}
       </Tab.Screen>
     </Tab.Navigator>
   );

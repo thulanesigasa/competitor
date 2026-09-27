@@ -10,6 +10,18 @@ import { TabNavigator } from './TabNavigator';
 import { UserProfile } from '../types/auth';
 import { getIsOnboarded, getUserProfile } from '../store/gameStore';
 
+import { PrivacyScreen } from '../screens/settings/PrivacyScreen';
+import { SecurityScreen } from '../screens/settings/SecurityScreen';
+import { BlockedUsersScreen } from '../screens/settings/BlockedUsersScreen';
+import { DeviceSessionsScreen } from '../screens/settings/DeviceSessionsScreen';
+import { DeleteAccountScreen } from '../screens/settings/DeleteAccountScreen';
+import { ExportDataScreen } from '../screens/settings/ExportDataScreen';
+import { InactivityLockScreen } from '../screens/settings/InactivityLockScreen';
+import { SecurityPinScreen } from '../screens/settings/SecurityPinScreen';
+import { PrivacyPolicyScreen } from '../screens/legal/PrivacyPolicyScreen';
+import { TermsOfServiceScreen } from '../screens/legal/TermsOfServiceScreen';
+import { AppSwitcherShield } from '../components/common/AppSwitcherShield';
+
 const Stack = createNativeStackNavigator();
 
 export const RootNavigator: React.FC = () => {
@@ -56,72 +68,89 @@ export const RootNavigator: React.FC = () => {
     : 'Onboarding';
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName={initialRouteName}
-        screenOptions={{ headerShown: false, animation: 'fade' }}
-      >
-        <Stack.Screen name="MainTabs">
-          {(props) => (
-            <TabNavigator
-              onLogout={() => {
-                setCurrentUser(null);
-                props.navigation.reset({
-                  index: 0,
-                  routes: [{ name: 'Login' }],
-                });
-              }}
-            />
-          )}
-        </Stack.Screen>
+    <>
+      <NavigationContainer>
+        <Stack.Navigator
+          initialRouteName={initialRouteName}
+          screenOptions={{ headerShown: false, animation: 'fade' }}
+        >
+          <Stack.Screen name="MainTabs">
+            {(props) => (
+              <TabNavigator
+                onLogout={() => {
+                  setCurrentUser(null);
+                  props.navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'Login' }],
+                  });
+                }}
+              />
+            )}
+          </Stack.Screen>
 
-        <Stack.Screen name="Onboarding">
-          {(props) => (
-            <OnboardingScreen
-              onSwipeToSignUp={() => props.navigation.navigate('SignUp')}
-              onNavigateToLogin={() => props.navigation.navigate('Login')}
-            />
-          )}
-        </Stack.Screen>
+          <Stack.Screen name="Onboarding">
+            {(props) => (
+              <OnboardingScreen
+                onSwipeToSignUp={() => props.navigation.navigate('SignUp')}
+                onNavigateToLogin={() => props.navigation.navigate('Login')}
+              />
+            )}
+          </Stack.Screen>
 
-        <Stack.Screen name="SignUp">
-          {(props) => (
-            <SignUpScreen
-              onSignUpSuccess={(user) => {
-                setCurrentUser(user);
-                props.navigation.reset({
-                  index: 0,
-                  routes: [{ name: 'MainTabs' }],
-                });
-              }}
-              onNavigateToLogin={() => props.navigation.navigate('Login')}
-              onNavigateBack={() => {
-                if (props.navigation.canGoBack()) {
-                  props.navigation.goBack();
-                } else {
-                  props.navigation.navigate('Onboarding');
-                }
-              }}
-            />
-          )}
-        </Stack.Screen>
+          <Stack.Screen name="SignUp">
+            {(props) => (
+              <SignUpScreen
+                onSignUpSuccess={(user) => {
+                  setCurrentUser(user);
+                  props.navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'MainTabs' }],
+                  });
+                }}
+                onNavigateToLogin={() => props.navigation.navigate('Login')}
+                onNavigateBack={() => {
+                  if (props.navigation.canGoBack()) {
+                    props.navigation.goBack();
+                  } else {
+                    props.navigation.navigate('Onboarding');
+                  }
+                }}
+              />
+            )}
+          </Stack.Screen>
 
-        <Stack.Screen name="Login">
-          {(props) => (
-            <LoginScreen
-              onLoginSuccess={(user) => {
-                setCurrentUser(user);
-                props.navigation.reset({
-                  index: 0,
-                  routes: [{ name: 'MainTabs' }],
-                });
-              }}
-              onNavigateToSignUp={() => props.navigation.navigate('SignUp')}
-            />
-          )}
-        </Stack.Screen>
-      </Stack.Navigator>
-    </NavigationContainer>
+          <Stack.Screen name="Login">
+            {(props) => (
+              <LoginScreen
+                onLoginSuccess={(user) => {
+                  setCurrentUser(user);
+                  props.navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'MainTabs' }],
+                  });
+                }}
+                onNavigateToSignUp={() => props.navigation.navigate('SignUp')}
+              />
+            )}
+          </Stack.Screen>
+
+          {/* Settings & Privacy Screens */}
+          <Stack.Screen name="Privacy" component={PrivacyScreen} />
+          <Stack.Screen name="Security" component={SecurityScreen} />
+          <Stack.Screen name="BlockedUsers" component={BlockedUsersScreen} />
+          <Stack.Screen name="DeviceSessions" component={DeviceSessionsScreen} />
+          <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
+          <Stack.Screen name="ExportData" component={ExportDataScreen} />
+          <Stack.Screen name="InactivityLock" component={InactivityLockScreen} />
+          <Stack.Screen name="SecurityPin" component={SecurityPinScreen} />
+
+          {/* Legal Screens */}
+          <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+          <Stack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+      <AppSwitcherShield />
+    </>
   );
 };
 
