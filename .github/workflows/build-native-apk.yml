@@ -8,10 +8,14 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-apk:
     name: Build Android APK (GitHub Actions Runner)
     runs-on: ubuntu-latest
+    timeout-minutes: 35
 
     steps:
       - name: Checkout Code
@@ -29,8 +33,12 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Configure Android SDK & Accept Licenses
+        run: |
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses >/dev/null 2>&1 || true
 
       - name: Install Dependencies
         run: npm install --legacy-peer-deps --prefer-offline --no-audit
@@ -50,13 +58,19 @@ jobs:
 
       - name: Compile Release APK
         working-directory: android
-        run: ./gradlew assembleRelease -x lint -x test --no-daemon
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease -x lint -x test --no-daemon
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+HeapDumpOnOutOfMemoryError -Dorg.gradle.parallel=false"
 
       - name: Rename APK Asset
         run: |
           APP_VERSION=$(node -p "require('./app.json').expo.version")
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/app-release-unsigned.apk build-output/morabaraba-v${APP_VERSION}-b${{ github.run_number }}.apk || cp android/app/build/outputs/apk/release/*.apk build-output/morabaraba-v${APP_VERSION}-b${{ github.run_number }}.apk
+          cp android/app/build/outputs/apk/release/*.apk build-output/morabaraba-v${APP_VERSION}-b${{ github.run_number }}.apk
+          ls -la build-output/
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
