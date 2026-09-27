@@ -34,14 +34,27 @@ if os.path.exists(original_path):
     android_canvas.save("assets/android-icon-foreground.png", "PNG")
     print("Saved assets/android-icon-foreground.png: 512x512 with 96px glyph (~72% margin)")
 
-    # 3. assets/splash.png (1284x2778)
-    splash_canvas = Image.new("RGBA", (1284, 2778), (255, 255, 255, 255))
+    # 3. assets/splash.png (512x512 canvas with 240px glyph - prevents Android cold-start OOM)
+    splash_canvas = Image.new("RGBA", (512, 512), (255, 255, 255, 255))
     scaled_splash = orig.resize((240, 240), Image.Resampling.LANCZOS)
-    splash_canvas.paste(scaled_splash, ((1284 - 240) // 2, (2778 - 240) // 2), scaled_splash)
-    splash_canvas.convert("RGB").save("assets/splash.png", "PNG")
-    print("Saved assets/splash.png (1284x2778)")
+    splash_canvas.paste(scaled_splash, ((512 - 240) // 2, (512 - 240) // 2), scaled_splash)
+    splash_canvas.convert("RGB").save("assets/splash.png", "PNG", optimize=True)
+    print("Saved assets/splash.png: 512x512 with 240px glyph")
 
     # 4. Favicon 48x48
     fav = orig.resize((48, 48), Image.Resampling.LANCZOS)
     fav.save("assets/favicon.png", "PNG")
     print("Saved assets/favicon.png (48x48)")
+
+# 5. Optimize Onboarding slides to clean non-progressive PNGs (1.png, 2.png, 3.png)
+onboarding_dir = "assets/onboarding"
+if os.path.exists(onboarding_dir):
+    for num in ["1", "2", "3"]:
+        png_file = os.path.join(onboarding_dir, f"{num}.png")
+        if os.path.exists(png_file):
+            with Image.open(png_file) as im:
+                im = im.convert("RGB")
+                im.thumbnail((480, 480), Image.Resampling.LANCZOS)
+                im.save(png_file, "PNG", optimize=True)
+                print(f"Verified {png_file}: {im.size} ({os.path.getsize(png_file)} bytes)")
+

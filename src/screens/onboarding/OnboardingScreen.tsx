@@ -35,7 +35,7 @@ const ONBOARDING_SLIDES: Slide[] = [
     highlight: 'The Ancient Art of Strategy',
     description:
       'Step into Southern Africa’s premier 1v1 tactical battleground. Place your twelve cows, outmaneuver your rival, and conquer the board.',
-    image: require('../../../assets/onboarding/10- VARIADOS 3D - Google Drive.jpg'),
+    image: require('../../../assets/onboarding/1.png'),
   },
   {
     id: '2',
@@ -44,7 +44,7 @@ const ONBOARDING_SLIDES: Slide[] = [
     highlight: 'Zero-Data Battles • High Stakes Duels',
     description:
       'Compete against friends in the Battleground over zero-data local Wi-Fi or climb the leaderboard with offline solo mastery.',
-    image: require('../../../assets/onboarding/download.jpg'),
+    image: require('../../../assets/onboarding/2.png'),
   },
   {
     id: '3',
@@ -53,7 +53,7 @@ const ONBOARDING_SLIDES: Slide[] = [
     highlight: 'Seven Nations • Top Regional Honors',
     description:
       'Represent your town and province across Southern Africa. Claim your custom Gamer Tag and rise to grandmaster glory.',
-    image: require('../../../assets/onboarding/3D Hand Picking Golden Stars Icon.jpg'),
+    image: require('../../../assets/onboarding/3.png'),
   },
 ];
 

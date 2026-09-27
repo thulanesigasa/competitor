@@ -4,6 +4,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { colors } from '../../theme/colors';
@@ -48,16 +49,26 @@ const getTabLabel = (routeName: string) => {
 /**
  * Rule 20 Custom Bottom Tab Bar
  * Fully centered floating pill architecture with bounded 280px width,
- * soft drop shadow, 16px tab SVGs, and active indicator dot.
+ * dynamic horizontal centering via useWindowDimensions(), soft drop shadow,
+ * 16px tab SVGs, and active indicator dot.
  */
 export const CustomTabBar: React.FC<BottomTabBarProps> = ({
   state,
   descriptors,
   navigation,
 }) => {
+  const { width } = useWindowDimensions();
+  const leftOffset = Math.max(0, (width - 280) / 2);
+
   return (
-    <View style={styles.tabBarWrapper} pointerEvents="box-none">
-      <View style={styles.pillContainer}>
+    <View
+      style={[
+        styles.pillContainer,
+        {
+          left: leftOffset,
+        },
+      ]}
+    >
         {state.routes.map((route, index) => {
           const isFocused = state.index === index;
           const color = isFocused ? colors.accent : '#94A3B8';
@@ -108,21 +119,13 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({
           );
         })}
       </View>
-    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  tabBarWrapper: {
+  pillContainer: {
     position: 'absolute',
     bottom: Platform.OS === 'ios' ? 28 : 24,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 100,
-  },
-  pillContainer: {
     width: 280,
     height: 50,
     backgroundColor: '#FFFFFF',
