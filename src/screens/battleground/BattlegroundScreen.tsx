@@ -19,7 +19,7 @@ import { CompetitorProfileCard } from '../../components/game/CompetitorProfileCa
 import { Text } from '../../components/Typography';
 import { colors } from '../../theme/colors';
 import { spacing, shadow } from '../../theme';
-import { GamePhase, GameState, Player, CompetitorProfile } from '../../types/game';
+import { GamePhase, GameState, Player, CompetitorProfile, UserCareerStats } from '../../types/game';
 import { UserProfile } from '../../types/auth';
 import {
   createInitialGameState,
@@ -28,9 +28,10 @@ import {
   getLegalShotVertices,
   hasLegalMoves,
 } from '../../engine/morabaraba';
-import { getUserProfile, recordGameResult } from '../../store/gameStore';
+import { getUserProfile, getCareerStats, recordGameResult } from '../../store/gameStore';
 import { battlegroundService } from '../../services/battlegroundService';
 import { gameSyncService } from '../../services/gameSyncService';
+import { getRankFromStats } from '../../constants/ranks';
 
 type DuelMode =
   | 'menu'
@@ -44,120 +45,6 @@ type DuelMode =
   | 'join_waiting_approval'
   | 'match_in_progress';
 
-const REGIONAL_PUBLIC_HOSTS: CompetitorProfile[] = [
-  {
-    id: 'host-1',
-    gamerTag: 'Kgosi_Sipho',
-    country: 'South Africa',
-    countryCode: 'ZA',
-    province: 'Gauteng',
-    town: 'Soweto',
-    title: 'Grandmaster',
-    winRate: 84,
-    matchesPlayed: 288,
-    wins: 242,
-  },
-  {
-    id: 'host-2',
-    gamerTag: 'Mambo_Tinashe',
-    country: 'Zimbabwe',
-    countryCode: 'ZW',
-    province: 'Harare',
-    town: 'Harare Central',
-    title: 'Warrior Chief',
-    winRate: 81,
-    matchesPlayed: 244,
-    wins: 198,
-  },
-  {
-    id: 'host-3',
-    gamerTag: 'Mophato_Kabo',
-    country: 'Botswana',
-    countryCode: 'BW',
-    province: 'South-East',
-    town: 'Gaborone',
-    title: 'Vanguard',
-    winRate: 79,
-    matchesPlayed: 222,
-    wins: 176,
-  },
-  {
-    id: 'host-4',
-    gamerTag: 'Inyatsi_Sibusiso',
-    country: 'Eswatini',
-    countryCode: 'SZ',
-    province: 'Hhohho',
-    town: 'Mbabane',
-    title: 'Tactician',
-    winRate: 76,
-    matchesPlayed: 202,
-    wins: 154,
-  },
-  {
-    id: 'host-5',
-    gamerTag: 'Tau_Maseru',
-    country: 'Lesotho',
-    countryCode: 'LS',
-    province: 'Maseru District',
-    town: 'Maseru',
-    title: 'Tactician',
-    winRate: 74,
-    matchesPlayed: 189,
-    wins: 140,
-  },
-  {
-    id: 'host-6',
-    gamerTag: 'Eagle_Lusaka',
-    country: 'Zambia',
-    countryCode: 'ZM',
-    province: 'Lusaka',
-    town: 'Lusaka',
-    title: 'Champion',
-    winRate: 72,
-    matchesPlayed: 173,
-    wins: 125,
-  },
-];
-
-const POTENTIAL_CHALLENGERS: CompetitorProfile[] = [
-  {
-    id: 'challenger-1',
-    gamerTag: 'Lake_Chikondi',
-    country: 'Malawi',
-    countryCode: 'MW',
-    province: 'Southern Region',
-    town: 'Blantyre',
-    title: 'Champion',
-    winRate: 70,
-    matchesPlayed: 157,
-    wins: 110,
-  },
-  {
-    id: 'challenger-2',
-    gamerTag: 'Veldt_Lethabo',
-    country: 'South Africa',
-    countryCode: 'ZA',
-    province: 'Limpopo',
-    town: 'Polokwane',
-    title: 'Warrior',
-    winRate: 68,
-    matchesPlayed: 144,
-    wins: 98,
-  },
-  {
-    id: 'challenger-3',
-    gamerTag: 'Mambo_Tinashe',
-    country: 'Zimbabwe',
-    countryCode: 'ZW',
-    province: 'Harare',
-    town: 'Harare Central',
-    title: 'Warrior Chief',
-    winRate: 81,
-    matchesPlayed: 244,
-    wins: 198,
-  },
-];
-
 export const BattlegroundScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { showAlert } = useThemedAlert();
@@ -166,7 +53,9 @@ export const BattlegroundScreen: React.FC = () => {
   const [enteredPin, setEnteredPin] = useState('');
   const [hasCopiedPin, setHasCopiedPin] = useState(false);
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
-  const [publicHosts, setPublicHosts] = useState<CompetitorProfile[]>(REGIONAL_PUBLIC_HOSTS);
+  const [userStats, setUserStats] = useState<UserCareerStats | null>(null);
+  const [publicHosts, setPublicHosts] = useState<CompetitorProfile[]>([]);
+  const [isLoadingLobby, setIsLoadingLobby] = useState(false);
 
   // Match & Room Profiles
   const [selectedHostProfile, setSelectedHostProfile] = useState<CompetitorProfile | null>(null);
@@ -190,6 +79,7 @@ export const BattlegroundScreen: React.FC = () => {
 
   useEffect(() => {
     getUserProfile().then((profile) => setCurrentUser(profile));
+    getCareerStats().then((stats) => setUserStats(stats));
     return () => {
       clearAllTimers();
       if (syncSubscription.current) syncSubscription.current();
@@ -247,11 +137,6 @@ export const BattlegroundScreen: React.FC = () => {
         });
       }
     }
-
-    // Defensive simulation fallback if offline
-    challengerTimer.current = setTimeout(() => {
-      setIncomingChallenger((prev) => prev || POTENTIAL_CHALLENGERS[0]);
-    }, 4500);
   };
 
   const handleEnterPrivateWaitingRoom = () => {
@@ -271,11 +156,6 @@ export const BattlegroundScreen: React.FC = () => {
         },
       });
     }
-
-    // Defensive simulation fallback if offline
-    challengerTimer.current = setTimeout(() => {
-      setIncomingChallenger((prev) => prev || POTENTIAL_CHALLENGERS[0]);
-    }, 4500);
   };
 
   const handleShareCode = async () => {
@@ -307,12 +187,10 @@ export const BattlegroundScreen: React.FC = () => {
   };
 
   const handleDeclineChallenger = () => {
+    if (activeRoomId.current) {
+      battlegroundService.declineChallenger(activeRoomId.current);
+    }
     setIncomingChallenger(null);
-    // Queue next challenger after a moment
-    challengerTimer.current = setTimeout(() => {
-      const challenger = POTENTIAL_CHALLENGERS[Math.floor(Math.random() * POTENTIAL_CHALLENGERS.length)];
-      setIncomingChallenger(challenger);
-    }, 4000);
   };
 
   // --- JOIN FLOWS ---
@@ -331,25 +209,25 @@ export const BattlegroundScreen: React.FC = () => {
 
   const handleChooseJoinPublic = async () => {
     setMode('join_public_lobby');
+    setIsLoadingLobby(true);
     try {
       const liveHosts = await battlegroundService.fetchPublicLobby();
-      if (liveHosts && liveHosts.length > 0) {
-        setPublicHosts(liveHosts);
-      }
+      setPublicHosts(liveHosts || []);
     } catch {
-      // Fallback to regional public hosts
+      setPublicHosts([]);
+    } finally {
+      setIsLoadingLobby(false);
     }
 
     if (lobbySubscription.current) lobbySubscription.current();
     lobbySubscription.current = battlegroundService.subscribeToPublicLobby((freshHosts) => {
-      if (freshHosts && freshHosts.length > 0) {
-        setPublicHosts(freshHosts);
-      }
+      setPublicHosts(freshHosts || []);
     });
   };
 
   const handleSubmitPrivatePin = async () => {
-    if (enteredPin.trim().length < 4) {
+    const pin = enteredPin.trim();
+    if (pin.length < 4) {
       showAlert({ title: 'Invalid PIN', message: 'Please enter the 4-digit code provided by the host.' });
       return;
     }
@@ -357,48 +235,59 @@ export const BattlegroundScreen: React.FC = () => {
 
     if (currentUser) {
       try {
-        const { room } = await battlegroundService.joinByCode(enteredPin.trim(), currentUser);
-        if (room) {
-          activeRoomId.current = room.id;
+        const { room, hostProfile, error } = await battlegroundService.joinByCode(pin, currentUser);
+        if (error || !room) {
+          showAlert({ title: 'Room Not Found', message: error || 'No active room found with this 4-digit PIN.' });
+          return;
         }
+        activeRoomId.current = room.id;
+        const host: CompetitorProfile = hostProfile || {
+          id: room.hostUserId,
+          gamerTag: `Host_${pin}`,
+          country: 'South Africa',
+          countryCode: 'ZA',
+          province: 'Southern Africa',
+          town: '',
+          title: 'Competitor',
+          winRate: 50,
+          matchesPlayed: 1,
+          wins: 1,
+        };
+        setSelectedHostProfile(host);
+        setOpponentName(host.gamerTag);
+        setMode('join_waiting_approval');
+
+        // Subscribe to host approval in real-time
+        if (roomSubscription.current) roomSubscription.current();
+        roomSubscription.current = battlegroundService.subscribeToRoom(room.id, {
+          onMatchAccepted: () => {
+            handleHostApproved();
+          },
+        });
       } catch {
-        // Fallback
+        showAlert({ title: 'Connection Error', message: 'Unable to connect to room. Please check your connection and retry.' });
       }
     }
-
-    // Connect to private host profile
-    const privateHost: CompetitorProfile = {
-      id: `private-host-${enteredPin}`,
-      gamerTag: `Host_${enteredPin}`,
-      country: 'South Africa',
-      countryCode: 'ZA',
-      province: 'Gauteng',
-      town: 'Johannesburg',
-      title: 'Warrior Chief',
-      winRate: 78,
-      matchesPlayed: 180,
-      wins: 140,
-    };
-    setSelectedHostProfile(privateHost);
-    setOpponentName(privateHost.gamerTag);
-    setMode('join_waiting_approval');
-
-    // Simulate host accepting after 2.5 seconds
-    hostApprovalTimer.current = setTimeout(() => {
-      handleHostApproved();
-    }, 2800);
   };
 
-  const handleSelectPublicHost = (host: CompetitorProfile) => {
+  const handleSelectPublicHost = async (host: CompetitorProfile) => {
     clearAllTimers();
     setSelectedHostProfile(host);
     setOpponentName(host.gamerTag);
     setMode('join_waiting_approval');
 
-    // Simulate host accepting challenge after 2.5 seconds
-    hostApprovalTimer.current = setTimeout(() => {
-      handleHostApproved();
-    }, 2800);
+    if (currentUser) {
+      activeRoomId.current = host.id;
+      await battlegroundService.challengePublicHost(host.id, currentUser.id);
+
+      // Subscribe to host approval in real-time
+      if (roomSubscription.current) roomSubscription.current();
+      roomSubscription.current = battlegroundService.subscribeToRoom(host.id, {
+        onMatchAccepted: () => {
+          handleHostApproved();
+        },
+      });
+    }
   };
 
   const startOnlineMatchSync = () => {
@@ -624,6 +513,17 @@ export const BattlegroundScreen: React.FC = () => {
     }
   };
 
+  const userWinRate =
+    userStats && userStats.gamesPlayed > 0
+      ? Math.round((userStats.gamesWon / userStats.gamesPlayed) * 100)
+      : 0;
+
+  const userRank = getRankFromStats(
+    userWinRate,
+    userStats?.gamesWon || 0,
+    userStats?.gamesPlayed || 0
+  );
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <Header
@@ -646,6 +546,21 @@ export const BattlegroundScreen: React.FC = () => {
         {mode === 'menu' && (
           <View style={styles.menuContainer}>
             <View style={styles.introSection}>
+              {currentUser && (
+                <View style={styles.userStatusBanner}>
+                  <View>
+                    <Text variant="caption" color={colors.textSecondary}>LOGGED IN COMPETITOR</Text>
+                    <Text variant="body" weight="900" color={colors.textPrimary}>
+                      {currentUser.gamerTag}
+                    </Text>
+                  </View>
+                  <View style={[styles.userRankPill, { borderColor: userRank.badgeColor }]}>
+                    <Text variant="caption" weight="800" color={userRank.badgeColor}>
+                      TIER {userRank.tier}: {userRank.title.toUpperCase()}
+                    </Text>
+                  </View>
+                </View>
+              )}
               <Text variant="h2" weight="900" color={colors.textPrimary}>
                 ONLINE BATTLEGROUND
               </Text>
@@ -978,14 +893,41 @@ export const BattlegroundScreen: React.FC = () => {
               </Text>
             </View>
 
-            {publicHosts.map((host) => (
-              <CompetitorProfileCard
-                key={host.id}
-                profile={host}
-                actionLabel="CHALLENGE HOST →"
-                onAction={() => handleSelectPublicHost(host)}
-              />
-            ))}
+            {isLoadingLobby ? (
+              <View style={styles.waitingStatusBlock}>
+                <ActivityIndicator size="small" color={colors.accent} />
+                <Text variant="body" weight="700" color={colors.textPrimary} style={{ marginTop: 8 }}>
+                  Scanning Southern African Lobby...
+                </Text>
+              </View>
+            ) : publicHosts.length > 0 ? (
+              publicHosts.map((host) => (
+                <CompetitorProfileCard
+                  key={host.id}
+                  profile={host}
+                  actionLabel="CHALLENGE HOST →"
+                  onAction={() => handleSelectPublicHost(host)}
+                />
+              ))
+            ) : (
+              <View style={styles.waitingStatusBlock}>
+                <Text variant="h3" weight="900" color={colors.textPrimary}>
+                  NO ACTIVE PUBLIC HOSTS
+                </Text>
+                <Text variant="caption" color={colors.textSecondary} align="center" style={{ marginVertical: 8, lineHeight: 18 }}>
+                  There are currently no active public rooms waiting for challengers. Host your own battle room to challenge players across Southern Africa!
+                </Text>
+                <TouchableOpacity
+                  style={[styles.primaryFullBtn, { marginTop: 8 }]}
+                  activeOpacity={0.8}
+                  onPress={handleStartHostFlow}
+                >
+                  <Text variant="body" weight="800" color="#FFFFFF">
+                    HOST A ROOM NOW →
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         )}
 
@@ -1153,6 +1095,23 @@ const styles = StyleSheet.create({
   flowHeader: {
     marginBottom: SPACING.lg,
   },
+  userStatusBanner: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: 'rgba(15, 23, 42, 0.08)',
+    marginBottom: SPACING.md,
+  },
+  userRankPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderWidth: 1,
+    backgroundColor: '#FFFFFF',
+  },
   optionBox: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
@@ -1168,16 +1127,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: 'rgba(15, 23, 42, 0.1)',
-    paddingVertical: SPACING.xl,
+    paddingVertical: 24,
+    minHeight: 104,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: SPACING.md,
   },
   pinCodeText: {
     fontSize: 42,
+    lineHeight: 56,
+    includeFontPadding: false,
     fontWeight: '900',
     color: colors.textPrimary,
     letterSpacing: 8,
+    textAlign: 'center',
   },
   pinActionsRow: {
     flexDirection: 'row',
@@ -1228,6 +1191,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(15, 23, 42, 0.12)',
     fontSize: 28,
+    lineHeight: 36,
+    includeFontPadding: false,
     fontWeight: '900',
     textAlign: 'center',
     color: colors.textPrimary,

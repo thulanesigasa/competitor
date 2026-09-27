@@ -1,9 +1,11 @@
 import { supabase } from '../lib/supabase';
-import { LeaderboardEntry, INITIAL_REGIONAL_LEADERBOARD } from '../store/gameStore';
+import { LeaderboardEntry } from '../store/gameStore';
+import { getRankTitle } from '../constants/ranks';
 
 export const leaderboardService = {
   /**
    * Fetch live regional leaderboard from Supabase career_stats & profiles.
+   * Strictly returns live database entries with zero mock data.
    */
   async getRegionalLeaderboard(countryFilter?: string): Promise<LeaderboardEntry[]> {
     try {
@@ -14,6 +16,8 @@ export const leaderboardService = {
           elo_rating,
           win_rate,
           wins,
+          losses,
+          matches_played,
           profiles (
             id,
             gamer_tag,
@@ -30,7 +34,7 @@ export const leaderboardService = {
       const { data, error } = await query;
 
       if (error || !data || data.length === 0) {
-        return this.filterFallback(countryFilter);
+        return [];
       }
 
       const entries: LeaderboardEntry[] = [];
@@ -44,41 +48,35 @@ export const leaderboardService = {
         if (
           countryFilter &&
           countryFilter !== 'All Nations' &&
+          profile.country &&
           profile.country.toLowerCase() !== countryFilter.toLowerCase()
         ) {
           continue;
         }
 
+        const winRate = Math.round(Number(row.win_rate) || 0);
+        const wins = row.wins || 0;
+        const matches = row.matches_played || (wins + (row.losses || 0));
+        const dynamicTitle = getRankTitle(winRate, wins, matches);
+
         entries.push({
           rank: rankCounter++,
-          gamerTag: profile.gamer_tag || 'Warrior',
+          gamerTag: profile.gamer_tag || 'Competitor',
           country: profile.country || 'South Africa',
           countryCode: profile.country_code || 'ZA',
           province: profile.province || 'Gauteng',
-          town: profile.town || 'Johannesburg',
+          town: profile.town || '',
           elo: row.elo_rating || 1200,
-          winRate: Math.round(Number(row.win_rate) || 0),
-          wins: row.wins || 0,
-          title: profile.title || 'Warrior',
+          winRate,
+          wins,
+          title: dynamicTitle,
         });
-      }
-
-      if (entries.length === 0) {
-        return this.filterFallback(countryFilter);
       }
 
       return entries;
     } catch {
-      return this.filterFallback(countryFilter);
+      return [];
     }
-  },
-
-  filterFallback(countryFilter?: string): LeaderboardEntry[] {
-    if (!countryFilter || countryFilter === 'All Nations') {
-      return INITIAL_REGIONAL_LEADERBOARD;
-    }
-    return INITIAL_REGIONAL_LEADERBOARD.filter(
-      (entry) => entry.country.toLowerCase() === countryFilter.toLowerCase()
-    );
   },
 };
+

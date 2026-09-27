@@ -43,12 +43,14 @@ export const CoinTossModal: React.FC<CoinTossModalProps> = ({
   const [isFlipping, setIsFlipping] = useState(false);
   const [tossResult, setTossResult] = useState<CoinSide | null>(null);
   const [winnerPlayer, setWinnerPlayer] = useState<Player | null>(null);
+  const [spinningLetter, setSpinningLetter] = useState<'H' | 'T'>('H');
 
   // Animation values
   const flipAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const autoFinishTimer = useRef<NodeJS.Timeout | null>(null);
+  const spinInterval = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (visible) {
@@ -57,6 +59,9 @@ export const CoinTossModal: React.FC<CoinTossModalProps> = ({
     return () => {
       if (autoFinishTimer.current) {
         clearTimeout(autoFinishTimer.current);
+      }
+      if (spinInterval.current) {
+        clearInterval(spinInterval.current);
       }
     };
   }, [visible]);
@@ -75,6 +80,12 @@ export const CoinTossModal: React.FC<CoinTossModalProps> = ({
     setIsFlipping(true);
     setTossResult(null);
     setWinnerPlayer(null);
+
+    // Rapidly alternate H and T during the 3D flip animation
+    if (spinInterval.current) clearInterval(spinInterval.current);
+    spinInterval.current = setInterval(() => {
+      setSpinningLetter((prev) => (prev === 'H' ? 'T' : 'H'));
+    }, 110);
 
     // 50/50 fair distribution
     const outcome: CoinSide = Math.random() < 0.5 ? 'heads' : 'tails';
@@ -106,6 +117,10 @@ export const CoinTossModal: React.FC<CoinTossModalProps> = ({
         useNativeDriver: true,
       }),
     ]).start(() => {
+      if (spinInterval.current) {
+        clearInterval(spinInterval.current);
+        spinInterval.current = null;
+      }
       setIsFlipping(false);
       setTossResult(outcome);
 
@@ -143,6 +158,10 @@ export const CoinTossModal: React.FC<CoinTossModalProps> = ({
   };
 
   const handleReset = () => {
+    if (spinInterval.current) {
+      clearInterval(spinInterval.current);
+      spinInterval.current = null;
+    }
     setSelectedSide(null);
     setIsFlipping(false);
     setTossResult(null);
@@ -247,7 +266,7 @@ export const CoinTossModal: React.FC<CoinTossModalProps> = ({
                   fontSize="24"
                   fontWeight="900"
                 >
-                  {isFlipping ? 'M' : displayedSide === 'heads' ? 'H' : 'T'}
+                  {isFlipping ? spinningLetter : displayedSide === 'heads' ? 'H' : 'T'}
                 </SvgText>
               </Svg>
             </Animated.View>

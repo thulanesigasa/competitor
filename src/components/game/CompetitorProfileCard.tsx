@@ -4,6 +4,7 @@ import { Text } from '../Typography';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme';
 import { CompetitorProfile } from '../../types/game';
+import { getRankFromStats } from '../../constants/ranks';
 
 interface CompetitorProfileCardProps {
   profile: CompetitorProfile;
@@ -24,6 +25,13 @@ export const CompetitorProfileCard: React.FC<CompetitorProfileCardProps> = ({
   onSecondaryAction,
   isActionLoading = false,
 }) => {
+  const rankInfo = getRankFromStats(
+    profile.winRate,
+    profile.wins,
+    profile.matchesPlayed
+  );
+  const displayTitle = rankInfo.title.toUpperCase();
+
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
@@ -38,9 +46,9 @@ export const CompetitorProfileCard: React.FC<CompetitorProfileCardProps> = ({
             <Text variant="h3" weight="900" color={colors.textPrimary}>
               {profile.gamerTag}
             </Text>
-            <View style={styles.titleChip}>
-              <Text variant="caption" weight="800" color={colors.accentHover}>
-                {profile.title.toUpperCase()}
+            <View style={[styles.titleChip, { borderColor: rankInfo.badgeColor }]}>
+              <Text variant="caption" weight="800" color={rankInfo.badgeColor}>
+                {displayTitle}
               </Text>
             </View>
           </View>

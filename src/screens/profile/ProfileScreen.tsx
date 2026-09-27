@@ -18,6 +18,7 @@ import {
   getUserProfile,
 } from '../../store/gameStore';
 import { authService } from '../../services/authService';
+import { getRankFromStats, RANK_TIERS } from '../../constants/ranks';
 
 interface ProfileScreenProps {
   onLogout: () => void;
@@ -64,6 +65,12 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
       ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100)
       : 0;
 
+  const rankInfo = getRankFromStats(
+    winRate,
+    stats?.gamesWon || 0,
+    stats?.gamesPlayed || 0
+  );
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <Header
@@ -80,14 +87,20 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
               {user?.gamerTag ? user.gamerTag.charAt(0).toUpperCase() : 'M'}
             </Text>
           </View>
-          <Text style={styles.gamerTag}>{user?.gamerTag || 'Morabaraba Warrior'}</Text>
+          <Text style={styles.gamerTag}>{user?.gamerTag || 'Competitor'}</Text>
           <Text style={styles.fullName}>
             {user?.name || 'Local'} {user?.surname || 'Competitor'}
           </Text>
           <Text style={styles.location}>
-            {user?.town || 'Johannesburg'}, {user?.province || 'Gauteng'} •{' '}
+            {user?.town ? `${user.town}, ` : ''}{user?.province || 'Gauteng'} •{' '}
             {user?.country || 'South Africa'}
           </Text>
+
+          <View style={[styles.rankChip, { borderColor: rankInfo.badgeColor }]}>
+            <Text style={[styles.rankChipText, { color: rankInfo.badgeColor }]}>
+              TIER {rankInfo.tier}: {rankInfo.title.toUpperCase()} ({rankInfo.culturalTitle.toUpperCase()})
+            </Text>
+          </View>
         </View>
 
         {/* Career Stats Grid (Direct Body Metrics) */}
@@ -138,6 +151,40 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
             <Text style={styles.detailKey}>Region Code</Text>
             <Text style={styles.detailValue}>{user?.countryCode || 'ZA'}</Text>
           </View>
+        </View>
+
+        {/* 10-Tier Rank Progression */}
+        <Text style={[styles.sectionTitle, { marginTop: SPACING.lg }]}>
+          SOUTHERN AFRICAN RANK TIERS (10 TIERS)
+        </Text>
+        <View style={styles.tiersContainer}>
+          {RANK_TIERS.map((tier) => {
+            const isCurrent = rankInfo.tier === tier.tier;
+            return (
+              <View
+                key={tier.tier}
+                style={[
+                  styles.tierRow,
+                  isCurrent && styles.tierRowCurrent,
+                ]}
+              >
+                <View style={styles.tierLeft}>
+                  <Text style={[styles.tierNumber, isCurrent && { color: COLORS.accent }]}>
+                    #{tier.tier}
+                  </Text>
+                  <View style={{ flex: 1, paddingRight: 8 }}>
+                    <Text style={[styles.tierTitle, isCurrent && { color: COLORS.accent }]}>
+                      {tier.title} ({tier.culturalTitle})
+                    </Text>
+                    <Text style={styles.tierDesc}>{tier.description}</Text>
+                  </View>
+                </View>
+                <Text style={[styles.tierReq, isCurrent && { color: COLORS.accent, fontWeight: '800' }]}>
+                  {tier.minWinRate}% WR
+                </Text>
+              </View>
+            );
+          })}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -250,5 +297,60 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
     fontSize: 12,
     fontWeight: '700',
+  },
+  rankChip: {
+    marginTop: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderWidth: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  rankChipText: {
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+  tiersContainer: {
+    borderTopWidth: 1,
+    borderColor: 'rgba(15, 23, 42, 0.08)',
+  },
+  tierRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(15, 23, 42, 0.08)',
+  },
+  tierRowCurrent: {
+    backgroundColor: 'rgba(229, 169, 60, 0.08)',
+    paddingHorizontal: 6,
+  },
+  tierLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: 8,
+  },
+  tierNumber: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: COLORS.textMuted,
+    width: 24,
+  },
+  tierTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+  },
+  tierDesc: {
+    fontSize: 10,
+    color: COLORS.textSecondary,
+    marginTop: 1,
+  },
+  tierReq: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
   },
 });
