@@ -179,6 +179,12 @@ npm install --legacy-peer-deps --prefer-offline --no-audit
 # Start with concurrently on pinned port 8082 (Rule 15)
 npm run dev
 
+# Run TypeScript typecheck
+npm run typecheck
+
+# Re-generate calibrated assets (Rule 15 & 19)
+npm run generate:assets
+
 # Or start directly
 npm start
 ```
