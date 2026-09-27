@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -10,7 +10,9 @@ import {
   Modal,
   BackHandler,
   Image,
+  Platform,
 } from 'react-native';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { colors } from '../../theme/colors';
 import { spacing, radius, shadow } from '../../theme';
 import { Text } from '../../components/Typography';
@@ -38,6 +40,17 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
   const { showAlert } = useThemedAlert();
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
 
+  // Keyboard Navigation Refs
+  const firstNameRef = useRef<TextInput>(null);
+  const surnameRef = useRef<TextInput>(null);
+  const phoneRef = useRef<TextInput>(null);
+  const townRef = useRef<TextInput>(null);
+  const gamerTagRef = useRef<TextInput>(null);
+  const emailRef = useRef<TextInput>(null);
+  const confirmEmailRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
+  const confirmPasswordRef = useRef<TextInput>(null);
+
   // Step 1: Personal Details
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
@@ -45,6 +58,28 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
   const [dialCode, setDialCode] = useState('+27');
   const [cellphone, setCellphone] = useState('');
   const [showCountryPicker, setShowCountryPicker] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [dateValue, setDateValue] = useState<Date>(() => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() - 18);
+    return d;
+  });
+
+  const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+    if (event.type === 'set' && selectedDate) {
+      setDateValue(selectedDate);
+      const yyyy = selectedDate.getFullYear();
+      const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const dd = String(selectedDate.getDate()).padStart(2, '0');
+      setDob(`${yyyy}-${mm}-${dd}`);
+      setTimeout(() => {
+        phoneRef.current?.focus();
+      }, 300);
+    }
+  };
 
   // Step 2: Location & Gamer Tag
   const [selectedCountryName, setSelectedCountryName] = useState('South Africa');
@@ -270,11 +305,14 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
               </Text>
               <View style={[styles.inputWrapper, shadow.sm]}>
                 <TextInput
+                  ref={firstNameRef}
                   style={styles.textInput}
                   placeholder="e.g. Sipho"
                   placeholderTextColor="#94A3B8"
                   value={name}
                   onChangeText={setName}
+                  returnKeyType="next"
+                  onSubmitEditing={() => surnameRef.current?.focus()}
                 />
               </View>
             </View>
@@ -285,28 +323,48 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
               </Text>
               <View style={[styles.inputWrapper, shadow.sm]}>
                 <TextInput
+                  ref={surnameRef}
                   style={styles.textInput}
                   placeholder="e.g. Dlamini"
                   placeholderTextColor="#94A3B8"
                   value={surname}
                   onChangeText={setSurname}
+                  returnKeyType="next"
+                  onSubmitEditing={() => setShowDatePicker(true)}
                 />
               </View>
             </View>
 
             <View style={styles.inputGroup}>
               <Text variant="caption" weight="700" color={colors.textSecondary} style={styles.inputLabel}>
-                DATE OF BIRTH (YYYY-MM-DD)
+                DATE OF BIRTH
               </Text>
-              <View style={[styles.inputWrapper, shadow.sm]}>
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="e.g. 2002-08-15"
-                  placeholderTextColor="#94A3B8"
-                  value={dob}
-                  onChangeText={setDob}
+              <TouchableOpacity
+                style={[styles.inputWrapper, shadow.sm, styles.datePickerBtn]}
+                activeOpacity={0.8}
+                onPress={() => setShowDatePicker(true)}
+              >
+                <Text
+                  variant="body"
+                  color={dob ? colors.textPrimary : '#94A3B8'}
+                  weight={dob ? '600' : '400'}
+                  style={styles.datePickerText}
+                >
+                  {dob ? dob : 'Select Date of Birth (Tap to pick)'}
+                </Text>
+                <Text variant="caption" color={colors.accentHover} weight="800">
+                  {dob ? 'CHANGE' : 'SELECT ▼'}
+                </Text>
+              </TouchableOpacity>
+              {showDatePicker && (
+                <DateTimePicker
+                  value={dateValue}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  maximumDate={new Date()}
+                  onChange={onDateChange}
                 />
-              </View>
+              )}
             </View>
 
             {/* Split Country Code + Phone with real-time zero stripper */}
@@ -330,12 +388,15 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
 
                 <View style={[styles.phoneInputWrapper, shadow.sm]}>
                   <TextInput
+                    ref={phoneRef}
                     style={styles.textInput}
                     placeholder="82 123 4567"
                     placeholderTextColor="#94A3B8"
                     value={cellphone}
                     onChangeText={handlePhoneChange}
-                    keyboardType="phone-pad"
+                    keyboardType="number-pad"
+                    returnKeyType="done"
+                    onSubmitEditing={handleNextStep1}
                   />
                   {cellphone.length >= 7 && (
                     <Image
@@ -438,11 +499,14 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
               </Text>
               <View style={[styles.inputWrapper, shadow.sm]}>
                 <TextInput
+                  ref={townRef}
                   style={styles.textInput}
                   placeholder="e.g. Soweto, Mutare, Gaborone..."
                   placeholderTextColor="#94A3B8"
                   value={town}
                   onChangeText={setTown}
+                  returnKeyType="next"
+                  onSubmitEditing={() => gamerTagRef.current?.focus()}
                 />
               </View>
             </View>
@@ -453,12 +517,15 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
               </Text>
               <View style={[styles.inputWrapper, shadow.sm]}>
                 <TextInput
+                  ref={gamerTagRef}
                   style={styles.textInput}
                   placeholder="e.g. KlipKing_01"
                   placeholderTextColor="#94A3B8"
                   autoCapitalize="none"
                   value={gamerTag}
                   onChangeText={setGamerTag}
+                  returnKeyType="done"
+                  onSubmitEditing={handleNextStep2}
                 />
               </View>
               <Text variant="caption" color={colors.textSecondary} style={styles.phoneHint}>
@@ -499,6 +566,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
               </Text>
               <View style={[styles.inputWrapper, shadow.sm]}>
                 <TextInput
+                  ref={emailRef}
                   style={styles.textInput}
                   placeholder="gamer@morabaraba.africa"
                   placeholderTextColor="#94A3B8"
@@ -506,6 +574,8 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                   autoCapitalize="none"
                   value={email}
                   onChangeText={setEmail}
+                  returnKeyType="next"
+                  onSubmitEditing={() => confirmEmailRef.current?.focus()}
                 />
               </View>
             </View>
@@ -516,6 +586,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
               </Text>
               <View style={[styles.inputWrapper, shadow.sm]}>
                 <TextInput
+                  ref={confirmEmailRef}
                   style={styles.textInput}
                   placeholder="Re-enter your email"
                   placeholderTextColor="#94A3B8"
@@ -523,6 +594,8 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                   autoCapitalize="none"
                   value={confirmEmail}
                   onChangeText={setConfirmEmail}
+                  returnKeyType="next"
+                  onSubmitEditing={() => passwordRef.current?.focus()}
                 />
               </View>
             </View>
@@ -533,12 +606,15 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
               </Text>
               <View style={[styles.inputWrapper, shadow.sm]}>
                 <TextInput
+                  ref={passwordRef}
                   style={styles.textInput}
                   placeholder="Minimum 8 letters & numbers"
                   placeholderTextColor="#94A3B8"
                   secureTextEntry={!showPassword}
                   value={password}
                   onChangeText={setPassword}
+                  returnKeyType="next"
+                  onSubmitEditing={() => confirmPasswordRef.current?.focus()}
                 />
                 <TouchableOpacity
                   onPress={() => setShowPassword(!showPassword)}
@@ -559,12 +635,15 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
               </Text>
               <View style={[styles.inputWrapper, shadow.sm]}>
                 <TextInput
+                  ref={confirmPasswordRef}
                   style={styles.textInput}
                   placeholder="Re-enter your password"
                   placeholderTextColor="#94A3B8"
                   secureTextEntry={!showConfirmPassword}
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
+                  returnKeyType="done"
+                  onSubmitEditing={handleFinalSubmit}
                 />
                 <TouchableOpacity
                   onPress={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -782,6 +861,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     paddingHorizontal: spacing.md,
+  },
+  datePickerBtn: {
+    justifyContent: 'space-between',
+  },
+  datePickerText: {
+    fontSize: 14,
   },
   inputIcon: {
     marginRight: 10,

@@ -1,6 +1,6 @@
 {
   "name": "morabaraba",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "index.ts",
   "scripts": {
     "start": "expo start --port 8082",
@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "3.1.1",
+    "@react-native-community/datetimepicker": "^9.2.1",
     "@react-navigation/bottom-tabs": "^7.15.9",
     "@react-navigation/native": "^7.2.2",
     "@react-navigation/native-stack": "^7.14.10",
