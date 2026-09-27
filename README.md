@@ -93,6 +93,7 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 - Seamless authentication toggle leading to direct Sign In.
 
 ### 6. Multi-Step Registration with DatePicker & Seamless Keyboard Navigation
+- **Step Progression Indicator:** Sequential 3-step navigation preserving bold step numbers across active and completed states with solid accent fill and crisp white typography on completed steps, ensuring clear numeric progress tracking without image replacements.
 - **Step 1 (Personal Details):**
   - **Interactive Native DatePicker:** Date of birth input uses `@react-native-community/datetimepicker` with a clean button trigger displaying `SELECT ▼` or formatted calendar dates (`YYYY-MM-DD`), preventing manual entry errors.
   - **Sequential Keyboard Navigation:** Pressing keyboard `Next` automatically transfers cursor focus from First Name to Surname, then to Phone number.

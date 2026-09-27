@@ -306,24 +306,17 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                       isCurrent && styles.stepCircleActive,
                     ]}
                   >
-                    {isPassed ? (
-                      <Image
-                        source={require('../../../assets/icon.png')}
-                        style={styles.stepVerifiedLogo}
-                        resizeMode="contain"
-                      />
-                    ) : (
-                      <Text
-                        variant="caption"
-                        weight="700"
-                        style={[
-                          styles.stepCircleText,
-                          isCurrent && styles.stepCircleTextActive,
-                        ]}
-                      >
-                        {s}
-                      </Text>
-                    )}
+                    <Text
+                      variant="caption"
+                      weight="800"
+                      style={[
+                        styles.stepCircleText,
+                        isCurrent && styles.stepCircleTextActive,
+                        isPassed && styles.stepCircleTextCompleted,
+                      ]}
+                    >
+                      {s}
+                    </Text>
                   </View>
                   {s < 3 && (
                     <View
@@ -830,6 +823,10 @@ const styles = StyleSheet.create({
   },
   stepCircleTextActive: {
     color: colors.accentHover,
+  },
+  stepCircleTextCompleted: {
+    color: '#FFFFFF',
+    fontWeight: '800',
   },
   stepVerifiedLogo: {
     width: 14,
