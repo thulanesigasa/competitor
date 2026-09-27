@@ -9,6 +9,7 @@ import {
   Share,
   ActivityIndicator,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { COLORS, SPACING } from '../../constants/theme';
 import { Header } from '../../components/common/Header';
 import { useThemedAlert } from '../../components/common/ThemedAlert';
@@ -156,6 +157,7 @@ const POTENTIAL_CHALLENGERS: CompetitorProfile[] = [
 ];
 
 export const BattlegroundScreen: React.FC = () => {
+  const navigation = useNavigation<any>();
   const { showAlert } = useThemedAlert();
   const [mode, setMode] = useState<DuelMode>('menu');
   const [roomPin, setRoomPin] = useState('');
@@ -324,8 +326,7 @@ export const BattlegroundScreen: React.FC = () => {
   // --- PASS & PLAY FLOW ---
   const handleStartPassAndPlay = () => {
     clearAllTimers();
-    setOpponentName('Player 2 (Charcoal)');
-    setShowCoinToss(true);
+    navigation.navigate('Offline', { mode: 'pass_and_play', timestamp: Date.now() });
   };
 
   // --- COIN TOSS & MATCH COMPLETION ---
