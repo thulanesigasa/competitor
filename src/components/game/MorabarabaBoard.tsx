@@ -260,10 +260,10 @@ export const MorabarabaBoard: React.FC<MorabarabaBoardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#F8FAFC',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(15, 23, 42, 0.08)',
     position: 'relative',
     alignSelf: 'center',
     marginVertical: SPACING.md,
@@ -271,30 +271,37 @@ const styles = StyleSheet.create({
   square: {
     position: 'absolute',
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderColor: '#94A3B8',
   },
   line: {
     position: 'absolute',
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: '#94A3B8',
   },
   vertex: {
     position: 'absolute',
-    backgroundColor: COLORS.surfaceLight,
+    backgroundColor: '#FFFFFF',
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
+    borderColor: '#CBD5E1',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
+    elevation: 2,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   piecePlayer1: {
     backgroundColor: COLORS.player1,
-    borderColor: COLORS.white,
+    borderColor: '#FFFFFF',
     borderWidth: 2,
+    elevation: 3,
   },
   piecePlayer2: {
     backgroundColor: COLORS.player2,
-    borderColor: COLORS.surface,
+    borderColor: '#FFFFFF',
     borderWidth: 2,
+    elevation: 3,
   },
   pieceSelected: {
     borderWidth: 3,
@@ -303,7 +310,7 @@ const styles = StyleSheet.create({
   },
   vertexDestination: {
     borderColor: COLORS.accent,
-    backgroundColor: COLORS.accentSubtle,
+    backgroundColor: 'rgba(229, 169, 60, 0.15)',
     borderWidth: 2,
   },
   destinationDot: {
@@ -323,9 +330,9 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   symbolPlayer1: {
-    color: COLORS.background,
+    color: '#FFFFFF',
   },
   symbolPlayer2: {
-    color: COLORS.background,
+    color: '#FFFFFF',
   },
 });
