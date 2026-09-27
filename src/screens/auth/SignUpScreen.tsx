@@ -148,7 +148,6 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
       currentCountry.provinces.map((p) => ({
         label: p.name,
         value: p.name,
-        subLabel: `${p.towns.length} towns`,
       })),
     [currentCountry]
   );

@@ -20,6 +20,7 @@ import {
   getLegalShotVertices,
   hasLegalMoves,
 } from '../../engine/morabaraba';
+import { CoinTossModal } from '../../components/game/CoinTossModal';
 
 type DuelMode = 'menu' | 'pass_and_play' | 'wifi_host' | 'wifi_join';
 
@@ -30,11 +31,12 @@ export const BattlegroundScreen: React.FC = () => {
   const [enteredPin, setEnteredPin] = useState('');
   const [gameState, setGameState] = useState<GameState>(createInitialGameState());
   const [statusMessage, setStatusMessage] = useState('Player 1 (Gold): Place your cow.');
+  const [showCoinToss, setShowCoinToss] = useState(false);
+  const [pendingTargetMode, setPendingTargetMode] = useState<DuelMode>('pass_and_play');
 
   const startPassAndPlay = () => {
-    setGameState(createInitialGameState());
-    setStatusMessage('Player 1 (Gold): Place your cow.');
-    setMode('pass_and_play');
+    setPendingTargetMode('pass_and_play');
+    setShowCoinToss(true);
   };
 
   const startHostWifi = () => {
@@ -43,14 +45,26 @@ export const BattlegroundScreen: React.FC = () => {
     setMode('wifi_host');
   };
 
+  const handleHostStart = () => {
+    setPendingTargetMode('pass_and_play');
+    setShowCoinToss(true);
+  };
+
   const joinWifiMatch = () => {
     if (enteredPin.length < 4) {
-      showAlert({ title: 'Invalid PIN', message: 'Please enter a 4-digit match PIN.' });
+      showAlert({ title: 'Invalid PIN', message: 'Please enter a 4-digit battle PIN.' });
       return;
     }
-    setGameState(createInitialGameState());
-    setStatusMessage(`Connected to Room ${enteredPin}! Match starting...`);
-    setMode('pass_and_play');
+    setPendingTargetMode('pass_and_play');
+    setShowCoinToss(true);
+  };
+
+  const handleTossComplete = (firstPlayer: Player) => {
+    setShowCoinToss(false);
+    setGameState(createInitialGameState(firstPlayer));
+    const firstPlayerName = firstPlayer === 'player1' ? 'Player 1 (Gold)' : 'Player 2 (Ivory)';
+    setStatusMessage(`${firstPlayerName} won the coin toss! Place your cow.`);
+    setMode(pendingTargetMode);
   };
 
   const handleVertexPress = (vertexId: number) => {
@@ -98,7 +112,7 @@ export const BattlegroundScreen: React.FC = () => {
           showAlert({
             title: 'Victory!',
             message: `${winner === 'player1' ? 'Player 1 (Gold)' : 'Player 2 (Ivory)'} has won the match!`,
-            buttons: [{ text: 'Play Again', onPress: () => setGameState(createInitialGameState()) }],
+            buttons: [{ text: 'Play Again', onPress: () => setShowCoinToss(true) }],
           });
         } else {
           setStatusMessage(`${opponent === 'player1' ? 'Player 1' : 'Player 2'}'s turn.`);
@@ -195,18 +209,20 @@ export const BattlegroundScreen: React.FC = () => {
     <SafeAreaView style={styles.safeArea}>
       <Header
         title="BATTLEGROUND"
-        subtitle={mode === 'menu' ? '2-PLAYER DUEL' : 'LIVE MATCH'}
+        subtitle={mode === 'menu' ? 'ONLINE BATTLE' : 'LIVE MATCH'}
         showBack={mode !== 'menu'}
         onBack={() => setMode('menu')}
+        rightActionLabel={mode !== 'menu' ? 'Coin Toss' : undefined}
+        onRightAction={mode !== 'menu' ? () => setShowCoinToss(true) : undefined}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {mode === 'menu' && (
           <View style={styles.menuContainer}>
             <View style={styles.introSection}>
-              <Text style={styles.sectionTitle}>ZERO-DATA LOCAL DUELS</Text>
+              <Text style={styles.sectionTitle}>MULTIPLAYER BATTLES</Text>
               <Text style={styles.sectionDesc}>
-                Compete against friends face-to-face. Play on the same screen or over local Wi-Fi without burning any cellular data.
+                Compete against friends face-to-face. Play together with a fair coin toss to start, or connect in an online battle.
               </Text>
             </View>
 
@@ -215,9 +231,9 @@ export const BattlegroundScreen: React.FC = () => {
               activeOpacity={0.7}
               onPress={startPassAndPlay}
             >
-              <Text style={styles.actionTitle}>PASS & PLAY (SAME DEVICE)</Text>
+              <Text style={styles.actionTitle}>PASS & PLAY</Text>
               <Text style={styles.actionDesc}>
-                Take turns on this device. Perfect for tabletop strategy anywhere.
+                Take turns making moves with fair coin toss turn selection. Perfect for competitive strategy anywhere.
               </Text>
               <Text style={styles.actionTag}>Instant Start →</Text>
             </TouchableOpacity>
@@ -227,11 +243,11 @@ export const BattlegroundScreen: React.FC = () => {
               activeOpacity={0.7}
               onPress={startHostWifi}
             >
-              <Text style={styles.actionTitle}>HOST WI-FI MATCH</Text>
+              <Text style={styles.actionTitle}>HOST ONLINE BATTLE</Text>
               <Text style={styles.actionDesc}>
-                Create a local match room and share a 4-digit PIN with a nearby player.
+                Create an online battle room and share a 4-digit PIN with a nearby player.
               </Text>
-              <Text style={styles.actionTag}>Host Match →</Text>
+              <Text style={styles.actionTag}>Host Battle →</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -239,9 +255,9 @@ export const BattlegroundScreen: React.FC = () => {
               activeOpacity={0.7}
               onPress={() => setMode('wifi_join')}
             >
-              <Text style={styles.actionTitle}>JOIN WI-FI MATCH</Text>
+              <Text style={styles.actionTitle}>JOIN ONLINE BATTLE</Text>
               <Text style={styles.actionDesc}>
-                Enter the 4-digit room code from a nearby player on the same Wi-Fi/Hotspot.
+                Enter the 4-digit room code from a host to connect to the online battle.
               </Text>
               <Text style={styles.actionTag}>Enter PIN →</Text>
             </TouchableOpacity>
@@ -250,31 +266,27 @@ export const BattlegroundScreen: React.FC = () => {
 
         {mode === 'wifi_host' && (
           <View style={styles.dialogSection}>
-            <Text style={styles.dialogTitle}>HOSTING LOCAL MATCH</Text>
+            <Text style={styles.dialogTitle}>HOSTING ONLINE BATTLE</Text>
             <Text style={styles.dialogDesc}>
-              Ask Player 2 to open Battleground → Join Wi-Fi Match, and enter this PIN:
+              Ask Player 2 to open Battleground → Join Online Battle, and enter this PIN:
             </Text>
             <View style={styles.pinDisplay}>
               <Text style={styles.pinText}>{roomPin}</Text>
             </View>
             <TouchableOpacity
               style={styles.primaryButton}
-              onPress={() => {
-                setGameState(createInitialGameState());
-                setStatusMessage('Player 2 connected! Match starting...');
-                setMode('pass_and_play');
-              }}
+              onPress={handleHostStart}
             >
-              <Text style={styles.primaryButtonText}>Start Match</Text>
+              <Text style={styles.primaryButtonText}>Start Online Battle →</Text>
             </TouchableOpacity>
           </View>
         )}
 
         {mode === 'wifi_join' && (
           <View style={styles.dialogSection}>
-            <Text style={styles.dialogTitle}>JOIN LOCAL MATCH</Text>
+            <Text style={styles.dialogTitle}>JOIN ONLINE BATTLE</Text>
             <Text style={styles.dialogDesc}>
-              Enter the 4-digit PIN displayed on the host's screen:
+              Enter the 4-digit PIN displayed on the host's screen to connect:
             </Text>
             <TextInput
               style={styles.pinInput}
@@ -291,7 +303,7 @@ export const BattlegroundScreen: React.FC = () => {
               style={styles.primaryButton}
               onPress={joinWifiMatch}
             >
-              <Text style={styles.primaryButtonText}>Connect to Room →</Text>
+              <Text style={styles.primaryButtonText}>Connect to Battle →</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -333,9 +345,25 @@ export const BattlegroundScreen: React.FC = () => {
               gameState={gameState}
               onVertexPress={handleVertexPress}
             />
+
+            <TouchableOpacity
+              style={styles.reTossBtn}
+              onPress={() => setShowCoinToss(true)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.reTossBtnText}>New Battle (Coin Toss) ↺</Text>
+            </TouchableOpacity>
           </View>
         )}
       </ScrollView>
+
+      <CoinTossModal
+        visible={showCoinToss}
+        onClose={() => setShowCoinToss(false)}
+        onTossComplete={handleTossComplete}
+        player1Name="Player 1"
+        player2Name="Player 2"
+      />
     </SafeAreaView>
   );
 };
@@ -503,5 +531,20 @@ const styles = StyleSheet.create({
     color: COLORS.accentHover,
     fontSize: 12,
     fontWeight: '900',
+  },
+  reTossBtn: {
+    marginTop: SPACING.md,
+    paddingVertical: SPACING.sm + 4,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: 'rgba(15, 23, 42, 0.08)',
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reTossBtnText: {
+    color: COLORS.accentHover,
+    fontSize: 13,
+    fontWeight: '700',
   },
 });

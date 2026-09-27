@@ -97,10 +97,10 @@ export const LeaderboardScreen: React.FC = () => {
                 </Text>
               </View>
 
-              {/* Elo & Stats */}
+              {/* Performance Stats */}
               <View style={styles.statsColumn}>
-                <Text style={styles.eloScore}>{entry.elo} ELO</Text>
-                <Text style={styles.winRate}>{entry.winRate}% WR ({entry.wins}W)</Text>
+                <Text style={styles.eloScore}>{entry.title}</Text>
+                <Text style={styles.winRate}>{entry.winRate}% Win Rate ({entry.wins}W)</Text>
               </View>
             </View>
           ))}

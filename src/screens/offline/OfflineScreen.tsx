@@ -11,6 +11,7 @@ import { COLORS, SPACING } from '../../constants/theme';
 import { Header } from '../../components/common/Header';
 import { useThemedAlert } from '../../components/common/ThemedAlert';
 import { MorabarabaBoard } from '../../components/game/MorabarabaBoard';
+import { CoinTossModal } from '../../components/game/CoinTossModal';
 import {
   AiDifficulty,
   GamePhase,
@@ -34,11 +35,21 @@ export const OfflineScreen: React.FC = () => {
   const [difficulty, setDifficulty] = useState<AiDifficulty>('warrior');
   const [statusMessage, setStatusMessage] = useState('Place your cow on any empty intersection.');
   const [isAiThinking, setIsAiThinking] = useState(false);
+  const [showCoinToss, setShowCoinToss] = useState(false);
 
   const resetGame = () => {
-    setGameState(createInitialGameState());
-    setStatusMessage('Place your cow on any empty intersection.');
+    setShowCoinToss(true);
+  };
+
+  const handleTossComplete = (firstPlayer: Player) => {
+    setShowCoinToss(false);
+    setGameState(createInitialGameState(firstPlayer));
     setIsAiThinking(false);
+    if (firstPlayer === 'player1') {
+      setStatusMessage('You won the coin toss! Place your cow.');
+    } else {
+      setStatusMessage('CPU won the coin toss! CPU makes the first move...');
+    }
   };
 
   // AI Turn Handler
@@ -320,8 +331,8 @@ export const OfflineScreen: React.FC = () => {
       <Header
         title="SOLO ARENA"
         subtitle="1P VS CPU ENGINE"
-        rightActionLabel="Reset"
-        onRightAction={resetGame}
+        rightActionLabel="Coin Toss"
+        onRightAction={() => setShowCoinToss(true)}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -390,7 +401,23 @@ export const OfflineScreen: React.FC = () => {
           onVertexPress={handleVertexPress}
           disabled={isAiThinking || gameState.winner !== null}
         />
+
+        <TouchableOpacity
+          style={styles.reTossBtn}
+          onPress={() => setShowCoinToss(true)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.reTossBtnText}>New Match (Coin Toss) ↺</Text>
+        </TouchableOpacity>
       </ScrollView>
+
+      <CoinTossModal
+        visible={showCoinToss}
+        onClose={() => setShowCoinToss(false)}
+        onTossComplete={handleTossComplete}
+        player1Name="You"
+        player2Name="CPU"
+      />
     </SafeAreaView>
   );
 };
@@ -485,5 +512,20 @@ const styles = StyleSheet.create({
     color: COLORS.accentHover,
     fontSize: 12,
     fontWeight: '900',
+  },
+  reTossBtn: {
+    marginTop: SPACING.md,
+    paddingVertical: SPACING.sm + 4,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: 'rgba(15, 23, 42, 0.08)',
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reTossBtnText: {
+    color: COLORS.accentHover,
+    fontSize: 13,
+    fontWeight: '700',
   },
 });
