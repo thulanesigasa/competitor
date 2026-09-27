@@ -260,10 +260,7 @@ export const MorabarabaBoard: React.FC<MorabarabaBoardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
+    backgroundColor: 'transparent',
     position: 'relative',
     alignSelf: 'center',
     marginVertical: SPACING.md,

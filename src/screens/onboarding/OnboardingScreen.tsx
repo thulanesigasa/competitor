@@ -275,7 +275,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                 <Image
                   source={slide.image}
                   style={styles.artImage}
-                  resizeMode="cover"
+                  resizeMode="contain"
                 />
               </Animated.View>
             );
@@ -440,22 +440,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: spacing.sm,
     marginBottom: spacing.md,
-    borderRadius: radius.lg,
-    overflow: 'hidden',
-    backgroundColor: colors.surfaceSecondary,
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
+    backgroundColor: 'transparent',
   },
   sharedArtSlide: {
     position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radius.lg,
-    overflow: 'hidden',
   },
   artImage: {
     width: '100%',
     height: '100%',
+    borderRadius: 0,
   },
   slideTextContainer: {
     alignItems: 'center',

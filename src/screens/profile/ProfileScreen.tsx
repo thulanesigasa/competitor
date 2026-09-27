@@ -70,8 +70,8 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Profile Card */}
-        <View style={styles.profileCard}>
+        {/* Profile Header (Direct Body Canvas) */}
+        <View style={styles.profileHeader}>
           <View style={styles.avatarCircle}>
             <Text style={styles.avatarInitial}>
               {user?.gamerTag ? user.gamerTag.charAt(0).toUpperCase() : 'M'}
@@ -85,12 +85,10 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
             {user?.town || 'Johannesburg'}, {user?.province || 'Gauteng'} •{' '}
             {user?.country || 'South Africa'}
           </Text>
-          <View style={styles.eloPill}>
-            <Text style={styles.eloText}>{stats?.eloRating || 1200} ELO</Text>
-          </View>
+          <Text style={styles.eloText}>{stats?.eloRating || 1200} ELO</Text>
         </View>
 
-        {/* Career Stats Grid */}
+        {/* Career Stats Grid (Direct Body Metrics) */}
         <Text style={styles.sectionTitle}>CAREER PERFORMANCE</Text>
         <View style={styles.statsGrid}>
           <View style={styles.statBox}>
@@ -119,9 +117,9 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
           </View>
         </View>
 
-        {/* Identity Details */}
+        {/* Identity Details (Direct Body Rows) */}
         <Text style={styles.sectionTitle}>GAMER DETAILS</Text>
-        <View style={styles.detailsCard}>
+        <View style={styles.detailsSection}>
           <View style={styles.detailRow}>
             <Text style={styles.detailKey}>Email</Text>
             <Text style={styles.detailValue}>{user?.email || 'N/A'}</Text>
@@ -134,7 +132,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
             <Text style={styles.detailKey}>Date of Birth</Text>
             <Text style={styles.detailValue}>{user?.dob || 'N/A'}</Text>
           </View>
-          <View style={[styles.detailRow, { borderBottomWidth: 0 }]}>
+          <View style={styles.detailRow}>
             <Text style={styles.detailKey}>Region Code</Text>
             <Text style={styles.detailValue}>{user?.countryCode || 'ZA'}</Text>
           </View>
@@ -153,13 +151,11 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
     paddingBottom: 90,
   },
-  profileCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 24,
-    padding: SPACING.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
+  profileHeader: {
     alignItems: 'center',
+    paddingVertical: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(15, 23, 42, 0.08)',
     marginBottom: SPACING.lg,
   },
   avatarCircle: {
@@ -195,24 +191,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 4,
   },
-  eloPill: {
-    marginTop: 10,
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
-  },
   eloText: {
+    marginTop: 8,
     color: COLORS.accentHover,
-    fontSize: 12,
-    fontWeight: '800',
+    fontSize: 13,
+    fontWeight: '900',
     letterSpacing: 0.5,
   },
   sectionTitle: {
     color: COLORS.textPrimary,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '800',
     letterSpacing: 0.8,
     marginBottom: SPACING.xs,
@@ -220,17 +208,16 @@ const styles = StyleSheet.create({
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
     marginBottom: SPACING.lg,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: 'rgba(15, 23, 42, 0.08)',
+    paddingVertical: SPACING.sm,
   },
   statBox: {
-    width: '31%',
-    backgroundColor: COLORS.surface,
-    borderRadius: 14,
-    paddingVertical: 12,
+    width: '33.33%',
+    paddingVertical: 10,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
   },
   statValue: {
     color: COLORS.accentHover,
@@ -243,19 +230,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginTop: 4,
   },
-  detailsCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 18,
-    padding: SPACING.sm,
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
+  detailsSection: {
+    paddingVertical: SPACING.xs,
   },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(15, 23, 42, 0.06)',
+    borderBottomColor: 'rgba(15, 23, 42, 0.08)',
   },
   detailKey: {
     color: COLORS.textSecondary,

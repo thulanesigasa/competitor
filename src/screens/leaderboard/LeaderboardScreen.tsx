@@ -74,24 +74,17 @@ export const LeaderboardScreen: React.FC = () => {
         <View style={styles.rankingsList}>
           {filteredList.map((entry) => (
             <View key={entry.gamerTag} style={styles.rankRow}>
-              {/* Rank Number */}
-              <View
+              {/* Rank Number - Pure clean typography */}
+              <Text
                 style={[
-                  styles.rankBadge,
-                  entry.rank === 1 && styles.rankBadgeGold,
-                  entry.rank === 2 && styles.rankBadgeSilver,
-                  entry.rank === 3 && styles.rankBadgeBronze,
+                  styles.rankNumber,
+                  entry.rank === 1 && styles.rankNumberGold,
+                  entry.rank === 2 && styles.rankNumberSilver,
+                  entry.rank === 3 && styles.rankNumberBronze,
                 ]}
               >
-                <Text
-                  style={[
-                    styles.rankNumber,
-                    entry.rank <= 3 && styles.rankNumberTop,
-                  ]}
-                >
-                  #{entry.rank}
-                </Text>
-              </View>
+                #{entry.rank}
+              </Text>
 
               {/* Player Info */}
               <View style={styles.playerDetails}>
@@ -129,19 +122,19 @@ const styles = StyleSheet.create({
   filtersScroll: {
     flexGrow: 0,
     marginBottom: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(15, 23, 42, 0.08)',
+    paddingBottom: 8,
   },
   filterChip: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-    backgroundColor: COLORS.surface,
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
-    marginRight: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+    marginRight: 6,
   },
   filterChipActive: {
-    backgroundColor: 'rgba(229, 169, 60, 0.12)',
-    borderColor: COLORS.accent,
+    borderBottomColor: COLORS.accent,
   },
   filterText: {
     color: COLORS.textSecondary,
@@ -153,42 +146,36 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   rankingsList: {
-    gap: SPACING.xs,
+    gap: 0,
   },
   rankRow: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 16,
-    padding: SPACING.sm,
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
+    paddingVertical: 14,
+    paddingHorizontal: SPACING.xs,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(15, 23, 42, 0.08)',
     flexDirection: 'row',
     alignItems: 'center',
   },
-  rankBadge: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    backgroundColor: COLORS.surfaceLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  rankBadgeGold: {
-    backgroundColor: COLORS.accent,
-  },
-  rankBadgeSilver: {
-    backgroundColor: '#94A3B8',
-  },
-  rankBadgeBronze: {
-    backgroundColor: '#B45309',
-  },
   rankNumber: {
+    width: 44,
     color: COLORS.textMuted,
     fontSize: 13,
     fontWeight: '800',
   },
-  rankNumberTop: {
-    color: COLORS.white,
+  rankNumberGold: {
+    color: COLORS.accent,
+    fontSize: 15,
+    fontWeight: '900',
+  },
+  rankNumberSilver: {
+    color: '#64748B',
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  rankNumberBronze: {
+    color: '#B45309',
+    fontSize: 14,
+    fontWeight: '900',
   },
   playerDetails: {
     flex: 1,
