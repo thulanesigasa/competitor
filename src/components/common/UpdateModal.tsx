@@ -37,33 +37,36 @@ export const UpdateModal: React.FC = () => {
   }, []);
 
   const checkForUpdate = async () => {
-    if (__DEV__) return; // Skip in local development
+    if (__DEV__ || !Updates.isEnabled) return;
 
     try {
       // Check snooze timestamp
       const snoozeTimeStr = await AsyncStorage.getItem(SNOOZE_KEY);
       if (snoozeTimeStr) {
         const snoozeTime = parseInt(snoozeTimeStr, 10);
-        if (Date.now() - snoozeTime < SNOOZE_DURATION_MS) {
+        if (!isNaN(snoozeTime) && Date.now() - snoozeTime < SNOOZE_DURATION_MS) {
           return; // Still snoozed
         }
       }
 
       const update = await Updates.checkForUpdateAsync();
       if (update.isAvailable) {
-        await Updates.fetchUpdateAsync();
+        // Present update notice without pre-fetching to prevent partial cache corruption on app suspension
         setModalVisible(true);
       }
     } catch {
-      // Silent catch for network drops
+      // Silent catch for network drops or offline operation
     }
   };
 
   const handleUpdateNow = async () => {
     setIsUpdating(true);
     try {
+      // Fetch full bundle on-demand before reloading
+      await Updates.fetchUpdateAsync();
       await Updates.reloadAsync();
-    } catch {
+    } catch (e) {
+      console.warn('Failed to fetch or reload update:', e);
       setIsUpdating(false);
       setModalVisible(false);
     }
@@ -111,7 +114,7 @@ export const UpdateModal: React.FC = () => {
               disabled={isUpdating}
             >
               <Text style={styles.updateButtonText}>
-                {isUpdating ? 'Reloading...' : 'Update Now'}
+                {isUpdating ? 'Downloading & Updating...' : 'Update Now'}
               </Text>
             </TouchableOpacity>
 
