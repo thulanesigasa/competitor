@@ -52,7 +52,7 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 ### 1. Authentic Morabaraba Game Engine & Pure Line Board
 - **Mathematical Board Modeling:** 24 vertices spanning three concentric squares connected by orthogonal and diagonal lines.
 - **Pure Line Intersection Board Architecture (`MorabarabaBoard.tsx`):** Empty board vertices are pure line intersections with zero circle backgrounds or borders, keeping the aesthetic focused strictly on the authentic grid lines.
-- **Authentic Concentric Carved Pieces (`MorabarabaPiece.tsx`):** Hand-crafted multi-layered SVG game pieces modeled after authentic carved stone/wood tokens, featuring outer granite rims, deep terracotta/slate concentric rings, inner shadow grooves, and centered concentric bullseyes.
+- **Authentic Pure Circular Tokens (`MorabarabaPiece.tsx`):** Hand-crafted multi-layered circular game pieces with zero background artifacts, featuring edge-to-edge outer stone rims, deep terracotta/slate concentric rings, inner shadow grooves, and centered concentric bullseyes.
 - **20 Mill Triplets:** Full automated detection of 3-in-a-row mills (*umphahlo*).
 - **Three Progressive Phases:**
   - **Placing Phase:** 12 cows per player placed sequentially; forming a mill unlocks immediate cow shooting.
@@ -60,11 +60,11 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
   - **Flying Phase (*Ku-fofa*):** When a competitor is reduced to 3 cows, their cows gain the ability to fly to any empty board intersection.
 - **Victory Evaluation:** A player wins when the opponent has fewer than 3 cows in the moving phase or has zero legal moves available.
 
-### 2. Fair Interactive Coin Toss Turn Determination (`CoinTossModal.tsx`)
-- **First Turn Decider:** Who takes the first turn is determined by an authentic, fair animated coin toss.
-- **Competitor Selection:** Players pick Heads or Tails before the toss.
-- **Realistic 3D Coin Animation:** Randomized 50/50 flip animation with smooth 3D perspective rotation, scale dynamics, and gold/bronze metallic styling.
-- **Turn Initialization:** The toss winner takes the first placement move across both Pass & Play, Online Battle, and Solo Offline matches.
+### 2. Transparent In-Game Coin Toss (`CoinTossModal.tsx`)
+- **Seamless Game Integration:** Rendered as a transparent overlay directly over the live board with zero card/div enclosures, keeping the competitor immersed in the game arena.
+- **Instant 1-Tap Trigger:** Competitors tap Heads or Tails to immediately launch the 3D coin flip without intermediate confirmation steps.
+- **Realistic 3D Physics Flip:** Randomized 50/50 flip animation with smooth perspective rotation, scale dynamics, and gold/bronze metallic styling.
+- **Automatic Head-Back-To-Game Transition:** Upon landing on the winning face and announcing the starting player, the coin toss automatically dismisses after 1.2s and heads directly into the live match.
 - **In-Game Re-Toss:** Competitors can trigger a new coin toss at any time from the match header controls or during victory rematch flows.
 
 ### 3. Intelligent Offline AI Arena (Solo Mode)

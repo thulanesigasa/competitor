@@ -37,17 +37,22 @@ export const MorabarabaPiece: React.FC<MorabarabaPieceProps> = ({
     <View
       style={[
         styles.container,
-        { width: size, height: size },
+        { width: size, height: size, borderRadius: size / 2 },
         isSelected && styles.selectedHalo,
         isShootable && styles.shootableHalo,
       ]}
     >
-      <Svg width={size} height={size} viewBox="0 0 100 100">
-        {/* Layer 1: Outer Stone Rim */}
-        <Circle cx="50" cy="50" r="48" fill={outerRim} stroke="rgba(0,0,0,0.25)" strokeWidth="1" />
+      <Svg
+        width={size}
+        height={size}
+        viewBox="0 0 100 100"
+        style={{ backgroundColor: 'transparent' }}
+      >
+        {/* Layer 1: Outer Stone Rim - fills 100% of circular disc */}
+        <Circle cx="50" cy="50" r="50" fill={outerRim} />
 
         {/* Layer 2: Main Concentric Ring (Terracotta / Deep Slate) */}
-        <Circle cx="50" cy="50" r="43" fill={middleRing} stroke={grooveRing} strokeWidth="1.5" />
+        <Circle cx="50" cy="50" r="44" fill={middleRing} stroke={grooveRing} strokeWidth="1.5" />
 
         {/* Layer 3: Inner Shadow Groove */}
         <Circle cx="50" cy="50" r="35" fill={grooveRing} />
@@ -79,7 +84,7 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 999,
+    backgroundColor: 'transparent',
   },
   selectedHalo: {
     borderWidth: 2.5,

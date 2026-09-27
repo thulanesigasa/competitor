@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Modal,
@@ -7,10 +7,10 @@ import {
   Animated,
   Easing,
 } from 'react-native';
-import Svg, { Circle, Path, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 import { Text } from '../Typography';
 import { colors } from '../../theme/colors';
-import { spacing, shadow } from '../../theme';
+import { spacing } from '../../theme';
 import { Player } from '../../types/game';
 
 interface CoinTossModalProps {
@@ -27,8 +27,8 @@ export const CoinTossModal: React.FC<CoinTossModalProps> = ({
   visible,
   onClose,
   onTossComplete,
-  player1Name = 'Player 1',
-  player2Name = 'Player 2',
+  player1Name = 'You',
+  player2Name = 'CPU',
 }) => {
   const [selectedSide, setSelectedSide] = useState<CoinSide | null>(null);
   const [isFlipping, setIsFlipping] = useState(false);
@@ -38,42 +38,54 @@ export const CoinTossModal: React.FC<CoinTossModalProps> = ({
   // Animation values
   const flipAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const autoFinishTimer = useRef<NodeJS.Timeout | null>(null);
 
-  const handleStartToss = () => {
-    if (!selectedSide || isFlipping) return;
+  useEffect(() => {
+    if (visible) {
+      handleReset();
+    }
+    return () => {
+      if (autoFinishTimer.current) {
+        clearTimeout(autoFinishTimer.current);
+      }
+    };
+  }, [visible]);
 
+  const handlePickAndToss = (side: CoinSide) => {
+    if (isFlipping) return;
+
+    setSelectedSide(side);
     setIsFlipping(true);
     setTossResult(null);
     setWinnerPlayer(null);
 
-    // Random outcome (50/50 fair distribution)
+    // 50/50 fair distribution
     const outcome: CoinSide = Math.random() < 0.5 ? 'heads' : 'tails';
-
-    // Total flips: 5 full rotations (1800 deg) + extra 180 if tails
     const targetFlips = outcome === 'heads' ? 5 : 5.5;
 
     flipAnim.setValue(0);
     scaleAnim.setValue(1);
 
-    // Coordinated toss animation: scale up during flight, rotate, land softly
+    // Coordinated 3D toss animation: scale up during flight, rotate, land
     Animated.parallel([
       Animated.sequence([
         Animated.timing(scaleAnim, {
-          toValue: 1.35,
-          duration: 900,
+          toValue: 1.3,
+          duration: 750,
           easing: Easing.out(Easing.quad),
           useNativeDriver: true,
         }),
         Animated.timing(scaleAnim, {
           toValue: 1,
-          duration: 900,
+          duration: 750,
           easing: Easing.in(Easing.quad),
           useNativeDriver: true,
         }),
       ]),
       Animated.timing(flipAnim, {
         toValue: targetFlips,
-        duration: 1800,
+        duration: 1500,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
@@ -81,16 +93,25 @@ export const CoinTossModal: React.FC<CoinTossModalProps> = ({
       setIsFlipping(false);
       setTossResult(outcome);
 
-      const first: Player = selectedSide === outcome ? 'player1' : 'player2';
+      const first: Player = side === outcome ? 'player1' : 'player2';
       setWinnerPlayer(first);
+
+      // Automatically head back to the game after a brief celebration pause
+      autoFinishTimer.current = setTimeout(() => {
+        finishAndReturn(first);
+      }, 1200);
     });
   };
 
-  const handleProceed = () => {
-    if (winnerPlayer) {
-      onTossComplete(winnerPlayer);
+  const finishAndReturn = (first: Player) => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 250,
+      useNativeDriver: true,
+    }).start(() => {
+      onTossComplete(first);
       handleReset();
-    }
+    });
   };
 
   const handleReset = () => {
@@ -100,6 +121,10 @@ export const CoinTossModal: React.FC<CoinTossModalProps> = ({
     setWinnerPlayer(null);
     flipAnim.setValue(0);
     scaleAnim.setValue(1);
+    fadeAnim.setValue(1);
+    if (autoFinishTimer.current) {
+      clearTimeout(autoFinishTimer.current);
+    }
   };
 
   // Interpolate rotation for 3D flip effect
@@ -110,6 +135,8 @@ export const CoinTossModal: React.FC<CoinTossModalProps> = ({
 
   const displayedSide = tossResult || selectedSide || 'heads';
 
+  if (!visible) return null;
+
   return (
     <Modal
       visible={visible}
@@ -117,17 +144,38 @@ export const CoinTossModal: React.FC<CoinTossModalProps> = ({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <View style={styles.modalOverlay}>
-        <View style={[styles.modalCard, shadow.lg]}>
-          <Text variant="h2" align="center" style={styles.title}>
-            COIN TOSS
-          </Text>
-          <Text variant="caption" align="center" color={colors.textSecondary} style={styles.subtitle}>
-            Determine who makes the first move.
-          </Text>
+      <TouchableOpacity
+        style={styles.transparentOverlay}
+        activeOpacity={1}
+        onPress={() => {
+          if (winnerPlayer) {
+            finishAndReturn(winnerPlayer);
+          }
+        }}
+      >
+        <Animated.View style={[styles.floatingContainer, { opacity: fadeAnim }]}>
+          {/* Header Title Floating Over Game */}
+          <View style={styles.headerBlock}>
+            <Text variant="h2" align="center" color="#FFFFFF" style={styles.headerTitle}>
+              {tossResult
+                ? `LANDED ON ${tossResult.toUpperCase()}`
+                : isFlipping
+                ? 'FLIPPING COIN...'
+                : 'WHO GOES FIRST?'}
+            </Text>
+            <Text variant="caption" align="center" color="rgba(255, 255, 255, 0.85)" style={styles.headerSubtitle}>
+              {tossResult
+                ? winnerPlayer === 'player1'
+                  ? `${player1Name} won the toss and moves first!`
+                  : `${player2Name} won the toss and moves first!`
+                : isFlipping
+                ? 'Determining who places the first cow...'
+                : 'Tap Heads or Tails to flip and start match'}
+            </Text>
+          </View>
 
-          {/* Animated Coin */}
-          <View style={styles.coinContainer}>
+          {/* Floating 3D Animated Coin */}
+          <View style={styles.coinArea}>
             <Animated.View
               style={[
                 styles.coinWrapper,
@@ -140,9 +188,9 @@ export const CoinTossModal: React.FC<CoinTossModalProps> = ({
                 },
               ]}
             >
-              <Svg width={96} height={96} viewBox="0 0 100 100">
-                {/* Outer Rim */}
-                <Circle cx="50" cy="50" r="48" fill="#B45309" stroke="#78350F" strokeWidth="2" />
+              <Svg width={110} height={110} viewBox="0 0 100 100">
+                {/* Outer Metallic Rim */}
+                <Circle cx="50" cy="50" r="49" fill="#B45309" stroke="#78350F" strokeWidth="2" />
                 {/* Gold Face */}
                 <Circle cx="50" cy="50" r="44" fill="#E5A93C" stroke="#D97706" strokeWidth="2" />
                 {/* Inner Bevel */}
@@ -151,10 +199,10 @@ export const CoinTossModal: React.FC<CoinTossModalProps> = ({
                 <Circle cx="50" cy="50" r="28" fill="#D97706" />
                 <SvgText
                   x="50"
-                  y="57"
+                  y="58"
                   textAnchor="middle"
                   fill="#FFFFFF"
-                  fontSize="22"
+                  fontSize="24"
                   fontWeight="900"
                 >
                   {isFlipping ? 'M' : displayedSide === 'heads' ? 'H' : 'T'}
@@ -163,246 +211,128 @@ export const CoinTossModal: React.FC<CoinTossModalProps> = ({
             </Animated.View>
           </View>
 
-          {/* Side Pickers (Shown before flipping) */}
-          {!tossResult && !isFlipping && (
-            <View style={styles.selectionSection}>
-              <Text variant="label" align="center" color={colors.textSecondary} style={styles.pickPrompt}>
-                SELECT YOUR CALL:
-              </Text>
-              <View style={styles.choiceRow}>
-                <TouchableOpacity
-                  style={[
-                    styles.choiceButton,
-                    selectedSide === 'heads' && styles.choiceButtonActive,
-                    shadow.sm,
-                  ]}
-                  onPress={() => setSelectedSide('heads')}
-                  activeOpacity={0.8}
-                >
-                  <Text
-                    variant="h3"
-                    weight={selectedSide === 'heads' ? '800' : '600'}
-                    color={selectedSide === 'heads' ? colors.accentHover : colors.textPrimary}
-                  >
-                    HEADS (H)
-                  </Text>
-                  <Text variant="caption" color={colors.textSecondary}>
-                    {player1Name} Call
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.choiceButton,
-                    selectedSide === 'tails' && styles.choiceButtonActive,
-                    shadow.sm,
-                  ]}
-                  onPress={() => setSelectedSide('tails')}
-                  activeOpacity={0.8}
-                >
-                  <Text
-                    variant="h3"
-                    weight={selectedSide === 'tails' ? '800' : '600'}
-                    color={selectedSide === 'tails' ? colors.accentHover : colors.textPrimary}
-                  >
-                    TAILS (T)
-                  </Text>
-                  <Text variant="caption" color={colors.textSecondary}>
-                    {player1Name} Call
-                  </Text>
-                </TouchableOpacity>
-              </View>
+          {/* Quick 1-Tap Heads or Tails Choices (Floating directly over game) */}
+          {!isFlipping && !tossResult && (
+            <View style={styles.choicesRow}>
+              <TouchableOpacity
+                style={[styles.floatingPill, styles.headsPill]}
+                onPress={() => handlePickAndToss('heads')}
+                activeOpacity={0.8}
+              >
+                <Text variant="h3" weight="800" color="#FFFFFF">
+                  HEADS (H)
+                </Text>
+                <Text variant="caption" color="rgba(255, 255, 255, 0.8)">
+                  Tap to Flip
+                </Text>
+              </TouchableOpacity>
 
               <TouchableOpacity
-                style={[
-                  styles.flipButton,
-                  !selectedSide && styles.flipButtonDisabled,
-                  shadow.sm,
-                ]}
-                disabled={!selectedSide}
-                onPress={handleStartToss}
-                activeOpacity={0.85}
+                style={[styles.floatingPill, styles.tailsPill]}
+                onPress={() => handlePickAndToss('tails')}
+                activeOpacity={0.8}
               >
-                <Text
-                  variant="body"
-                  weight="800"
-                  color={selectedSide ? '#FFFFFF' : '#94A3B8'}
-                >
-                  {selectedSide ? `FLIP COIN (${selectedSide.toUpperCase()}) →` : 'CHOOSE A SIDE TO FLIP'}
+                <Text variant="h3" weight="800" color="#FFFFFF">
+                  TAILS (T)
+                </Text>
+                <Text variant="caption" color="rgba(255, 255, 255, 0.8)">
+                  Tap to Flip
                 </Text>
               </TouchableOpacity>
             </View>
           )}
 
-          {/* Flipping Indicator */}
-          {isFlipping && (
-            <View style={styles.statusSection}>
-              <Text variant="h3" align="center" color={colors.accentHover} weight="800">
-                Flipping Coin...
-              </Text>
-              <Text variant="caption" align="center" color={colors.textSecondary}>
-                Physics-based random turn decider in flight.
-              </Text>
-            </View>
-          )}
-
-          {/* Result Announcement */}
+          {/* Auto Heading Back Notice */}
           {tossResult && (
-            <View style={styles.resultSection}>
-              <View style={styles.resultBanner}>
-                <Text variant="caption" weight="800" color={colors.accentHover} align="center">
-                  LANDED ON {tossResult.toUpperCase()}
-                </Text>
-                <Text variant="h2" weight="900" color={colors.textPrimary} align="center" style={styles.winnerHeading}>
-                  {winnerPlayer === 'player1' ? `${player1Name} Moves First!` : `${player2Name} Moves First!`}
-                </Text>
-                <Text variant="caption" color={colors.textSecondary} align="center">
-                  {winnerPlayer === 'player1'
-                    ? `${player1Name} won the coin toss and starts as Cow 1 (Gold).`
-                    : `${player2Name} won the coin toss and starts as Cow 1 (Gold).`}
-                </Text>
-              </View>
-
-              <View style={styles.actionBtnRow}>
-                <TouchableOpacity
-                  style={[styles.secondaryBtn, shadow.sm]}
-                  onPress={handleReset}
-                  activeOpacity={0.8}
-                >
-                  <Text variant="body" weight="700" color={colors.textSecondary}>
-                    Re-Toss
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.primaryProceedBtn, shadow.sm]}
-                  onPress={handleProceed}
-                  activeOpacity={0.85}
-                >
-                  <Text variant="body" weight="800" color="#FFFFFF">
-                    Start Match →
-                  </Text>
-                </TouchableOpacity>
-              </View>
+            <View style={styles.autoReturnNotice}>
+              <Text variant="caption" weight="700" color={colors.accent} align="center">
+                Heading into match...
+              </Text>
             </View>
           )}
-        </View>
-      </View>
+        </Animated.View>
+      </TouchableOpacity>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  modalOverlay: {
+  transparentOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    backgroundColor: 'rgba(15, 23, 42, 0.55)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.md,
   },
-  modalCard: {
+  floatingContainer: {
     width: '100%',
-    maxWidth: 340,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
-  },
-  title: {
-    letterSpacing: 1,
-  },
-  subtitle: {
-    marginTop: 4,
-    marginBottom: spacing.md,
-  },
-  coinContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    height: 120,
-    marginVertical: spacing.sm,
+  },
+  headerBlock: {
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  headerTitle: {
+    letterSpacing: 1.5,
+    textShadowColor: 'rgba(0, 0, 0, 0.6)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 6,
+  },
+  headerSubtitle: {
+    marginTop: 6,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  coinArea: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 140,
+    marginVertical: spacing.md,
   },
   coinWrapper: {
-    width: 96,
-    height: 96,
+    width: 110,
+    height: 110,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
   },
-  selectionSection: {
-    marginTop: spacing.sm,
-  },
-  pickPrompt: {
-    letterSpacing: 0.8,
-    marginBottom: spacing.sm,
-  },
-  choiceRow: {
+  choicesRow: {
     flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.md,
+    gap: spacing.md,
+    marginTop: spacing.lg,
+    paddingHorizontal: spacing.sm,
   },
-  choiceButton: {
+  floatingPill: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
-    borderRadius: 10,
-    paddingVertical: spacing.sm + 4,
+    paddingVertical: 14,
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1.5,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  choiceButtonActive: {
-    backgroundColor: '#FFFBEB',
-    borderColor: colors.accent,
-  },
-  flipButton: {
+  headsPill: {
     backgroundColor: colors.accent,
-    height: 48,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderColor: '#D97706',
   },
-  flipButtonDisabled: {
-    backgroundColor: '#F1F5F9',
+  tailsPill: {
+    backgroundColor: '#334155',
+    borderColor: '#475569',
   },
-  statusSection: {
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-  },
-  resultSection: {
-    marginTop: spacing.sm,
-  },
-  resultBanner: {
-    backgroundColor: '#FFFDF5',
-    borderWidth: 1,
-    borderColor: 'rgba(229, 169, 60, 0.3)',
-    borderRadius: 12,
-    padding: spacing.md,
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  winnerHeading: {
-    marginVertical: 4,
-  },
-  actionBtnRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  secondaryBtn: {
-    flex: 1,
-    height: 46,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryProceedBtn: {
-    flex: 1.5,
-    height: 46,
-    backgroundColor: colors.accent,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+  autoReturnNotice: {
+    marginTop: spacing.lg,
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 20,
   },
 });
