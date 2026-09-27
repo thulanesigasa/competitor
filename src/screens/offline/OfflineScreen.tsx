@@ -28,6 +28,16 @@ import {
 } from '../../engine/morabaraba';
 import { computeAiMove } from '../../engine/ai';
 import { recordGameResult } from '../../store/gameStore';
+import { RuleTipModal } from '../../components/game/RuleTipModal';
+import {
+  RuleTip,
+  MoveRecord,
+  validateHumanReactionRate,
+  validatePlacement,
+  validateCowSelection,
+  validateCowMove,
+  validateCowShot,
+} from '../../engine/morabarabaValidator';
 
 export const OfflineScreen: React.FC = () => {
   const route = useRoute<any>();
@@ -38,6 +48,10 @@ export const OfflineScreen: React.FC = () => {
   const [statusMessage, setStatusMessage] = useState('Place your cow on any empty intersection.');
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [showCoinToss, setShowCoinToss] = useState(false);
+  const [ruleTip, setRuleTip] = useState<RuleTip | null>(null);
+  const [showRuleTip, setShowRuleTip] = useState(false);
+  const lastActionTimestamp = React.useRef<number | null>(null);
+  const recentMoves = React.useRef<MoveRecord[]>([]);
 
   // Sync route params when routed from Battleground
   useEffect(() => {
@@ -55,6 +69,8 @@ export const OfflineScreen: React.FC = () => {
     setShowCoinToss(false);
     setGameState(createInitialGameState(firstPlayer));
     setIsAiThinking(false);
+    lastActionTimestamp.current = Date.now();
+    recentMoves.current = [];
     if (offlineMode === 'ai') {
       if (firstPlayer === 'player1') {
         setStatusMessage('You won the coin toss! Place your cow.');
@@ -167,6 +183,14 @@ export const OfflineScreen: React.FC = () => {
     if (gameState.winner) return;
     if (offlineMode === 'ai' && (isAiThinking || gameState.currentPlayer !== 'player1')) return;
 
+    // 1. Anti-Bot / Script Reaction Speed Check
+    const rateCheck = validateHumanReactionRate(lastActionTimestamp.current);
+    if (!rateCheck.isValid) {
+      setRuleTip(rateCheck.tip);
+      setShowRuleTip(true);
+      return;
+    }
+
     const current: Player = gameState.currentPlayer;
     const opponent: Player = current === 'player1' ? 'player2' : 'player1';
     const currentPhase: GamePhase = gameState.phase[current];
@@ -181,30 +205,38 @@ export const OfflineScreen: React.FC = () => {
 
     // Case 1: Shoot opponent cow
     if (gameState.mustShoot) {
-      const legalShots = getLegalShotVertices(gameState.board, opponent);
-      if (legalShots.includes(vertexId)) {
-        executeShot(vertexId, current);
-      } else {
-        showAlert({
-          title: 'Cannot Shoot Cow',
-          message: 'This cow is protected in a mill or not an opponent cow.',
-        });
+      const shotCheck = validateCowShot(gameState, current, vertexId);
+      if (!shotCheck.isValid) {
+        setRuleTip(shotCheck.tip);
+        setShowRuleTip(true);
+        return;
       }
+      lastActionTimestamp.current = Date.now();
+      executeShot(vertexId, current);
       return;
     }
 
     // Case 2: Placing Phase
     if (currentPhase === 'placing') {
-      if (gameState.board[vertexId] !== null) {
-        showAlert({ title: 'Occupied', message: 'This intersection already has a cow.' });
+      const placeCheck = validatePlacement(gameState, current, vertexId);
+      if (!placeCheck.isValid) {
+        setRuleTip(placeCheck.tip);
+        setShowRuleTip(true);
         return;
       }
 
+      lastActionTimestamp.current = Date.now();
       const nextBoard = [...gameState.board];
       nextBoard[vertexId] = current;
       const mill = formsNewMill(nextBoard, vertexId, current);
       const remainingUnplaced = gameState.unplacedCows[current] - 1;
       const nextPhase = remainingUnplaced === 0 ? 'moving' : 'placing';
+
+      recentMoves.current.push({
+        player: current,
+        to: vertexId,
+        timestamp: Date.now(),
+      });
 
       if (mill) {
         setGameState((prev) => ({
@@ -238,8 +270,15 @@ export const OfflineScreen: React.FC = () => {
     }
 
     // Case 3: Moving / Flying Phase
-    // Sub-case A: Select own cow
-    if (gameState.board[vertexId] === current) {
+    // Sub-case A: Select or change selected cow
+    if (gameState.selectedVertex === null || gameState.board[vertexId] === current) {
+      const selectCheck = validateCowSelection(gameState, current, vertexId);
+      if (!selectCheck.isValid) {
+        setRuleTip(selectCheck.tip);
+        setShowRuleTip(true);
+        return;
+      }
+      lastActionTimestamp.current = Date.now();
       setGameState((prev) => ({
         ...prev,
         selectedVertex: vertexId,
@@ -249,27 +288,32 @@ export const OfflineScreen: React.FC = () => {
     }
 
     // Sub-case B: Moving selected cow to destination
-    if (gameState.selectedVertex !== null && gameState.board[vertexId] === null) {
-      const legalDests = getLegalDestinations(
-        gameState.board,
+    if (gameState.selectedVertex !== null) {
+      const moveCheck = validateCowMove(
+        gameState,
+        current,
         gameState.selectedVertex,
-        currentPhase
+        vertexId,
+        recentMoves.current
       );
-
-      if (!legalDests.includes(vertexId)) {
-        showAlert({
-          title: 'Invalid Move',
-          message: currentPhase === 'flying'
-            ? 'Tap any empty intersection to fly.'
-            : 'You can only move to adjacent connected intersections.',
-        });
+      if (!moveCheck.isValid) {
+        setRuleTip(moveCheck.tip);
+        setShowRuleTip(true);
         return;
       }
 
+      lastActionTimestamp.current = Date.now();
       const nextBoard = [...gameState.board];
       nextBoard[gameState.selectedVertex] = null;
       nextBoard[vertexId] = current;
       const mill = formsNewMill(nextBoard, vertexId, current);
+
+      recentMoves.current.push({
+        player: current,
+        from: gameState.selectedVertex,
+        to: vertexId,
+        timestamp: Date.now(),
+      });
 
       if (mill) {
         setGameState((prev) => ({
@@ -506,6 +550,13 @@ export const OfflineScreen: React.FC = () => {
         onTossComplete={handleTossComplete}
         player1Name={offlineMode === 'ai' ? 'You' : 'Player 1 (Gold)'}
         player2Name={offlineMode === 'ai' ? 'CPU' : 'Player 2 (Charcoal)'}
+      />
+
+      {/* Strict Tactical Rule Tip Modal */}
+      <RuleTipModal
+        visible={showRuleTip}
+        tip={ruleTip}
+        onClose={() => setShowRuleTip(false)}
       />
     </SafeAreaView>
   );
