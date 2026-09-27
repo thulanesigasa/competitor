@@ -54,8 +54,9 @@ jobs:
 
       - name: Rename APK Asset
         run: |
+          APP_VERSION=$(node -p "require('./app.json').expo.version")
           mkdir -p build-output
-          cp android/app/build/outputs/apk/release/app-release-unsigned.apk build-output/morabaraba-v1.0.0-b${{ github.run_number }}.apk || cp android/app/build/outputs/apk/release/*.apk build-output/morabaraba-v1.0.0-b${{ github.run_number }}.apk
+          cp android/app/build/outputs/apk/release/app-release-unsigned.apk build-output/morabaraba-v${APP_VERSION}-b${{ github.run_number }}.apk || cp android/app/build/outputs/apk/release/*.apk build-output/morabaraba-v${APP_VERSION}-b${{ github.run_number }}.apk
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -68,8 +69,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          RELEASE_TAG="v1.0.0-build${{ github.run_number }}"
+          APP_VERSION=$(node -p "require('./app.json').expo.version")
+          RELEASE_TAG="v${APP_VERSION}-build${{ github.run_number }}"
           gh release create "$RELEASE_TAG" build-output/*.apk \
-            --title "Morabaraba Release $RELEASE_TAG" \
-            --notes "Automated native Android release build compiled directly on GitHub Actions runner." \
+            --title "Morabaraba v${APP_VERSION} (Build ${{ github.run_number }})" \
+            --notes "Automated native Android release build v${APP_VERSION} compiled directly on GitHub Actions runner." \
             --clobber || gh release upload "$RELEASE_TAG" build-output/*.apk --clobber

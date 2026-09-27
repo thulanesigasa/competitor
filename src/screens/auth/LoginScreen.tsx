@@ -7,11 +7,11 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
-  Alert,
   Image,
 } from 'react-native';
 import { COLORS, METRICS, SPACING } from '../../constants/theme';
 import { Header } from '../../components/common/Header';
+import { useThemedAlert } from '../../components/common/ThemedAlert';
 import { getUserProfile, saveUserProfile } from '../../store/gameStore';
 import { UserProfile } from '../../types/auth';
 
@@ -24,16 +24,17 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   onLoginSuccess,
   onNavigateToSignUp,
 }) => {
+  const { showAlert } = useThemedAlert();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
 
   const handleLogin = async () => {
     if (!identifier.trim()) {
-      Alert.alert('Missing Input', 'Please enter your Gamer Tag or Email.');
+      showAlert({ title: 'Missing Input', message: 'Please enter your Gamer Tag or Email.' });
       return;
     }
     if (!password.trim() || password.length < 8) {
-      Alert.alert('Invalid Password', 'Please enter your password (minimum 8 characters).');
+      showAlert({ title: 'Invalid Password', message: 'Please enter your password (minimum 8 characters).' });
       return;
     }
 
@@ -149,7 +150,7 @@ const styles = StyleSheet.create({
   logo: {
     width: METRICS.brandLogoModal,
     height: METRICS.brandLogoModal,
-    borderRadius: 12,
+    borderRadius: 0,
     marginBottom: SPACING.xs,
   },
   brandTitle: {

@@ -6,14 +6,18 @@ import { RootNavigator } from './src/navigation/RootNavigator';
 import { UpdateModal } from './src/components/common/UpdateModal';
 import { COLORS } from './src/constants/theme';
 
+import { ThemedAlertProvider } from './src/components/common/ThemedAlert';
+
 export default function App() {
   return (
     <SafeAreaProvider>
-      <View style={styles.container}>
-        <StatusBar style="light" />
-        <RootNavigator />
-        <UpdateModal />
-      </View>
+      <ThemedAlertProvider>
+        <View style={styles.container}>
+          <StatusBar style="light" />
+          <RootNavigator />
+          <UpdateModal />
+        </View>
+      </ThemedAlertProvider>
     </SafeAreaProvider>
   );
 }
