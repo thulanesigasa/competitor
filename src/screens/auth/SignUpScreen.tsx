@@ -9,6 +9,7 @@ import {
   StatusBar,
   Modal,
   BackHandler,
+  Image,
 } from 'react-native';
 import { colors } from '../../theme/colors';
 import { spacing, radius, shadow } from '../../theme';
@@ -217,9 +218,11 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                     ]}
                   >
                     {isPassed ? (
-                      <Text variant="caption" weight="800" color="#FFFFFF">
-                        ✓
-                      </Text>
+                      <Image
+                        source={require('../../../assets/icon.png')}
+                        style={styles.stepVerifiedLogo}
+                        resizeMode="contain"
+                      />
                     ) : (
                       <Text
                         variant="caption"
@@ -335,9 +338,11 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                     keyboardType="phone-pad"
                   />
                   {cellphone.length >= 7 && (
-                    <Text variant="body" weight="800" color={colors.accent}>
-                      ✓
-                    </Text>
+                    <Image
+                      source={require('../../../assets/icon.png')}
+                      style={styles.verifiedLogo}
+                      resizeMode="contain"
+                    />
                   )}
                 </View>
               </View>
@@ -737,6 +742,11 @@ const styles = StyleSheet.create({
   stepCircleTextActive: {
     color: colors.accentHover,
   },
+  stepVerifiedLogo: {
+    width: 14,
+    height: 14,
+    borderRadius: 0,
+  },
   stepConnectorLine: {
     width: 36,
     height: 2,
@@ -816,6 +826,11 @@ const styles = StyleSheet.create({
   phoneHint: {
     marginTop: 4,
     paddingHorizontal: 4,
+  },
+  verifiedLogo: {
+    width: 16,
+    height: 16,
+    borderRadius: 0,
   },
   chipsScroll: {
     flexGrow: 0,

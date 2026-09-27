@@ -86,22 +86,25 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 
 ---
 
-## Design System & Theme Architecture (Strict 60-30-10 & Zero SVG Icons)
+## Design System & Theme Architecture (Strict 60-30-10 & Tab-Only SVGs)
 
 [![Colors](https://img.shields.io/badge/60--30--10-Background_%23FFFFFF_|_Surface_%23FFFFFF_|_Accent_%23E5A93C-E5A93C)](https://shields.io/)
 [![Typography](https://img.shields.io/badge/Typography-Custom_Type_Scale-0F172A)](https://shields.io/)
-[![Iconography](https://img.shields.io/badge/Iconography-Zero_SVGs_|_Pure_Typographic-10B981)](https://shields.io/)
+[![Tab Icons](https://img.shields.io/badge/Bottom_Nav-Dedicated_SVGs-61DAFB)](https://shields.io/)
+[![Verification](https://img.shields.io/badge/Verification-App_Logo_Emblem-E5A93C)](https://shields.io/)
 
 - **60% Dominant Background:** Crisp Pure White (`#FFFFFF`) providing a clean, high-contrast, modern application canvas.
 - **30% Panel & Surface:** Pure White (`#FFFFFF`) & Soft Slate Surface (`#F8FAFC`) with hairline borders (`rgba(15, 23, 42, 0.08)`) and subtle elevation shadows (`shadow.sm`, `shadow.md`, `shadow.pill`).
 - **10% Accent:** Radiant Gold / Orange (`#E5A93C` / `#D97706`) strictly reserved for active states, primary CTAs, and winning moves.
+- **Bottom Navigation Tab SVGs (`TabIcons.tsx`):** Strictly reserved for the bottom navigation pill bar (`BattlegroundTabSvg`, `OfflineTabSvg`, `LeaderboardTabSvg`, `ProfileTabSvg`) with 16px compact geometry and dynamic focused tint.
+- **Status Verification with App Logo:** For validation and verified status checkpoints (e.g. valid cellphone verification, completed step verification), the app's brand logo emblem (`assets/icon.png` with `borderRadius: 0`) is used.
+- **Pure Text Throughout Application:** All other screens, forms, headers, alerts, and buttons use crisp native typography and typographic indicators (`→`, `←`, `▼`, `SHOW` / `HIDE`).
 - **Typography Component (`Typography.tsx`):** Standardized `<Text>` abstraction with variants (`h1`, `h2`, `h3`, `body`, `caption`, `label`), font weights (`400`, `500`, `600`, `700`, `800`, `900`), and automatic color defaults.
-- **Zero SVG Icons:** Clean typographic indicators (`→`, `←`, `▼`, `✓`), geometric board coordinates, and native rendering without external SVG icon fonts or icon libraries.
 - **Multiples-of-8 Spacing (Rule 15):** Strict `spacing` system (`sm: 8`, `md: 16`, `lg: 24`, `xl: 32`, `xxl: 48`, `nav: 56`, `huge: 64`).
 - **Zero Card/Div Box Wrappers:** Onboarding and authentication content flows directly on the full-bleed body canvas.
 - **Themed Popup System:** All user dialogs, errors, and alerts are rendered via custom `ThemedAlert` modals matching the 60-30-10 palette.
 - **Unrounded Brand Logos:** All app brand logo displays maintain sharp, unrounded geometry (`borderRadius: 0`) across all screens and modals.
-- **Floating Pill Bottom Navigation:** Rule 20 compliant floating curved bottom navigation bar with dynamically centered geometry (`width: 280`), compact height (`50px`), and focused indicator dots.
+- **Centered Floating Pill Bottom Navigation (`CustomTabBar.tsx`):** Rule 20 compliant floating curved bottom navigation bar (`width: 280`, `height: 50`) wrapped in a full-width alignment container (`left: 0, right: 0, alignItems: 'center'`) to guarantee perfect horizontal centering across all screen sizes.
 
 ---
 
@@ -131,8 +134,11 @@ competitor/
 |   |   |   |-- SwipeToSignUp.tsx      # Custom pan-responder swipe slider
 |   |   |   |-- ThemedAlert.tsx        # 60-30-10 modal alert system replacing OS alerts
 |   |   |   `-- UpdateModal.tsx        # Rule 21 dual-action OTA update modal
-|   |   `-- game/
-|   |       `-- MorabarabaBoard.tsx    # 24-vertex board layout and interactive pieces
+|   |   |-- game/
+|   |   |   `-- MorabarabaBoard.tsx    # 24-vertex board layout and interactive pieces
+|   |   `-- navigation/
+|   |       |-- CustomTabBar.tsx       # Centered floating pill tab bar with active indicator dot
+|   |       `-- TabIcons.tsx           # 16px bottom tab bar SVGs (Rule 20)
 |   |-- constants/
 |   |   |-- regions.ts                 # Southern African countries, provinces, and towns
 |   |   `-- theme.ts                   # Legacy theme metrics re-exported to src/theme
@@ -141,7 +147,7 @@ competitor/
 |   |   `-- morabaraba.ts              # Mathematical board model and rule validator
 |   |-- navigation/
 |   |   |-- RootNavigator.tsx          # Auth stack and main app coordinator
-|   |   `-- TabNavigator.tsx           # Rule 20 floating pill bottom navigation
+|   |   `-- TabNavigator.tsx           # Rule 20 floating pill bottom navigation with CustomTabBar
 |   |-- screens/
 |   |   |-- auth/
 |   |   |   |-- LoginScreen.tsx        # Gamer Tag/Email credential sign in with Typography
