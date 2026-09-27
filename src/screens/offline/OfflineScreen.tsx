@@ -7,6 +7,7 @@ import {
   ScrollView,
   SafeAreaView,
 } from 'react-native';
+import { useRoute } from '@react-navigation/native';
 import { COLORS, SPACING } from '../../constants/theme';
 import { Header } from '../../components/common/Header';
 import { useThemedAlert } from '../../components/common/ThemedAlert';
@@ -24,18 +25,27 @@ import {
   getLegalDestinations,
   getLegalShotVertices,
   hasLegalMoves,
-  TOTAL_COWS_PER_PLAYER,
 } from '../../engine/morabaraba';
 import { computeAiMove } from '../../engine/ai';
 import { recordGameResult } from '../../store/gameStore';
 
 export const OfflineScreen: React.FC = () => {
+  const route = useRoute<any>();
   const { showAlert } = useThemedAlert();
+  const [offlineMode, setOfflineMode] = useState<'ai' | 'pass_and_play'>('ai');
   const [gameState, setGameState] = useState<GameState>(createInitialGameState());
   const [difficulty, setDifficulty] = useState<AiDifficulty>('warrior');
   const [statusMessage, setStatusMessage] = useState('Place your cow on any empty intersection.');
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [showCoinToss, setShowCoinToss] = useState(false);
+
+  // Sync route params when routed from Battleground
+  useEffect(() => {
+    if (route.params?.mode === 'pass_and_play') {
+      setOfflineMode('pass_and_play');
+      setShowCoinToss(true);
+    }
+  }, [route.params?.timestamp, route.params?.mode]);
 
   const resetGame = () => {
     setShowCoinToss(true);
@@ -45,15 +55,21 @@ export const OfflineScreen: React.FC = () => {
     setShowCoinToss(false);
     setGameState(createInitialGameState(firstPlayer));
     setIsAiThinking(false);
-    if (firstPlayer === 'player1') {
-      setStatusMessage('You won the coin toss! Place your cow.');
+    if (offlineMode === 'ai') {
+      if (firstPlayer === 'player1') {
+        setStatusMessage('You won the coin toss! Place your cow.');
+      } else {
+        setStatusMessage('CPU won the coin toss! CPU makes the first move...');
+      }
     } else {
-      setStatusMessage('CPU won the coin toss! CPU makes the first move...');
+      const winnerLabel = firstPlayer === 'player1' ? 'Player 1 (Gold)' : 'Player 2 (Charcoal)';
+      setStatusMessage(`${winnerLabel} won the coin toss! Place your cow.`);
     }
   };
 
-  // AI Turn Handler
+  // AI Turn Handler (Active exclusively in 'ai' mode)
   useEffect(() => {
+    if (offlineMode !== 'ai') return;
     if (gameState.winner || gameState.currentPlayer !== 'player2') return;
 
     setIsAiThinking(true);
@@ -62,7 +78,7 @@ export const OfflineScreen: React.FC = () => {
     }, 600);
 
     return () => clearTimeout(timer);
-  }, [gameState.currentPlayer, gameState.mustShoot, gameState.winner]);
+  }, [offlineMode, gameState.currentPlayer, gameState.mustShoot, gameState.winner]);
 
   const handleAiTurn = () => {
     const decision = computeAiMove(gameState, difficulty);
@@ -75,7 +91,6 @@ export const OfflineScreen: React.FC = () => {
       if (decision.shotVertex !== undefined && decision.shotVertex >= 0) {
         executeShot(decision.shotVertex, cpu);
       } else {
-        // No legal shootable piece
         endTurn(cpu);
       }
       setIsAiThinking(false);
@@ -147,73 +162,89 @@ export const OfflineScreen: React.FC = () => {
     }
   };
 
-  // Human (Player 1) Vertex Click
+  // Vertex Press Handler (Supports human in AI mode & dual humans in Pass & Play mode)
   const handleVertexPress = (vertexId: number) => {
-    if (isAiThinking || gameState.winner || gameState.currentPlayer !== 'player1') return;
+    if (gameState.winner) return;
+    if (offlineMode === 'ai' && (isAiThinking || gameState.currentPlayer !== 'player1')) return;
 
-    const human: Player = 'player1';
-    const opponent: Player = 'player2';
-    const humanPhase: GamePhase = gameState.phase[human];
+    const current: Player = gameState.currentPlayer;
+    const opponent: Player = current === 'player1' ? 'player2' : 'player1';
+    const currentPhase: GamePhase = gameState.phase[current];
 
-    // Case 1: Human must shoot an opponent cow
+    const currentName = offlineMode === 'ai'
+      ? (current === 'player1' ? 'You' : 'CPU')
+      : (current === 'player1' ? 'Player 1 (Gold)' : 'Player 2 (Charcoal)');
+
+    const opponentName = offlineMode === 'ai'
+      ? (opponent === 'player1' ? 'You' : 'CPU')
+      : (opponent === 'player1' ? 'Player 1 (Gold)' : 'Player 2 (Charcoal)');
+
+    // Case 1: Shoot opponent cow
     if (gameState.mustShoot) {
       const legalShots = getLegalShotVertices(gameState.board, opponent);
       if (legalShots.includes(vertexId)) {
-        executeShot(vertexId, human);
+        executeShot(vertexId, current);
       } else {
-        showAlert({ title: 'Cannot Shoot Cow', message: 'This cow is protected in a mill or not an opponent cow.' });
+        showAlert({
+          title: 'Cannot Shoot Cow',
+          message: 'This cow is protected in a mill or not an opponent cow.',
+        });
       }
       return;
     }
 
     // Case 2: Placing Phase
-    if (humanPhase === 'placing') {
+    if (currentPhase === 'placing') {
       if (gameState.board[vertexId] !== null) {
         showAlert({ title: 'Occupied', message: 'This intersection already has a cow.' });
         return;
       }
 
       const nextBoard = [...gameState.board];
-      nextBoard[vertexId] = human;
-      const mill = formsNewMill(nextBoard, vertexId, human);
-      const remainingUnplaced = gameState.unplacedCows[human] - 1;
+      nextBoard[vertexId] = current;
+      const mill = formsNewMill(nextBoard, vertexId, current);
+      const remainingUnplaced = gameState.unplacedCows[current] - 1;
       const nextPhase = remainingUnplaced === 0 ? 'moving' : 'placing';
 
       if (mill) {
         setGameState((prev) => ({
           ...prev,
           board: nextBoard,
-          unplacedCows: { ...prev.unplacedCows, [human]: remainingUnplaced },
-          activeCows: { ...prev.activeCows, [human]: prev.activeCows[human] + 1 },
-          phase: { ...prev.phase, [human]: nextPhase },
+          unplacedCows: { ...prev.unplacedCows, [current]: remainingUnplaced },
+          activeCows: { ...prev.activeCows, [current]: prev.activeCows[current] + 1 },
+          phase: { ...prev.phase, [current]: nextPhase },
           mustShoot: true,
-          lastMove: { to: vertexId, player: human, formedMill: true },
+          lastMove: { to: vertexId, player: current, formedMill: true },
         }));
-        setStatusMessage('Mill formed! Tap an opponent cow to shoot it.');
+        setStatusMessage(`${currentName} formed a mill! Shoot an opponent cow.`);
       } else {
         setGameState((prev) => ({
           ...prev,
           board: nextBoard,
-          unplacedCows: { ...prev.unplacedCows, [human]: remainingUnplaced },
-          activeCows: { ...prev.activeCows, [human]: prev.activeCows[human] + 1 },
-          phase: { ...prev.phase, [human]: nextPhase },
+          unplacedCows: { ...prev.unplacedCows, [current]: remainingUnplaced },
+          activeCows: { ...prev.activeCows, [current]: prev.activeCows[current] + 1 },
+          phase: { ...prev.phase, [current]: nextPhase },
           currentPlayer: opponent,
           turnCount: prev.turnCount + 1,
-          lastMove: { to: vertexId, player: human },
+          lastMove: { to: vertexId, player: current },
         }));
-        setStatusMessage('CPU is thinking...');
+        setStatusMessage(
+          offlineMode === 'ai'
+            ? 'CPU is thinking...'
+            : `${opponentName}'s turn: Place a cow.`
+        );
       }
       return;
     }
 
     // Case 3: Moving / Flying Phase
-    // Sub-case A: Select or reselect own cow
-    if (gameState.board[vertexId] === human) {
+    // Sub-case A: Select own cow
+    if (gameState.board[vertexId] === current) {
       setGameState((prev) => ({
         ...prev,
         selectedVertex: vertexId,
       }));
-      setStatusMessage('Cow selected. Tap a connected empty intersection.');
+      setStatusMessage(`${currentName}: Cow selected. Tap a connected empty intersection.`);
       return;
     }
 
@@ -222,18 +253,23 @@ export const OfflineScreen: React.FC = () => {
       const legalDests = getLegalDestinations(
         gameState.board,
         gameState.selectedVertex,
-        humanPhase
+        currentPhase
       );
 
       if (!legalDests.includes(vertexId)) {
-        showAlert({ title: 'Invalid Move', message: 'You can only move to adjacent connected intersections.' });
+        showAlert({
+          title: 'Invalid Move',
+          message: currentPhase === 'flying'
+            ? 'Tap any empty intersection to fly.'
+            : 'You can only move to adjacent connected intersections.',
+        });
         return;
       }
 
       const nextBoard = [...gameState.board];
       nextBoard[gameState.selectedVertex] = null;
-      nextBoard[vertexId] = human;
-      const mill = formsNewMill(nextBoard, vertexId, human);
+      nextBoard[vertexId] = current;
+      const mill = formsNewMill(nextBoard, vertexId, current);
 
       if (mill) {
         setGameState((prev) => ({
@@ -241,9 +277,9 @@ export const OfflineScreen: React.FC = () => {
           board: nextBoard,
           selectedVertex: null,
           mustShoot: true,
-          lastMove: { from: prev.selectedVertex!, to: vertexId, player: human, formedMill: true },
+          lastMove: { from: prev.selectedVertex!, to: vertexId, player: current, formedMill: true },
         }));
-        setStatusMessage('Mill formed! Tap an opponent cow to shoot it.');
+        setStatusMessage(`${currentName} formed a mill! Shoot an opponent cow.`);
       } else {
         setGameState((prev) => ({
           ...prev,
@@ -251,9 +287,13 @@ export const OfflineScreen: React.FC = () => {
           selectedVertex: null,
           currentPlayer: opponent,
           turnCount: prev.turnCount + 1,
-          lastMove: { from: prev.selectedVertex!, to: vertexId, player: human },
+          lastMove: { from: prev.selectedVertex!, to: vertexId, player: current },
         }));
-        setStatusMessage('CPU is thinking...');
+        setStatusMessage(
+          offlineMode === 'ai'
+            ? 'CPU is thinking...'
+            : `${opponentName}'s turn to move.`
+        );
       }
     }
   };
@@ -267,14 +307,12 @@ export const OfflineScreen: React.FC = () => {
     const remainingVictimActive = gameState.activeCows[victim] - 1;
     const victimUnplaced = gameState.unplacedCows[victim];
 
-    // Check Flying Phase trigger (cows == 3 after placing)
     let nextVictimPhase = gameState.phase[victim];
     if (victimUnplaced === 0 && remainingVictimActive === 3) {
       nextVictimPhase = 'flying';
     }
 
-    // Check Win Condition:
-    // Opponent has fewer than 3 cows when unplaced == 0, OR has 0 legal moves
+    // Win evaluation: fewer than 3 cows or no legal moves
     let winner: Player | null = null;
     if (victimUnplaced === 0 && remainingVictimActive < 3) {
       winner = shooter;
@@ -298,21 +336,36 @@ export const OfflineScreen: React.FC = () => {
     setGameState(updatedState);
 
     if (winner) {
-      const isHumanWin = winner === 'player1';
-      recordGameResult(isHumanWin, 1, 1, gameState.phase.player1 === 'flying');
-      showAlert({
-        title: isHumanWin ? 'Victory!' : 'Defeated',
-        message: isHumanWin
-          ? 'Congratulations! You outmaneuvered the CPU in true Morabaraba tradition.'
-          : 'The CPU captured your herd. Train further and rematch!',
-        buttons: [{ text: 'Play Again', onPress: resetGame }],
-      });
+      if (offlineMode === 'ai') {
+        const isHumanWin = winner === 'player1';
+        recordGameResult(isHumanWin, 1, 1, gameState.phase.player1 === 'flying');
+        showAlert({
+          title: isHumanWin ? 'Victory!' : 'Defeated',
+          message: isHumanWin
+            ? 'Congratulations! You outmaneuvered the CPU in true Morabaraba tradition.'
+            : 'The CPU captured your herd. Train further and rematch!',
+          buttons: [{ text: 'Play Again', onPress: resetGame }],
+        });
+      } else {
+        const winnerLabel = winner === 'player1' ? 'Player 1 (Gold)' : 'Player 2 (Charcoal)';
+        recordGameResult(winner === 'player1', 1, 1, gameState.phase[winner] === 'flying');
+        showAlert({
+          title: `${winnerLabel} Wins!`,
+          message: `Congratulations! ${winnerLabel} has captured the opponent herd and triumphed in Pass & Play.`,
+          buttons: [{ text: 'Play Again', onPress: resetGame }],
+        });
+      }
     } else {
-      setStatusMessage(
-        shooter === 'player1'
-          ? 'Opponent cow captured. CPU is thinking...'
-          : 'Your cow was shot. Your turn to move.'
-      );
+      if (offlineMode === 'ai') {
+        setStatusMessage(
+          shooter === 'player1'
+            ? 'Opponent cow captured. CPU is thinking...'
+            : 'Your cow was shot. Your turn to move.'
+        );
+      } else {
+        const nextLabel = victim === 'player1' ? 'Player 1 (Gold)' : 'Player 2 (Charcoal)';
+        setStatusMessage(`Cow captured! ${nextLabel}'s turn.`);
+      }
     }
   };
 
@@ -326,54 +379,90 @@ export const OfflineScreen: React.FC = () => {
     }));
   };
 
+  const currentTurnLabel = offlineMode === 'ai'
+    ? (gameState.currentPlayer === 'player1' ? 'YOUR TURN' : 'CPU TURN')
+    : (gameState.currentPlayer === 'player1' ? 'PLAYER 1 (GOLD) TURN' : 'PLAYER 2 (CHARCOAL) TURN');
+
+  const p1Label = offlineMode === 'ai' ? 'YOU (GOLD)' : 'PLAYER 1 (GOLD)';
+  const p2Label = offlineMode === 'ai' ? 'CPU (CHARCOAL)' : 'PLAYER 2 (CHARCOAL)';
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <Header
-        title="SOLO ARENA"
-        subtitle="1P VS CPU ENGINE"
+        title="OFFLINE ARENA"
+        subtitle={offlineMode === 'ai' ? '1P VS CPU ENGINE' : 'PASS & PLAY • 2-PLAYER LOCAL'}
         rightActionLabel="Coin Toss"
         onRightAction={() => setShowCoinToss(true)}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Difficulty Selector */}
-        <View style={styles.difficultyRow}>
-          {(['novice', 'warrior', 'grandmaster'] as AiDifficulty[]).map((d) => (
-            <TouchableOpacity
-              key={d}
-              onPress={() => {
-                setDifficulty(d);
-                resetGame();
-              }}
-              style={[
-                styles.difficultyBtn,
-                difficulty === d && styles.difficultyBtnActive,
-              ]}
-            >
-              <Text
+        {/* Mode Selector Row */}
+        <View style={styles.modeToggleRow}>
+          <TouchableOpacity
+            style={[styles.modeToggleBtn, offlineMode === 'ai' && styles.modeToggleBtnActive]}
+            onPress={() => {
+              setOfflineMode('ai');
+              resetGame();
+            }}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.modeToggleText, offlineMode === 'ai' && styles.modeToggleTextActive]}>
+              VS CPU (AI)
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.modeToggleBtn, offlineMode === 'pass_and_play' && styles.modeToggleBtnActive]}
+            onPress={() => {
+              setOfflineMode('pass_and_play');
+              resetGame();
+            }}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.modeToggleText, offlineMode === 'pass_and_play' && styles.modeToggleTextActive]}>
+              PASS & PLAY (2P)
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Difficulty Selector (Visible only in AI mode) */}
+        {offlineMode === 'ai' && (
+          <View style={styles.difficultyRow}>
+            {(['novice', 'warrior', 'grandmaster'] as AiDifficulty[]).map((d) => (
+              <TouchableOpacity
+                key={d}
+                onPress={() => {
+                  setDifficulty(d);
+                  resetGame();
+                }}
                 style={[
-                  styles.difficultyText,
-                  difficulty === d && styles.difficultyTextActive,
+                  styles.difficultyBtn,
+                  difficulty === d && styles.difficultyBtnActive,
                 ]}
               >
-                {d === 'novice' ? 'Novice' : d === 'warrior' ? 'Warrior' : 'Grandmaster'}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+                <Text
+                  style={[
+                    styles.difficultyText,
+                    difficulty === d && styles.difficultyTextActive,
+                  ]}
+                >
+                  {d === 'novice' ? 'Novice' : d === 'warrior' ? 'Warrior' : 'Grandmaster'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         {/* Status Bar */}
         <View style={styles.statusBox}>
-          <Text style={styles.statusTurn}>
-            {gameState.currentPlayer === 'player1' ? 'YOUR TURN' : 'CPU TURN'}
-          </Text>
+          <Text style={styles.statusTurn}>{currentTurnLabel}</Text>
           <Text style={styles.statusMessage}>{statusMessage}</Text>
         </View>
 
         {/* Scores & Cows Info */}
         <View style={styles.scoreRow}>
           <View style={styles.playerInfo}>
-            <Text style={styles.playerName}>YOU (GOLD)</Text>
+            <Text style={styles.playerName}>{p1Label}</Text>
             <Text style={styles.cowCount}>
               Hand: {gameState.unplacedCows.player1} • Board: {gameState.activeCows.player1}
             </Text>
@@ -385,7 +474,7 @@ export const OfflineScreen: React.FC = () => {
             <Text style={styles.vsText}>VS</Text>
           </View>
           <View style={[styles.playerInfo, { alignItems: 'flex-end' }]}>
-            <Text style={styles.playerName}>CPU (CHARCOAL)</Text>
+            <Text style={styles.playerName}>{p2Label}</Text>
             <Text style={styles.cowCount}>
               Hand: {gameState.unplacedCows.player2} • Board: {gameState.activeCows.player2}
             </Text>
@@ -399,7 +488,7 @@ export const OfflineScreen: React.FC = () => {
         <MorabarabaBoard
           gameState={gameState}
           onVertexPress={handleVertexPress}
-          disabled={isAiThinking || gameState.winner !== null}
+          disabled={(offlineMode === 'ai' && isAiThinking) || gameState.winner !== null}
         />
 
         <TouchableOpacity
@@ -415,8 +504,8 @@ export const OfflineScreen: React.FC = () => {
         visible={showCoinToss}
         onClose={() => setShowCoinToss(false)}
         onTossComplete={handleTossComplete}
-        player1Name="You"
-        player2Name="CPU"
+        player1Name={offlineMode === 'ai' ? 'You' : 'Player 1 (Gold)'}
+        player2Name={offlineMode === 'ai' ? 'CPU' : 'Player 2 (Charcoal)'}
       />
     </SafeAreaView>
   );
@@ -429,7 +518,33 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: SPACING.sm,
-    paddingBottom: 90, // Leave room for floating bottom tab bar
+    paddingBottom: 90, // Room for floating bottom tab bar
+  },
+  modeToggleRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(15, 23, 42, 0.08)',
+    marginBottom: SPACING.xs,
+  },
+  modeToggleBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  modeToggleBtnActive: {
+    borderBottomColor: COLORS.accent,
+  },
+  modeToggleText: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  modeToggleTextActive: {
+    color: COLORS.accentHover,
+    fontWeight: '800',
   },
   difficultyRow: {
     flexDirection: 'row',

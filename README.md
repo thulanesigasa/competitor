@@ -67,16 +67,19 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 - **Automatic Head-Back-To-Game Transition:** Upon landing on the winning face and announcing the starting player, the coin toss automatically dismisses after 1.2s and heads directly into the live match.
 - **In-Game Re-Toss:** Competitors can trigger a new coin toss at any time from the match header controls or during victory rematch flows.
 
-### 3. Intelligent Offline AI Arena (Solo Mode)
-- **Heuristic & Minimax Engine:**
-  - **Novice (*Dumela*):** Balanced learning AI that recognizes basic mills with casual play.
-  - **Warrior (*Inkosi*):** 2-ply search minimax evaluating material advantage, mill potential, and blocking traps.
-  - **Grandmaster (*Isangoma*):** Deep alpha-beta pruning minimax with tactical board dominance evaluation.
-- **Autonomous First-Move AI:** When the offline competitor loses the coin toss, the CPU takes the first move automatically.
+### 3. Intelligent Offline AI & Pass & Play Arena (`OfflineScreen.tsx`)
+- **Dual Offline Modes:**
+  - **VS CPU (AI Engine):** Solo arena with 3 skill tiers:
+    - **Novice (*Dumela*):** Balanced learning AI that recognizes basic mills with casual play.
+    - **Warrior (*Inkosi*):** 2-ply search minimax evaluating material advantage, mill potential, and blocking traps.
+    - **Grandmaster (*Isangoma*):** Deep alpha-beta pruning minimax with tactical board dominance evaluation.
+    - **Autonomous First-Move AI:** When the offline competitor loses the coin toss, the CPU takes the first move automatically.
+  - **Pass & Play (2-Player Local Duel):** 1-on-1 tabletop battle on the same device with Player 1 (Gold) vs Player 2 (Charcoal), fair coin toss turn decider, and live scoreboard.
+- **Dynamic Cross-Screen Rerouting:** Starting a Pass & Play match from the Battleground automatically switches tabs and navigates directly to the Offline arena with match parameters and instant coin toss initialization.
 - **Zero Internet Requirement:** Completely operational offline without consuming cellular data.
 
 ### 4. Zero-Data Local Battleground & Online Battle Rooms (`BattlegroundScreen.tsx`)
-- **Pass & Play:** Direct tabletop mode for head-to-head dueling on one screen.
+- **Pass & Play Rerouting:** Initiating a local offline duel seamlessly transfers the session to the dedicated `OfflineScreen`.
 - **Public & Private Battle Rooms:**
   - **Public Room Hosting (`'host_waiting_room_public'`):** Instantly broadcasts the match to the regional lobby. The host enters a public waiting room with live incoming challenger detection, full challenger profile inspection (Gamer Tag, location, title, win rate %, match record), and one-tap Accept or Decline actions.
   - **Private Room Hosting (`'host_private_share'` & `'host_waiting_room_private'`):** Generates a dynamic 4-digit battle code with one-tap clipboard copy and native share sheet triggering (`Share.share`), followed by a private waiting room awaiting the PIN connection and challenger profile inspection.
@@ -186,7 +189,7 @@ competitor/
 |   |   |-- leaderboard/
 |   |   |   `-- LeaderboardScreen.tsx  # Regional Southern African rankings
 |   |   |-- offline/
-|   |   |   `-- OfflineScreen.tsx      # Solo 1P vs CPU AI arena
+|   |   |   `-- OfflineScreen.tsx      # Solo 1P vs CPU AI and 2-Player Pass & Play arena with route syncing
 |   |   |-- onboarding/
 |   |   |   `-- OnboardingScreen.tsx   # 3-slide crossfade art canvas, liquid sliding pill & SwipeToStartButton
 |   |   `-- profile/
