@@ -22,18 +22,6 @@ import {
 import { UserProfile } from '../../types/auth';
 import { saveUserProfile } from '../../store/gameStore';
 import { SOUTHERN_AFRICAN_COUNTRIES } from '../../constants/regions';
-import {
-  UserSvg,
-  PhoneSvg,
-  MailSvg,
-  LockSvg,
-  AtSvg,
-  CheckSvg,
-  ChevronRightSvg,
-  ChevronLeftSvg,
-  EyeSvg,
-  EyeOffSvg,
-} from '../../components/SvgIcons';
 
 interface SignUpScreenProps {
   onSignUpSuccess: (user: UserProfile) => void;
@@ -229,7 +217,9 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                     ]}
                   >
                     {isPassed ? (
-                      <CheckSvg size={12} color="#FFFFFF" strokeWidth={3} />
+                      <Text variant="caption" weight="800" color="#FFFFFF">
+                        ✓
+                      </Text>
                     ) : (
                       <Text
                         variant="caption"
@@ -276,7 +266,6 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                 FIRST NAME
               </Text>
               <View style={[styles.inputWrapper, shadow.sm]}>
-                <UserSvg size={18} color="#94A3B8" style={styles.inputIcon} />
                 <TextInput
                   style={styles.textInput}
                   placeholder="e.g. Sipho"
@@ -292,7 +281,6 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                 SURNAME / LAST NAME
               </Text>
               <View style={[styles.inputWrapper, shadow.sm]}>
-                <UserSvg size={18} color="#94A3B8" style={styles.inputIcon} />
                 <TextInput
                   style={styles.textInput}
                   placeholder="e.g. Dlamini"
@@ -332,13 +320,12 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                   <Text variant="body" weight="700" color={colors.textPrimary}>
                     {dialCode}
                   </Text>
-                  <View style={styles.countryChevron}>
-                    <ChevronRightSvg size={14} color="#94A3B8" />
-                  </View>
+                  <Text variant="caption" weight="700" color="#94A3B8">
+                    ▼
+                  </Text>
                 </TouchableOpacity>
 
                 <View style={[styles.phoneInputWrapper, shadow.sm]}>
-                  <PhoneSvg size={18} color="#94A3B8" style={styles.inputIcon} />
                   <TextInput
                     style={styles.textInput}
                     placeholder="82 123 4567"
@@ -348,7 +335,9 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                     keyboardType="phone-pad"
                   />
                   {cellphone.length >= 7 && (
-                    <CheckSvg size={16} color={colors.accent} />
+                    <Text variant="body" weight="800" color={colors.accent}>
+                      ✓
+                    </Text>
                   )}
                 </View>
               </View>
@@ -363,9 +352,8 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
               onPress={handleNextStep1}
             >
               <Text variant="h3" style={styles.primaryBtnText}>
-                Continue to Location
+                Continue to Location →
               </Text>
-              <ChevronRightSvg size={18} color="#FFFFFF" strokeWidth={2.5} />
             </TouchableOpacity>
           </View>
         )}
@@ -459,7 +447,6 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                 GAMER TAG (ONLINE ALIAS)
               </Text>
               <View style={[styles.inputWrapper, shadow.sm]}>
-                <AtSvg size={18} color="#94A3B8" style={styles.inputIcon} />
                 <TextInput
                   style={styles.textInput}
                   placeholder="e.g. KlipKing_01"
@@ -480,9 +467,8 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                 onPress={() => setCurrentStep(1)}
                 activeOpacity={0.8}
               >
-                <ChevronLeftSvg size={18} color={colors.textPrimary} />
                 <Text variant="h3" style={styles.secondaryBtnText}>
-                  Back
+                  ← Back
                 </Text>
               </TouchableOpacity>
 
@@ -492,9 +478,8 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                 onPress={handleNextStep2}
               >
                 <Text variant="h3" style={styles.primaryBtnText}>
-                  Continue to Security
+                  Continue to Security →
                 </Text>
-                <ChevronRightSvg size={18} color="#FFFFFF" strokeWidth={2.5} />
               </TouchableOpacity>
             </View>
           </View>
@@ -508,7 +493,6 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                 EMAIL ADDRESS
               </Text>
               <View style={[styles.inputWrapper, shadow.sm]}>
-                <MailSvg size={18} color="#94A3B8" style={styles.inputIcon} />
                 <TextInput
                   style={styles.textInput}
                   placeholder="gamer@morabaraba.africa"
@@ -526,7 +510,6 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                 CONFIRM EMAIL ADDRESS
               </Text>
               <View style={[styles.inputWrapper, shadow.sm]}>
-                <MailSvg size={18} color="#94A3B8" style={styles.inputIcon} />
                 <TextInput
                   style={styles.textInput}
                   placeholder="Re-enter your email"
@@ -544,7 +527,6 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                 PASSWORD (8+ CHARACTERS)
               </Text>
               <View style={[styles.inputWrapper, shadow.sm]}>
-                <LockSvg size={18} color="#94A3B8" style={styles.inputIcon} />
                 <TextInput
                   style={styles.textInput}
                   placeholder="Minimum 8 letters & numbers"
@@ -556,12 +538,11 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                 <TouchableOpacity
                   onPress={() => setShowPassword(!showPassword)}
                   activeOpacity={0.7}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                  {showPassword ? (
-                    <EyeOffSvg size={18} color="#94A3B8" />
-                  ) : (
-                    <EyeSvg size={18} color="#94A3B8" />
-                  )}
+                  <Text variant="label" weight="700" color={colors.textSecondary}>
+                    {showPassword ? 'HIDE' : 'SHOW'}
+                  </Text>
                 </TouchableOpacity>
               </View>
               <PasswordStrengthMeter password={password} />
@@ -572,7 +553,6 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                 CONFIRM PASSWORD
               </Text>
               <View style={[styles.inputWrapper, shadow.sm]}>
-                <LockSvg size={18} color="#94A3B8" style={styles.inputIcon} />
                 <TextInput
                   style={styles.textInput}
                   placeholder="Re-enter your password"
@@ -584,12 +564,11 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                 <TouchableOpacity
                   onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                   activeOpacity={0.7}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                  {showConfirmPassword ? (
-                    <EyeOffSvg size={18} color="#94A3B8" />
-                  ) : (
-                    <EyeSvg size={18} color="#94A3B8" />
-                  )}
+                  <Text variant="label" weight="700" color={colors.textSecondary}>
+                    {showConfirmPassword ? 'HIDE' : 'SHOW'}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -600,9 +579,8 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                 onPress={() => setCurrentStep(2)}
                 activeOpacity={0.8}
               >
-                <ChevronLeftSvg size={18} color={colors.textPrimary} />
                 <Text variant="h3" style={styles.secondaryBtnText}>
-                  Back
+                  ← Back
                 </Text>
               </TouchableOpacity>
 
@@ -612,9 +590,8 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                 onPress={handleFinalSubmit}
               >
                 <Text variant="h3" style={styles.primaryBtnText}>
-                  Create Account
+                  Create Account ✓
                 </Text>
-                <CheckSvg size={18} color="#FFFFFF" strokeWidth={2.5} />
               </TouchableOpacity>
             </View>
           </View>

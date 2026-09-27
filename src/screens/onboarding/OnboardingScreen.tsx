@@ -17,7 +17,6 @@ import {
 import { colors } from '../../theme/colors';
 import { spacing, radius, shadow } from '../../theme';
 import { Text } from '../../components/Typography';
-import { ChevronRightSvg } from '../../components/SvgIcons';
 
 interface Slide {
   id: string;
@@ -158,7 +157,9 @@ function SwipeToStartButton({ onComplete, resetTrigger }: SwipeToStartButtonProp
           }}
           style={styles.swipeThumbTouchable}
         >
-          <ChevronRightSvg size={20} color="#FFFFFF" strokeWidth={2.5} />
+          <Text variant="h3" weight="800" color="#FFFFFF" style={styles.arrowText}>
+            →
+          </Text>
         </TouchableOpacity>
       </Animated.View>
     </View>
@@ -363,7 +364,9 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
               activeOpacity={0.85}
               accessibilityLabel="Next slide"
             >
-              <ChevronRightSvg size={22} color="#FFFFFF" strokeWidth={2.5} />
+              <Text variant="h3" weight="800" color="#FFFFFF" style={styles.arrowText}>
+                →
+              </Text>
             </TouchableOpacity>
           ) : (
             <SwipeToStartButton
@@ -569,5 +572,9 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  arrowText: {
+    fontSize: 18,
+    lineHeight: 22,
   },
 });

@@ -3,7 +3,6 @@ import { View, StyleSheet, Image, TouchableOpacity, Platform, StatusBar } from '
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme';
 import { Text } from '../Typography';
-import { ChevronLeftSvg } from '../SvgIcons';
 
 interface HeaderProps {
   title: string;
@@ -32,9 +31,8 @@ export const Header: React.FC<HeaderProps> = ({
             activeOpacity={0.7}
             accessibilityLabel="Go back"
           >
-            <ChevronLeftSvg size={20} color={colors.accentHover} />
             <Text variant="body" weight="700" color={colors.accentHover} style={styles.backText}>
-              Back
+              ← Back
             </Text>
           </TouchableOpacity>
         ) : (

@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, ViewStyle, TouchableOpacity, StyleProp } from 'react-native';
 import { colors } from '../theme/colors';
 import { spacing, radius, shadow } from '../theme';
-import { ChevronRightSvg } from './SvgIcons';
+import { Text } from './Typography';
 
 interface CardProps {
   children: React.ReactNode;
@@ -55,7 +55,9 @@ export const Card: React.FC<CardProps> = ({
       <View style={{ flex: 1 }}>{children}</View>
       {showChevron && (
         <View style={styles.chevron}>
-          <ChevronRightSvg size={18} color={colors.textSecondary} />
+          <Text variant="body" weight="700" color={colors.textSecondary}>
+            →
+          </Text>
         </View>
       )}
     </View>

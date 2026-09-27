@@ -86,23 +86,22 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 
 ---
 
-## Design System & Theme Architecture (Strict 60-30-10 & Native SVGs)
+## Design System & Theme Architecture (Strict 60-30-10 & Zero SVG Icons)
 
 [![Colors](https://img.shields.io/badge/60--30--10-Background_%23FFFFFF_|_Surface_%23FFFFFF_|_Accent_%23E5A93C-E5A93C)](https://shields.io/)
 [![Typography](https://img.shields.io/badge/Typography-Custom_Type_Scale-0F172A)](https://shields.io/)
-[![SVGs](https://img.shields.io/badge/Iconography-Native_SVGs-61DAFB)](https://shields.io/)
+[![Iconography](https://img.shields.io/badge/Iconography-Zero_SVGs_|_Pure_Typographic-10B981)](https://shields.io/)
 
 - **60% Dominant Background:** Crisp Pure White (`#FFFFFF`) providing a clean, high-contrast, modern application canvas.
 - **30% Panel & Surface:** Pure White (`#FFFFFF`) & Soft Slate Surface (`#F8FAFC`) with hairline borders (`rgba(15, 23, 42, 0.08)`) and subtle elevation shadows (`shadow.sm`, `shadow.md`, `shadow.pill`).
 - **10% Accent:** Radiant Gold / Orange (`#E5A93C` / `#D97706`) strictly reserved for active states, primary CTAs, and winning moves.
 - **Typography Component (`Typography.tsx`):** Standardized `<Text>` abstraction with variants (`h1`, `h2`, `h3`, `body`, `caption`, `label`), font weights (`400`, `500`, `600`, `700`, `800`, `900`), and automatic color defaults.
-- **Native SVGs (`SvgIcons.tsx` per Rule 2 & 4):** Standardized on `react-native-svg` vector paths (`ChevronRightSvg`, `ChevronLeftSvg`, `ChevronDownSvg`, `CheckSvg`, `CrossSvg`, `UserSvg`, `PhoneSvg`, `MailSvg`, `LockSvg`, `AtSvg`, `EyeSvg`, `EyeOffSvg`, `ShieldCheckSvg`, `SwordsSvg`, `TrophySvg`, `BoardGridSvg`, `RefreshSvg`).
+- **Zero SVG Icons:** Clean typographic indicators (`→`, `←`, `▼`, `✓`), geometric board coordinates, and native rendering without external SVG icon fonts or icon libraries.
 - **Multiples-of-8 Spacing (Rule 15):** Strict `spacing` system (`sm: 8`, `md: 16`, `lg: 24`, `xl: 32`, `xxl: 48`, `nav: 56`, `huge: 64`).
 - **Zero Card/Div Box Wrappers:** Onboarding and authentication content flows directly on the full-bleed body canvas.
 - **Themed Popup System:** All user dialogs, errors, and alerts are rendered via custom `ThemedAlert` modals matching the 60-30-10 palette.
 - **Unrounded Brand Logos:** All app brand logo displays maintain sharp, unrounded geometry (`borderRadius: 0`) across all screens and modals.
 - **Floating Pill Bottom Navigation:** Rule 20 compliant floating curved bottom navigation bar with dynamically centered geometry (`width: 280`), compact height (`50px`), and focused indicator dots.
-
 
 ---
 
@@ -125,10 +124,9 @@ competitor/
 |-- src/
 |   |-- components/
 |   |   |-- Card.tsx                   # Surface card with shadow.sm and radius tokens
-|   |   |-- SvgIcons.tsx               # Native react-native-svg icons (Rule 2 & 4)
 |   |   |-- Typography.tsx             # Standardized Text component with variants & weights
 |   |   |-- common/
-|   |   |   |-- Header.tsx             # Standard header with 24x24 brand logo (0 border radius) & ChevronLeftSvg
+|   |   |   |-- Header.tsx             # Standard header with 24x24 brand logo (0 border radius)
 |   |   |   |-- PasswordStrengthMeter.tsx # 4-segment 8+ char password validator
 |   |   |   |-- SwipeToSignUp.tsx      # Custom pan-responder swipe slider
 |   |   |   |-- ThemedAlert.tsx        # 60-30-10 modal alert system replacing OS alerts
@@ -146,7 +144,7 @@ competitor/
 |   |   `-- TabNavigator.tsx           # Rule 20 floating pill bottom navigation
 |   |-- screens/
 |   |   |-- auth/
-|   |   |   |-- LoginScreen.tsx        # Gamer Tag/Email credential sign in with SvgIcons & Typography
+|   |   |   |-- LoginScreen.tsx        # Gamer Tag/Email credential sign in with Typography
 |   |   |   `-- SignUpScreen.tsx       # 3-step progressive Southern African registration with step connectors
 |   |   |-- battleground/
 |   |   |   `-- BattlegroundScreen.tsx # 2-Player Pass & Play and Wi-Fi match setup

@@ -18,13 +18,6 @@ import { Header } from '../../components/common/Header';
 import { useThemedAlert } from '../../components/common/ThemedAlert';
 import { getUserProfile, saveUserProfile } from '../../store/gameStore';
 import { UserProfile } from '../../types/auth';
-import {
-  UserSvg,
-  LockSvg,
-  ChevronRightSvg,
-  EyeSvg,
-  EyeOffSvg,
-} from '../../components/SvgIcons';
 
 interface LoginScreenProps {
   onLoginSuccess: (user: UserProfile) => void;
@@ -119,7 +112,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 GAMER TAG OR EMAIL
               </Text>
               <View style={[styles.inputWrapper, shadow.sm]}>
-                <UserSvg size={18} color="#94A3B8" style={styles.inputIcon} />
                 <TextInput
                   style={styles.textInput}
                   placeholder="e.g. KlipKing_01 or email@domain.com"
@@ -136,7 +128,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 PASSWORD
               </Text>
               <View style={[styles.inputWrapper, shadow.sm]}>
-                <LockSvg size={18} color="#94A3B8" style={styles.inputIcon} />
                 <TextInput
                   style={styles.textInput}
                   placeholder="Enter your 8+ character password"
@@ -149,12 +140,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   onPress={() => setShowPassword(!showPassword)}
                   activeOpacity={0.7}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  style={styles.toggleVisibilityBtn}
                 >
-                  {showPassword ? (
-                    <EyeOffSvg size={18} color="#94A3B8" />
-                  ) : (
-                    <EyeSvg size={18} color="#94A3B8" />
-                  )}
+                  <Text variant="label" weight="700" color={colors.textSecondary}>
+                    {showPassword ? 'HIDE' : 'SHOW'}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -165,9 +155,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               onPress={handleLogin}
             >
               <Text variant="body" weight="800" color="#FFFFFF">
-                Sign In to Arena
+                Sign In to Arena →
               </Text>
-              <ChevronRightSvg size={18} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
 
@@ -240,8 +229,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     paddingHorizontal: spacing.md,
   },
-  inputIcon: {
-    marginRight: 10,
+  toggleVisibilityBtn: {
+    paddingHorizontal: 6,
+    paddingVertical: 4,
   },
   textInput: {
     flex: 1,
