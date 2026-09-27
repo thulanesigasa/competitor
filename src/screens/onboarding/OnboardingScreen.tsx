@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   StatusBar,
   Image,
+  ImageSourcePropType,
 } from 'react-native';
 import { COLORS, METRICS, SPACING } from '../../constants/theme';
 import { SwipeToSignUp } from '../../components/common/SwipeToSignUp';
@@ -19,32 +20,36 @@ interface Slide {
   title: string;
   description: string;
   highlight: string;
+  image: ImageSourcePropType;
 }
 
 const ONBOARDING_SLIDES: Slide[] = [
   {
     id: '1',
     step: '01 / 03',
-    title: 'THE ANCIENT ART OF STRATEGY',
+    title: 'WELCOME TO MORABARABA',
+    highlight: 'The Ancient Art of Strategy',
     description:
-      'Experience Southern Africa’s premier two-player tactical heritage. Place your twelve cows, outmaneuver your rival, and form unbreakable mills.',
-    highlight: 'Pure Heritage • Zero Data',
+      'Step into Southern Africa’s premier 1v1 tactical battleground. Place your twelve cows, outmaneuver your rival, and conquer the board.',
+    image: require('../../../assets/onboarding/10- VARIADOS 3D - Google Drive.jpg'),
   },
   {
     id: '2',
     step: '02 / 03',
-    title: 'OFFLINE ENGINE & WI-FI DUELS',
+    title: 'EARN COMPETITIVELY',
+    highlight: 'Zero-Data Battles • High Stakes Duels',
     description:
-      'Train offline against heuristic AI grandmasters or host high-stakes 1v1 duels with nearby challengers over zero-data local Wi-Fi hotspots.',
-    highlight: 'Solo Mastery • Local Clash',
+      'Compete against friends in the Battleground over zero-data local Wi-Fi or climb the leaderboard with offline solo mastery.',
+    image: require('../../../assets/onboarding/download.jpg'),
   },
   {
     id: '3',
     step: '03 / 03',
-    title: 'RISE THROUGH THE REGIONAL RANKS',
+    title: 'ENJOY THE ARENA',
+    highlight: 'Seven Nations • Top Regional Honors',
     description:
-      'Claim your custom Gamer Tag. Represent your town and province across South Africa, Zimbabwe, Zambia, Botswana, Malawi, Lesotho, and Eswatini.',
-    highlight: 'Seven Nations • One Champion',
+      'Represent your town and province across Southern Africa. Claim your custom Gamer Tag and rise to grandmaster glory.',
+    image: require('../../../assets/onboarding/3D Hand Picking Golden Stars Icon.jpg'),
   },
 ];
 
@@ -94,6 +99,13 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
         renderItem={({ item }) => (
           <View style={[styles.slideContainer, { width }]}>
             <View style={styles.slideCard}>
+              <View style={styles.imageContainer}>
+                <Image
+                  source={item.image}
+                  style={styles.slideImage}
+                  resizeMode="cover"
+                />
+              </View>
               <Text style={styles.stepBadge}>{item.step}</Text>
               <Text style={styles.slideTitle}>{item.title}</Text>
               <Text style={styles.slideHighlight}>{item.highlight}</Text>
@@ -200,36 +212,50 @@ const styles = StyleSheet.create({
   slideCard: {
     backgroundColor: COLORS.surface,
     borderRadius: 24,
-    padding: SPACING.lg,
+    padding: SPACING.md,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
+  imageContainer: {
+    width: '100%',
+    height: 180,
+    backgroundColor: COLORS.background,
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: SPACING.sm,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  slideImage: {
+    width: '100%',
+    height: '100%',
+  },
   stepBadge: {
     color: COLORS.accent,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     letterSpacing: 1.2,
-    marginBottom: SPACING.sm,
+    marginBottom: 4,
   },
   slideTitle: {
     color: COLORS.white,
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '900',
     letterSpacing: 0.5,
-    lineHeight: 30,
-    marginBottom: SPACING.xs,
+    lineHeight: 26,
+    marginBottom: 2,
   },
   slideHighlight: {
     color: COLORS.accent,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
     letterSpacing: 0.5,
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.xs,
   },
   slideDescription: {
     color: COLORS.textMuted,
-    fontSize: 15,
-    lineHeight: 24,
+    fontSize: 13,
+    lineHeight: 20,
   },
   bottomArea: {
     paddingBottom: SPACING.lg,
