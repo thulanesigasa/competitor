@@ -233,3 +233,10 @@ Native Android APK binaries compile directly on GitHub Actions runners without c
 - **EAS Configuration (`eas.json`):** Defines `development`, `preview`, and `production` channels with auto-increment.
 - **Prebuild Embedding:** Native APKs embed `updates.url` and `projectId` in their build manifests so installed standalone APKs continuously check for and download OTA updates.
 - **In-App Modal (`UpdateModal.tsx`):** Dual-action update prompt (Update Now / Remind Me Later) triggered on app launch and foreground resume (`AppState`), with 30-minute snooze timestamp persisted in `AsyncStorage` and 0-border-radius unrounded brand emblem. Tapping "Update Now" instantly reloads the runtime with the fresh update bundle.
+
+### Managed Workflow & Ephemeral Android Directory Architecture
+The repository operates under a standard **Expo Managed Workflow**:
+- **Zero Local Native Bloat:** The `android/` and `ios/` folders are intentionally omitted from version control and strictly covered by `.gitignore`. The entire application code, UI components, and game logic reside in TypeScript and Expo configuration (`app.json`).
+- **On-Demand CI Native Generation:** The `android/` directory is created dynamically on the GitHub Actions runner during the APK compilation step via `npx expo prebuild --platform android --no-install`. The runner compiles the release binary and discards the transient directory after artifact upload.
+- **Local Development Cleanliness:** If `npx expo prebuild` or native commands are executed locally during debugging, an `android/` directory is generated in the workspace. Because it is gitignored, it does not pollute the git repository and can be safely purged at any time with `Remove-Item -Recurse -Force android` without affecting project source code.
+

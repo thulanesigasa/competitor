@@ -18,17 +18,30 @@ if os.path.exists(original_path):
     new_h = int(H * scale)
     scaled = orig.resize((new_w, new_h), Image.Resampling.LANCZOS)
 
-    canvas = Image.new("RGBA", (W, H), (255, 255, 255, 255))
-    offset_x = (W - new_w) // 2
-    offset_y = (H - new_h) // 2
-    canvas.paste(scaled, (offset_x, offset_y), scaled)
+    # 1. assets/icon.png (1024x1024)
+    canvas = Image.new("RGBA", (1024, 1024), (255, 255, 255, 255))
+    icon_w = int(1024 * scale)
+    icon_h = int(1024 * scale)
+    scaled_icon = orig.resize((icon_w, icon_h), Image.Resampling.LANCZOS)
+    canvas.paste(scaled_icon, ((1024 - icon_w) // 2, (1024 - icon_h) // 2), scaled_icon)
+    canvas.convert("RGB").save("assets/icon.png", "PNG")
+    print(f"Saved assets/icon.png: 1024x1024 with {icon_w}x{icon_h} glyph")
 
-    canvas_rgb = canvas.convert("RGB")
-    canvas_rgb.save("assets/icon.png", "PNG")
-    canvas_rgb.save("assets/android-icon-foreground.png", "PNG")
-    print(f"Saved assets/icon.png & android-icon-foreground.png: {W}x{H} with {new_w}x{new_h} glyph (decreased 48%)")
+    # 2. assets/android-icon-foreground.png (512x512 canvas with 96px centered glyph per Rule 15 & 19)
+    android_canvas = Image.new("RGBA", (512, 512), (0, 0, 0, 0))
+    scaled_android = orig.resize((96, 96), Image.Resampling.LANCZOS)
+    android_canvas.paste(scaled_android, ((512 - 96) // 2, (512 - 96) // 2), scaled_android)
+    android_canvas.save("assets/android-icon-foreground.png", "PNG")
+    print("Saved assets/android-icon-foreground.png: 512x512 with 96px glyph (~72% margin)")
 
-    # Favicon 48x48
-    fav = canvas_rgb.resize((48, 48), Image.Resampling.LANCZOS)
+    # 3. assets/splash.png (1284x2778)
+    splash_canvas = Image.new("RGBA", (1284, 2778), (255, 255, 255, 255))
+    scaled_splash = orig.resize((240, 240), Image.Resampling.LANCZOS)
+    splash_canvas.paste(scaled_splash, ((1284 - 240) // 2, (2778 - 240) // 2), scaled_splash)
+    splash_canvas.convert("RGB").save("assets/splash.png", "PNG")
+    print("Saved assets/splash.png (1284x2778)")
+
+    # 4. Favicon 48x48
+    fav = orig.resize((48, 48), Image.Resampling.LANCZOS)
     fav.save("assets/favicon.png", "PNG")
     print("Saved assets/favicon.png (48x48)")
