@@ -169,6 +169,16 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 - **Legal & Fair Play Standards (`PrivacyPolicyScreen.tsx`, `TermsOfServiceScreen.tsx`):**
   - Dedicated transparent screens for Privacy Policy and Terms of Service covering traditional Morabaraba rules, anti-cheating, disconnection forfeits, and sportsmanship.
 
+### 10. Strict Gameplay Rules, Anti-Cheat Engine & Tactical Rule Validator (`morabarabaValidator.ts`, `RuleTipModal.tsx`)
+- **Centralized Tactical Validator (`src/engine/morabarabaValidator.ts`):** Enforces strict authentic Southern African Morabaraba rules across both Offline (vs CPU / Pass & Play) and Online Battleground arenas.
+- **Anti-Bot Reaction Speed Throttler (`validateHumanReactionRate`):** Intercepts input bursts registered faster than human physical touch latency (< 260ms), blocking automated click bots, macro injection, and scripted execution.
+- **Threefold Repetition Stalling Loop Breaker (`validateThreefoldRepetition`):** Forbids moving the same cow back and forth across identical intersections 3 consecutive times, preventing artificial bot deadlocks and infinite stalling.
+- **Sacred Mill Shoot Protection (*Umphahlo*):** Enforces the authentic rule where cows inside an opponent's active mill are sacred and protected from capture unless all opponent cows on the board are locked in mills; forbids friendly fire and empty intersection shooting.
+- **Connected Adjacency & Flight Gating (*Ku-fofa*):** Sliding is strictly limited to connected lines along the authentic board graph; flight across vacant intersections is restricted until a herd is reduced to exactly 3 cows and the hand is empty.
+- **Peer Packet Verification:** Validates every incoming WebSocket move payload before updating local state, rejecting tampered, forged, or out-of-turn packets.
+- **Anti-AI Deliberation Clock:** 60-second deliberation timer preventing external solver/AI assistance and stalling tactics in ranked battles.
+- **Educational Rule Tip Modal (`RuleTipModal.tsx`):** Unobtrusive 60-30-10 modal that surfaces authentic rule tips only when a user or script attempts to violate a rule, explaining why the action was rejected without cluttering the screen during normal gameplay.
+
 ---
 
 ## Design System & Theme Architecture (Strict 60-30-10 & Tab-Only SVGs)
@@ -232,7 +242,8 @@ competitor/
 |   |   |   |-- CoinTossModal.tsx      # Fair animated 3D coin toss turn decider (alternates H/T)
 |   |   |   |-- CompetitorProfileCard.tsx # 60-30-10 player profile inspection card with stats & actions
 |   |   |   |-- MorabarabaBoard.tsx    # 24-vertex pure line intersection board layout
-|   |   |   `-- MorabarabaPiece.tsx    # Authentic concentric carved African tokens
+|   |   |   |-- MorabarabaPiece.tsx    # Authentic concentric carved African tokens
+|   |   |   `-- RuleTipModal.tsx       # Unobtrusive 60-30-10 tactical rule violation tip modal
 |   |   `-- navigation/
 |   |       |-- CustomTabBar.tsx       # Centered floating pill tab bar with active indicator dot
 |   |       `-- TabIcons.tsx           # 16px bottom tab bar SVGs (Rule 20)
@@ -242,7 +253,8 @@ competitor/
 |   |   `-- theme.ts                   # Legacy theme metrics re-exported to src/theme
 |   |-- engine/
 |   |   |-- ai.ts                      # Heuristic & Minimax AI across 3 difficulties
-|   |   `-- morabaraba.ts              # Mathematical board model and rule validator
+|   |   |-- morabaraba.ts              # Mathematical board model and mill triplets
+|   |   `-- morabarabaValidator.ts     # Strict rules, anti-bot speed limiter, and violation tips
 |   |-- navigation/
 |   |   |-- RootNavigator.tsx          # Dynamic initialRoute auth coordinator & unconditional stack screens
 |   |   `-- TabNavigator.tsx           # Rule 20 floating pill bottom navigation with CustomTabBar

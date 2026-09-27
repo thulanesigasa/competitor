@@ -32,7 +32,17 @@ import {
 } from '../../engine/morabaraba';
 import { getUserProfile, getCareerStats, recordGameResult } from '../../store/gameStore';
 import { battlegroundService } from '../../services/battlegroundService';
-import { gameSyncService } from '../../services/gameSyncService';
+import { gameSyncService, MoveBroadcastPayload } from '../../services/gameSyncService';
+import { RuleTipModal } from '../../components/game/RuleTipModal';
+import {
+  RuleTip,
+  MoveRecord,
+  validateHumanReactionRate,
+  validatePlacement,
+  validateCowSelection,
+  validateCowMove,
+  validateCowShot,
+} from '../../engine/morabarabaValidator';
 
 type DuelMode =
   | 'menu'
@@ -78,6 +88,13 @@ export const BattlegroundScreen: React.FC = () => {
   const lobbySubscription = useRef<(() => void) | null>(null);
   const roomSubscription = useRef<(() => void) | null>(null);
 
+  // Strict Gameplay Validation & Anti-Cheat
+  const [ruleTip, setRuleTip] = useState<RuleTip | null>(null);
+  const [showRuleTip, setShowRuleTip] = useState(false);
+  const lastActionTimestamp = useRef<number | null>(null);
+  const recentMoves = useRef<MoveRecord[]>([]);
+  const deliberationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     getUserProfile().then((profile) => setCurrentUser(profile));
     getCareerStats().then((stats) => setUserStats(stats));
@@ -92,7 +109,32 @@ export const BattlegroundScreen: React.FC = () => {
   const clearAllTimers = () => {
     if (challengerTimer.current) clearTimeout(challengerTimer.current);
     if (hostApprovalTimer.current) clearTimeout(hostApprovalTimer.current);
+    if (deliberationTimer.current) clearTimeout(deliberationTimer.current);
   };
+
+  const localPlayer: Player = isHostRole ? 'player1' : 'player2';
+  const peerPlayer: Player = isHostRole ? 'player2' : 'player1';
+
+  // Anti-AI Deliberation Stalling Clock
+  useEffect(() => {
+    if (deliberationTimer.current) clearTimeout(deliberationTimer.current);
+    if (mode === 'match_in_progress' && !gameState.winner) {
+      deliberationTimer.current = setTimeout(() => {
+        if (gameState.currentPlayer === localPlayer) {
+          setRuleTip({
+            code: 'DELIBERATION_TIMEOUT',
+            title: 'FAIR PLAY: DELIBERATION CLOCK',
+            message:
+              'To preserve competitive integrity and prevent stalling or external solver assistance, please execute your tactical move promptly.',
+          });
+          setShowRuleTip(true);
+        }
+      }, 60000);
+    }
+    return () => {
+      if (deliberationTimer.current) clearTimeout(deliberationTimer.current);
+    };
+  }, [gameState.currentPlayer, mode, gameState.winner, isHostRole]);
 
   // --- HOST FLOWS ---
   const handleStartHostFlow = () => {
@@ -302,9 +344,175 @@ export const BattlegroundScreen: React.FC = () => {
           handleTossComplete(firstPlayer);
         },
         onMove: (payload) => {
-          // Live opponent move handling
+          handlePeerMove(payload);
         },
       });
+    }
+  };
+
+  const handlePeerMove = (payload: MoveBroadcastPayload) => {
+    const peer: Player = payload.player;
+    if (peer === localPlayer) return;
+
+    if (payload.type === 'place' && payload.to !== undefined) {
+      const check = validatePlacement(gameState, peer, payload.to);
+      if (!check.isValid) {
+        setRuleTip({
+          code: 'PEER_PACKET_DESYNC',
+          title: 'INTEGRITY CHECK: ILLEGAL MOVE REJECTED',
+          message: 'The opponent sent an invalid placement that violates Morabaraba rules.',
+        });
+        setShowRuleTip(true);
+        return;
+      }
+
+      const nextBoard = [...gameState.board];
+      nextBoard[payload.to] = peer;
+      const mill = formsNewMill(nextBoard, payload.to, peer);
+      const remainingUnplaced = gameState.unplacedCows[peer] - 1;
+      const nextPhase = remainingUnplaced === 0 ? 'moving' : 'placing';
+
+      recentMoves.current.push({
+        player: peer,
+        to: payload.to,
+        timestamp: Date.now(),
+      });
+
+      if (mill) {
+        setGameState((prev) => ({
+          ...prev,
+          board: nextBoard,
+          unplacedCows: { ...prev.unplacedCows, [peer]: remainingUnplaced },
+          activeCows: { ...prev.activeCows, [peer]: prev.activeCows[peer] + 1 },
+          phase: { ...prev.phase, [peer]: nextPhase },
+          mustShoot: true,
+          lastMove: { to: payload.to!, player: peer, formedMill: true },
+        }));
+        setStatusMessage(`${opponentName} formed a mill and is shooting your cow!`);
+      } else {
+        setGameState((prev) => ({
+          ...prev,
+          board: nextBoard,
+          unplacedCows: { ...prev.unplacedCows, [peer]: remainingUnplaced },
+          activeCows: { ...prev.activeCows, [peer]: prev.activeCows[peer] + 1 },
+          phase: { ...prev.phase, [peer]: nextPhase },
+          currentPlayer: localPlayer,
+          turnCount: prev.turnCount + 1,
+          lastMove: { to: payload.to!, player: peer },
+        }));
+        setStatusMessage('Your turn: Place a cow.');
+      }
+    } else if ((payload.type === 'move' || payload.type === 'fly') && payload.from !== undefined && payload.to !== undefined) {
+      const check = validateCowMove(gameState, peer, payload.from, payload.to, recentMoves.current);
+      if (!check.isValid) {
+        setRuleTip({
+          code: 'PEER_PACKET_DESYNC',
+          title: 'INTEGRITY CHECK: ILLEGAL MOVE REJECTED',
+          message: 'The opponent sent an invalid move that violates connected line adjacency.',
+        });
+        setShowRuleTip(true);
+        return;
+      }
+
+      const nextBoard = [...gameState.board];
+      nextBoard[payload.from] = null;
+      nextBoard[payload.to] = peer;
+      const mill = formsNewMill(nextBoard, payload.to, peer);
+
+      recentMoves.current.push({
+        player: peer,
+        from: payload.from,
+        to: payload.to,
+        timestamp: Date.now(),
+      });
+
+      if (mill) {
+        setGameState((prev) => ({
+          ...prev,
+          board: nextBoard,
+          mustShoot: true,
+          lastMove: { from: payload.from, to: payload.to!, player: peer, formedMill: true },
+        }));
+        setStatusMessage(`${opponentName} formed a mill and is shooting your cow!`);
+      } else {
+        let winner: Player | null = null;
+        if (gameState.unplacedCows[localPlayer] === 0 && !hasLegalMoves(nextBoard, localPlayer, gameState.phase[localPlayer])) {
+          winner = peer;
+        }
+
+        setGameState((prev) => ({
+          ...prev,
+          board: nextBoard,
+          currentPlayer: localPlayer,
+          turnCount: prev.turnCount + 1,
+          lastMove: { from: payload.from, to: payload.to!, player: peer },
+          winner,
+        }));
+
+        if (winner) {
+          recordGameResult(false, 0, 1, gameState.phase.player1 === 'flying');
+          showAlert({
+            title: 'Defeated',
+            message: `${opponentName} has blocked all your legal moves and claimed victory.`,
+            buttons: [{ text: 'Return to Menu', onPress: () => setMode('menu') }],
+          });
+        } else {
+          setStatusMessage('Your turn to move.');
+        }
+      }
+    } else if (payload.type === 'shoot' && payload.shotVertex !== undefined) {
+      const check = validateCowShot(gameState, peer, payload.shotVertex);
+      if (!check.isValid) {
+        setRuleTip({
+          code: 'PEER_PACKET_DESYNC',
+          title: 'INTEGRITY CHECK: ILLEGAL SHOT REJECTED',
+          message: 'The opponent attempted to shoot a protected cow in an active mill.',
+        });
+        setShowRuleTip(true);
+        return;
+      }
+
+      const nextBoard = [...gameState.board];
+      nextBoard[payload.shotVertex] = null;
+
+      const remainingVictimActive = gameState.activeCows[localPlayer] - 1;
+      const victimUnplaced = gameState.unplacedCows[localPlayer];
+
+      let nextVictimPhase = gameState.phase[localPlayer];
+      if (victimUnplaced === 0 && remainingVictimActive === 3) {
+        nextVictimPhase = 'flying';
+      }
+
+      let winner: Player | null = null;
+      if (victimUnplaced === 0 && remainingVictimActive < 3) {
+        winner = peer;
+      } else if (victimUnplaced === 0 && !hasLegalMoves(nextBoard, localPlayer, nextVictimPhase)) {
+        winner = peer;
+      }
+
+      const nextTurnCount = gameState.turnCount + 1;
+      setGameState((prev) => ({
+        ...prev,
+        board: nextBoard,
+        activeCows: { ...prev.activeCows, [localPlayer]: remainingVictimActive },
+        capturedCows: { ...prev.capturedCows, [peer]: prev.capturedCows[peer] + 1 },
+        phase: { ...prev.phase, [localPlayer]: nextVictimPhase },
+        mustShoot: false,
+        currentPlayer: localPlayer,
+        turnCount: nextTurnCount,
+        winner,
+      }));
+
+      if (winner) {
+        recordGameResult(false, 0, 1, gameState.phase.player1 === 'flying');
+        showAlert({
+          title: 'Defeated',
+          message: `${opponentName} has captured your herd and claimed victory.`,
+          buttons: [{ text: 'Return to Menu', onPress: () => setMode('menu') }],
+        });
+      } else {
+        setStatusMessage('Your turn.');
+      }
     }
   };
 
@@ -333,6 +541,8 @@ export const BattlegroundScreen: React.FC = () => {
   const handleTossComplete = (firstPlayer: Player) => {
     setShowCoinToss(false);
     setGameState(createInitialGameState(firstPlayer));
+    lastActionTimestamp.current = Date.now();
+    recentMoves.current = [];
     const firstPlayerLabel = firstPlayer === 'player1' ? 'You (Gold)' : `${opponentName} (Charcoal)`;
     setStatusMessage(`${firstPlayerLabel} won the coin toss! Place your cow.`);
     setMode('match_in_progress');
@@ -346,76 +556,125 @@ export const BattlegroundScreen: React.FC = () => {
   const handleVertexPress = (vertexId: number) => {
     if (gameState.winner) return;
 
-    const current = gameState.currentPlayer;
-    const opponent: Player = current === 'player1' ? 'player2' : 'player1';
+    // 1. Turn Authorization Check
+    if (gameState.currentPlayer !== localPlayer) {
+      setRuleTip({
+        code: 'NOT_PLAYER_TURN',
+        title: 'TACTICAL TIP: OPPONENT’S TURN',
+        message: `It is currently ${opponentName}’s turn. Please wait for your opponent to complete their action.`,
+      });
+      setShowRuleTip(true);
+      return;
+    }
+
+    // 2. Anti-Bot / Rapid Reaction Speed Check
+    const rateCheck = validateHumanReactionRate(lastActionTimestamp.current);
+    if (!rateCheck.isValid) {
+      setRuleTip(rateCheck.tip);
+      setShowRuleTip(true);
+      return;
+    }
+
+    const current: Player = localPlayer;
+    const opponent: Player = peerPlayer;
     const currentPhase: GamePhase = gameState.phase[current];
 
     // Case 1: Shoot opponent cow
     if (gameState.mustShoot) {
-      const legalShots = getLegalShotVertices(gameState.board, opponent);
-      if (legalShots.includes(vertexId)) {
-        const nextBoard = [...gameState.board];
-        nextBoard[vertexId] = null;
+      const shotCheck = validateCowShot(gameState, current, vertexId);
+      if (!shotCheck.isValid) {
+        setRuleTip(shotCheck.tip);
+        setShowRuleTip(true);
+        return;
+      }
 
-        const remainingVictimActive = gameState.activeCows[opponent] - 1;
-        const victimUnplaced = gameState.unplacedCows[opponent];
+      lastActionTimestamp.current = Date.now();
+      const nextBoard = [...gameState.board];
+      nextBoard[vertexId] = null;
 
-        let nextVictimPhase = gameState.phase[opponent];
-        if (victimUnplaced === 0 && remainingVictimActive === 3) {
-          nextVictimPhase = 'flying';
+      const remainingVictimActive = gameState.activeCows[opponent] - 1;
+      const victimUnplaced = gameState.unplacedCows[opponent];
+
+      let nextVictimPhase = gameState.phase[opponent];
+      if (victimUnplaced === 0 && remainingVictimActive === 3) {
+        nextVictimPhase = 'flying';
+      }
+
+      let winner: Player | null = null;
+      if (victimUnplaced === 0 && remainingVictimActive < 3) {
+        winner = current;
+      } else if (victimUnplaced === 0 && !hasLegalMoves(nextBoard, opponent, nextVictimPhase)) {
+        winner = current;
+      }
+
+      if (activeRoomId.current) {
+        gameSyncService.broadcastMove(activeRoomId.current, {
+          type: 'shoot',
+          player: current,
+          shotVertex: vertexId,
+        });
+      }
+
+      const nextTurnCount = gameState.turnCount + 1;
+      setGameState((prev) => ({
+        ...prev,
+        board: nextBoard,
+        activeCows: { ...prev.activeCows, [opponent]: remainingVictimActive },
+        capturedCows: { ...prev.capturedCows, [current]: prev.capturedCows[current] + 1 },
+        phase: { ...prev.phase, [opponent]: nextVictimPhase },
+        mustShoot: false,
+        currentPlayer: opponent,
+        turnCount: nextTurnCount,
+        winner,
+      }));
+
+      if (winner) {
+        const isP1 = winner === 'player1';
+        recordGameResult(isP1, 1, 1, gameState.phase.player1 === 'flying');
+        if (activeRoomId.current && currentUser) {
+          gameSyncService.finalizeMatch(activeRoomId.current, currentUser.id);
         }
-
-        let winner: Player | null = null;
-        if (victimUnplaced === 0 && remainingVictimActive < 3) {
-          winner = current;
-        } else if (victimUnplaced === 0 && !hasLegalMoves(nextBoard, opponent, nextVictimPhase)) {
-          winner = current;
-        }
-
-        const nextTurnCount = gameState.turnCount + 1;
-        setGameState((prev) => ({
-          ...prev,
-          board: nextBoard,
-          activeCows: { ...prev.activeCows, [opponent]: remainingVictimActive },
-          capturedCows: { ...prev.capturedCows, [current]: prev.capturedCows[current] + 1 },
-          phase: { ...prev.phase, [opponent]: nextVictimPhase },
-          mustShoot: false,
-          currentPlayer: opponent,
-          turnCount: nextTurnCount,
-          winner,
-        }));
-
-        if (winner) {
-          const isP1 = winner === 'player1';
-          recordGameResult(isP1, 1, 1, gameState.phase.player1 === 'flying');
-          showAlert({
-            title: isP1 ? 'Victory!' : 'Defeated',
-            message: isP1
-              ? 'Congratulations! You captured your opponent herd and triumphed on the battleground.'
-              : `${opponentName} has captured your herd. Train and rematch!`,
-            buttons: [{ text: 'Play Again', onPress: () => setShowCoinToss(true) }],
-          });
-        } else {
-          setStatusMessage(`${opponent === 'player1' ? 'Your' : `${opponentName}'s`} turn.`);
-        }
+        showAlert({
+          title: 'Victory!',
+          message: 'Congratulations! You captured your opponent herd and triumphed on the battleground.',
+          buttons: [{ text: 'Play Again', onPress: () => setShowCoinToss(true) }],
+        });
       } else {
-        showAlert({ title: 'Cannot Shoot', message: 'Target is either protected in a mill or not an opponent cow.' });
+        setStatusMessage(`${opponentName}'s turn.`);
       }
       return;
     }
 
     // Case 2: Placing Phase
     if (currentPhase === 'placing') {
-      if (gameState.board[vertexId] !== null) {
-        showAlert({ title: 'Occupied', message: 'This intersection already holds a cow.' });
+      const placeCheck = validatePlacement(gameState, current, vertexId);
+      if (!placeCheck.isValid) {
+        setRuleTip(placeCheck.tip);
+        setShowRuleTip(true);
         return;
       }
 
+      lastActionTimestamp.current = Date.now();
       const nextBoard = [...gameState.board];
       nextBoard[vertexId] = current;
       const mill = formsNewMill(nextBoard, vertexId, current);
       const remainingUnplaced = gameState.unplacedCows[current] - 1;
       const nextPhase = remainingUnplaced === 0 ? 'moving' : 'placing';
+
+      recentMoves.current.push({
+        player: current,
+        to: vertexId,
+        timestamp: Date.now(),
+      });
+
+      if (activeRoomId.current) {
+        gameSyncService.broadcastMove(activeRoomId.current, {
+          type: 'place',
+          player: current,
+          to: vertexId,
+          formedMill: mill,
+        });
+      }
 
       if (mill) {
         setGameState((prev) => ({
@@ -427,7 +686,7 @@ export const BattlegroundScreen: React.FC = () => {
           mustShoot: true,
           lastMove: { to: vertexId, player: current, formedMill: true },
         }));
-        setStatusMessage(`${current === 'player1' ? 'You' : opponentName} formed a mill! Shoot an opponent cow.`);
+        setStatusMessage('You formed a mill! Shoot an opponent cow.');
       } else {
         setGameState((prev) => ({
           ...prev,
@@ -439,29 +698,63 @@ export const BattlegroundScreen: React.FC = () => {
           turnCount: prev.turnCount + 1,
           lastMove: { to: vertexId, player: current },
         }));
-        setStatusMessage(`${opponent === 'player1' ? 'Your' : `${opponentName}'s`} turn: Place a cow.`);
+        setStatusMessage(`${opponentName}'s turn: Place a cow.`);
       }
       return;
     }
 
     // Case 3: Moving / Flying Phase
-    if (gameState.board[vertexId] === current) {
+    // Sub-case A: Select or change selected cow
+    if (gameState.selectedVertex === null || gameState.board[vertexId] === current) {
+      const selectCheck = validateCowSelection(gameState, current, vertexId);
+      if (!selectCheck.isValid) {
+        setRuleTip(selectCheck.tip);
+        setShowRuleTip(true);
+        return;
+      }
+      lastActionTimestamp.current = Date.now();
       setGameState((prev) => ({ ...prev, selectedVertex: vertexId }));
       setStatusMessage('Cow selected. Tap a connected empty intersection.');
       return;
     }
 
-    if (gameState.selectedVertex !== null && gameState.board[vertexId] === null) {
-      const legalDests = getLegalDestinations(gameState.board, gameState.selectedVertex, currentPhase);
-      if (!legalDests.includes(vertexId)) {
-        showAlert({ title: 'Invalid Move', message: 'You can only move to adjacent connected intersections.' });
+    // Sub-case B: Moving selected cow to destination
+    if (gameState.selectedVertex !== null) {
+      const moveCheck = validateCowMove(
+        gameState,
+        current,
+        gameState.selectedVertex,
+        vertexId,
+        recentMoves.current
+      );
+      if (!moveCheck.isValid) {
+        setRuleTip(moveCheck.tip);
+        setShowRuleTip(true);
         return;
       }
 
+      lastActionTimestamp.current = Date.now();
       const nextBoard = [...gameState.board];
       nextBoard[gameState.selectedVertex] = null;
       nextBoard[vertexId] = current;
       const mill = formsNewMill(nextBoard, vertexId, current);
+
+      recentMoves.current.push({
+        player: current,
+        from: gameState.selectedVertex,
+        to: vertexId,
+        timestamp: Date.now(),
+      });
+
+      if (activeRoomId.current) {
+        gameSyncService.broadcastMove(activeRoomId.current, {
+          type: currentPhase === 'flying' ? 'fly' : 'move',
+          player: current,
+          from: gameState.selectedVertex,
+          to: vertexId,
+          formedMill: mill,
+        });
+      }
 
       if (mill) {
         setGameState((prev) => ({
@@ -471,8 +764,13 @@ export const BattlegroundScreen: React.FC = () => {
           mustShoot: true,
           lastMove: { from: prev.selectedVertex!, to: vertexId, player: current, formedMill: true },
         }));
-        setStatusMessage(`${current === 'player1' ? 'You' : opponentName} formed a mill! Shoot an opponent cow.`);
+        setStatusMessage('You formed a mill! Shoot an opponent cow.');
       } else {
+        let winner: Player | null = null;
+        if (gameState.unplacedCows[opponent] === 0 && !hasLegalMoves(nextBoard, opponent, gameState.phase[opponent])) {
+          winner = current;
+        }
+
         setGameState((prev) => ({
           ...prev,
           board: nextBoard,
@@ -480,8 +778,23 @@ export const BattlegroundScreen: React.FC = () => {
           currentPlayer: opponent,
           turnCount: prev.turnCount + 1,
           lastMove: { from: prev.selectedVertex!, to: vertexId, player: current },
+          winner,
         }));
-        setStatusMessage(`${opponent === 'player1' ? 'Your' : `${opponentName}'s`} turn to move.`);
+
+        if (winner) {
+          const isP1 = winner === 'player1';
+          recordGameResult(isP1, 1, 1, gameState.phase.player1 === 'flying');
+          if (activeRoomId.current && currentUser) {
+            gameSyncService.finalizeMatch(activeRoomId.current, currentUser.id);
+          }
+          showAlert({
+            title: 'Victory!',
+            message: 'You trapped all opponent cows! Undisputed victory on the battleground.',
+            buttons: [{ text: 'Play Again', onPress: () => setShowCoinToss(true) }],
+          });
+        } else {
+          setStatusMessage(`${opponentName}'s turn to move.`);
+        }
       }
     }
   };
@@ -1055,6 +1368,13 @@ export const BattlegroundScreen: React.FC = () => {
         isHost={isHostRole}
         externalCalledSide={calledCoinSide}
         onSideCalled={handleSideCalled}
+      />
+
+      {/* Strict Tactical Rule Tip Modal */}
+      <RuleTipModal
+        visible={showRuleTip}
+        tip={ruleTip}
+        onClose={() => setShowRuleTip(false)}
       />
     </SafeAreaView>
   );
