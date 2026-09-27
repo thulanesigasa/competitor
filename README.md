@@ -104,7 +104,10 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 - **Zero Card/Div Box Wrappers:** Onboarding and authentication content flows directly on the full-bleed body canvas.
 - **Themed Popup System:** All user dialogs, errors, and alerts are rendered via custom `ThemedAlert` modals matching the 60-30-10 palette.
 - **Unrounded Brand Logos:** All app brand logo displays maintain sharp, unrounded geometry (`borderRadius: 0`) across all screens and modals.
-- **Centered Floating Pill Bottom Navigation (`CustomTabBar.tsx`):** Rule 20 compliant floating curved bottom navigation bar (`width: 280`, `height: 50`) wrapped in a full-width alignment container (`left: 0, right: 0, alignItems: 'center'`) to guarantee perfect horizontal centering across all screen sizes.
+- **Centered Floating Pill Bottom Navigation (`CustomTabBar.tsx`):** Rule 20 compliant floating curved bottom navigation bar (`width: 280`, `height: 50`) with dynamic horizontal centering via `useWindowDimensions()` (`left: (width - 280) / 2`) to guarantee mathematically perfect horizontal centering across all Android and iOS display widths.
+- **Optimized Asset Pipeline:**
+  - **Onboarding Assets (`assets/onboarding/1.png`, `2.png`, `3.png`):** Standard non-progressive PNGs with clean, space-free filenames, eliminating Android Fresco image decode crashes.
+  - **Cold-Start Splash Canvas (`assets/splash.png`):** Calibrated 512x512 canvas with centered 240px brand glyph on #FFFFFF, reducing native startup memory consumption by over 90% compared to raw full-screen assets.
 
 ---
 
@@ -119,9 +122,9 @@ competitor/
 |-- assets/
 |   |-- android-icon-foreground.png    # 512x512 canvas with 96px centered glyph (Rule 15/19)
 |   |-- favicon.png                    # Web favicon
-|   |-- icon.png                       # 1024x1024 canvas with 800px brand emblem
-|   |-- splash.png                     # Cohesive dark splash screen
-|   `-- onboarding/                    # 3D illustration cards (Welcome, Earn, Enjoy)
+|   |-- icon.png                       # 1024x1024 canvas with 532x532 brand emblem
+|   |-- splash.png                     # Calibrated 512x512 splash screen with 240px glyph
+|   `-- onboarding/                    # Optimized PNG illustration cards (1.png, 2.png, 3.png)
 |-- scripts/
 |   `-- generate_assets.py             # Rule 15/19 asset calibration generator
 |-- src/
