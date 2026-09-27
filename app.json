@@ -38,6 +38,11 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "owner": "thulanesigasa0"
+    "owner": "thulanesigasa0",
+    "extra": {
+      "eas": {
+        "projectId": "b8b21744-2bd2-44f3-81c1-aa86ffe2c250"
+      }
+    }
   }
 }
