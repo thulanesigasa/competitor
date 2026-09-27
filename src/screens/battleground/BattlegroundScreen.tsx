@@ -281,6 +281,8 @@ export const BattlegroundScreen: React.FC = () => {
               placeholder="e.g. 5421"
               placeholderTextColor={COLORS.textSecondary}
               keyboardType="number-pad"
+              returnKeyType="done"
+              onSubmitEditing={joinWifiMatch}
               maxLength={4}
               value={enteredPin}
               onChangeText={setEnteredPin}

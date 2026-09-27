@@ -3,6 +3,8 @@
 [![React Native](https://img.shields.io/badge/React_Native-0.86.3-61DAFB?logo=react&logoColor=black)](https://reactnative.dev/)
 [![Expo](https://img.shields.io/badge/Expo_SDK-~57.0.24-000020?logo=expo&logoColor=white)](https://expo.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9.2-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Native Version](https://img.shields.io/badge/Native_Version-1.0.2-E5A93C)](https://github.com/thulanesigasa/competitor/releases)
+[![Runtime Version](https://img.shields.io/badge/Runtime_Version-1.0.0-0F172A)](https://expo.dev/)
 [![Design System](https://img.shields.io/badge/Design_System-60--30--10_Rule-E5A93C)](https://shields.io/)
 [![Market](https://img.shields.io/badge/Target_Market-Southern_Africa-10B981)](https://shields.io/)
 [![CI/CD](https://img.shields.io/badge/GitHub_Actions-Direct_Native_APK-2088FF?logo=githubactions&logoColor=white)](https://github.com/thulanesigasa/competitor/actions)
@@ -72,13 +74,16 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 - Custom interactive **Swipe to Sign Up** gesture slider with pan tracking.
 - Seamless authentication toggle leading to direct Sign In.
 
-### 5. Multi-Step Registration with Split Phone Input & Zero Sanitizer
-- **Step 1 (Personal Details):** Name, surname, date of birth, and split cellphone input group:
-  - Left dedicated dropdown button (`+27 ▼`) opening a modal picker of Southern African regional codes.
-  - Automatic leading zero sanitization (`082 123 4567` automatically converted to clean regional format `821234567` for storage without duplicate zeros).
-  - Navigation stack preservation ensuring back button on Step 1 takes the competitor back to onboarding screens without closing the app.
-- **Step 2 (Location & Gamer Tag):** Country selector, dynamically populated regional province selector, town/city input, and unique Gamer Tag.
-- **Step 3 (Security & Credentials):** Email verification and real-time password strength meter requiring 8+ characters with alphanumeric/symbol requirements.
+### 5. Multi-Step Registration with DatePicker & Seamless Keyboard Navigation
+- **Step 1 (Personal Details):**
+  - **Interactive Native DatePicker:** Date of birth input uses `@react-native-community/datetimepicker` with a clean button trigger displaying `SELECT ▼` or formatted calendar dates (`YYYY-MM-DD`), preventing manual entry errors.
+  - **Sequential Keyboard Navigation:** Pressing keyboard `Next` automatically transfers cursor focus from First Name to Surname, then to Phone number.
+  - **Numeric Keypad:** Cellphone input explicitly opens `keyboardType="number-pad"` for smooth, dedicated numeric input.
+  - **Split Phone Input Group:** Left dedicated dropdown button (`+27 ▼`) opening a modal picker of Southern African regional country codes.
+  - **Automatic Leading Zero Sanitization:** Inputs like `082 123 4567` are automatically sanitized to `821234567` for storage without duplicate zeros.
+  - **Navigation Stack Preservation:** Back button on Step 1 takes the competitor back to onboarding screens without closing the app.
+- **Step 2 (Location & Gamer Tag):** Country selector, dynamically populated regional province selector, town/city input, and unique Gamer Tag with `returnKeyType="done"`.
+- **Step 3 (Security & Credentials):** Email, email confirmation, password, and password confirmation with `returnKeyType="next"` advancing sequentially to password submission (`handleFinalSubmit`), paired with a real-time password strength meter requiring 8+ characters.
 
 ### 6. Regional Leaderboard & Gamer Profile
 - Southern African regional ranking filterable across all 7 nations.
@@ -105,9 +110,9 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 - **Unrounded Body Images (0 Border Radius):** All images and brand emblems maintain zero border radius (`borderRadius: 0`) and unclipped bounds, seamlessly integrating into the dominant `#FFFFFF` body canvas.
 - **Themed Popup System:** All user dialogs, errors, and alerts are rendered via custom `ThemedAlert` modals matching the 60-30-10 palette.
 - **Centered Floating Pill Bottom Navigation (`CustomTabBar.tsx`):** Rule 20 compliant floating curved bottom navigation bar (`width: 280`, `height: 50`) with dynamic horizontal centering via `useWindowDimensions()` (`left: (width - 280) / 2`) to guarantee mathematically perfect horizontal centering across all Android and iOS display widths.
-- **Optimized Asset Pipeline:**
+- **Calibrated Asset Pipeline (Build 13 Specifications):**
   - **Onboarding Assets (`assets/onboarding/1.png`, `2.png`, `3.png`):** Standard non-progressive PNGs with clean, space-free filenames, eliminating Android Fresco image decode crashes.
-  - **Cold-Start Splash Canvas (`assets/splash.png`):** Calibrated 512x512 canvas with centered 240px brand glyph on #FFFFFF, reducing native startup memory consumption by over 90% compared to raw full-screen assets.
+  - **Launcher, Icon & Splash Assets:** Restored to Build 13 specifications (`android-icon-foreground.png`, `favicon.png`, `icon.png`, `icon-original.png`, and `splash.png`) with crisp rendering and solid white canvas backgrounds.
 
 ---
 
@@ -120,10 +125,11 @@ competitor/
 |       |-- build-native-apk.yml       # Direct GitHub Actions runner APK compilation with dynamic app.json versioning
 |       `-- eas-ota-update.yml         # Dual-channel EAS OTA workflow
 |-- assets/
-|   |-- android-icon-foreground.png    # 512x512 canvas with 96px centered glyph (Rule 15/19)
+|   |-- android-icon-foreground.png    # Build 13 Android launcher foreground asset
 |   |-- favicon.png                    # Web favicon
-|   |-- icon.png                       # 1024x1024 canvas with 532x532 brand emblem
-|   |-- splash.png                     # Calibrated 512x512 splash screen with 240px glyph
+|   |-- icon.png                       # Build 13 in-app and store brand emblem
+|   |-- icon-original.png              # Build 13 raw high-resolution brand asset
+|   |-- splash.png                     # Build 13 splash screen asset
 |   `-- onboarding/                    # Optimized PNG illustration cards (1.png, 2.png, 3.png)
 |-- scripts/
 |   `-- generate_assets.py             # Rule 15/19 asset calibration generator

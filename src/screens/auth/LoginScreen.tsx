@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -32,6 +32,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  const identifierRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
 
   const handleLogin = async () => {
     if (!identifier.trim()) {
@@ -113,12 +116,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               </Text>
               <View style={[styles.inputWrapper, shadow.sm]}>
                 <TextInput
+                  ref={identifierRef}
                   style={styles.textInput}
                   placeholder="e.g. KlipKing_01 or email@domain.com"
                   placeholderTextColor="#94A3B8"
                   autoCapitalize="none"
                   value={identifier}
                   onChangeText={setIdentifier}
+                  returnKeyType="next"
+                  onSubmitEditing={() => passwordRef.current?.focus()}
                 />
               </View>
             </View>
@@ -129,12 +135,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               </Text>
               <View style={[styles.inputWrapper, shadow.sm]}>
                 <TextInput
+                  ref={passwordRef}
                   style={styles.textInput}
                   placeholder="Enter your 8+ character password"
                   placeholderTextColor="#94A3B8"
                   secureTextEntry={!showPassword}
                   value={password}
                   onChangeText={setPassword}
+                  returnKeyType="done"
+                  onSubmitEditing={handleLogin}
                 />
                 <TouchableOpacity
                   onPress={() => setShowPassword(!showPassword)}
