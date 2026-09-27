@@ -93,6 +93,8 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
   - **Realtime Public Lobby Joining (`'join_public_lobby'`):** Realtime WebSocket feed (`public_battle_rooms_feed`) streaming active regional hosts directly to joiners as soon as rooms are created. If no public rooms are active, displays a clean 60-30-10 empty state with direct "Host a Room Now" action.
   - **Private PIN Joining (`'join_private_enter_code'` & `'join_waiting_approval'`):** Dedicated 4-digit numeric code entry querying active rooms directly from Supabase, linking the challenger to the host and awaiting real-time approval.
   - **Competitor Profile Inspection Card (`CompetitorProfileCard.tsx`):** Unified 60-30-10 component showcasing initials avatar, gamer tag, dynamic 10-tier competitive title chip, Southern African province/country, win rate percentage, total victories, and match volume.
+  - **Hardware Back & Edge Swipe-Back Gestures:** Both Android hardware back button events (`BackHandler`) and touch rightward edge swipes (`PanResponder`) are cleanly intercepted in nested host/join flows to return safely to the previous screen without exiting the application.
+  - **Streamlined Menu Header:** Purged redundant logged-in competitor status tags and tier chips from the Battleground menu to maintain a clean, distraction-free lobby canvas.
 
 ### 5. Full-Bleed 3-Screen Onboarding & Gesture Slider
 - High-impact visual introduction to heritage, zero-data competitive modes, and regional ranking rendered directly on the pure white body canvas without card/div box wrappers.
@@ -124,7 +126,7 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
   - **Tier 9: Grandmaster (*Isangoma*):** 82%+ WR, 90+ wins, 100+ matches.
   - **Tier 10: Supreme Paramount (*Kgosi*):** 88%+ WR, 120+ wins, 130+ matches - legendary undisputed sovereign.
 - **Pure Live Regional Leaderboard:** Direct queries against Supabase PostgreSQL `career_stats` joined with `profiles`. Mock fallback data has been eradicated; if a region has no recorded matches, a clean empty state invites the player to claim the #1 spot.
-- **Gamer Profile Integration:** Gamer profile renders their current rank tier chip and the full 10-tier progression roadmap.
+- **Streamlined Gamer Profile Header:** Displays the competitor's competitive rank title in clean brand accent orange directly beneath their residence location (town, province, and country), removing redundant backend tier lists and status banners for a modern, focused presentation.
 
 ### 8. Backend & Cloud Infrastructure (Supabase)
 - **Zero-Exposure Credential Architecture (`.env` & `.env.example`):** Supabase endpoint URLs and public anon keys are strictly injected via `process.env.EXPO_PUBLIC_SUPABASE_URL` and `process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY`. Privileged service role keys and administrative clients have been completely purged from the client distribution bundle.
