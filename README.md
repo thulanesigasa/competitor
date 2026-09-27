@@ -82,7 +82,7 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
   - **Split Phone Input Group:** Left dedicated dropdown button (`+27 ▼`) opening a modal picker of Southern African regional country codes.
   - **Automatic Leading Zero Sanitization:** Inputs like `082 123 4567` are automatically sanitized to `821234567` for storage without duplicate zeros.
   - **Navigation Stack Preservation:** Back button on Step 1 takes the competitor back to onboarding screens without closing the app.
-- **Step 2 (Location & Gamer Tag):** Country selector, dynamically populated regional province selector, town/city input, and unique Gamer Tag with `returnKeyType="done"`.
+- **Step 2 (Location & Gamer Tag):** Replaced horizontal chip rows with sleek, reusable **ThemedDropdown** menus for both Country and Province / Region selection. The dropdowns adhere strictly to the 60-30-10 design system, featuring SVG chevrons, active checkmark indicators, accent focus styling, and dynamic province population based on the chosen nation, alongside Town/City and unique Gamer Tag inputs.
 - **Step 3 (Security & Credentials):** Email, email confirmation, password, and password confirmation with `returnKeyType="next"` advancing sequentially to password submission (`handleFinalSubmit`), paired with a real-time password strength meter requiring 8+ characters.
 
 ### 6. Regional Leaderboard & Gamer Profile
@@ -101,6 +101,7 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 - **60% Dominant Background:** Crisp Pure White (`#FFFFFF`) providing a clean, high-contrast, modern application canvas.
 - **30% Panel & Surface:** Pure White (`#FFFFFF`) & Soft Slate Surface (`#F8FAFC`) with hairline borders (`rgba(15, 23, 42, 0.08)`) and subtle elevation shadows (`shadow.sm`, `shadow.md`, `shadow.pill`).
 - **10% Accent:** Radiant Gold / Orange (`#E5A93C` / `#D97706`) strictly reserved for active states, primary CTAs, and winning moves.
+- **Themed Dropdown Menus (`ThemedDropdown.tsx`):** Reusable aesthetic selection menus with 52px touchable trigger boxes, SVG chevron indicators, 60-30-10 active focus rings, and scrollable option lists featuring SVG checkmarks and regional badge indicators.
 - **Bottom Navigation Tab SVGs (`TabIcons.tsx`):** Strictly reserved for the bottom navigation pill bar (`BattlegroundTabSvg`, `OfflineTabSvg`, `LeaderboardTabSvg`, `ProfileTabSvg`) with 16px compact geometry and dynamic focused tint.
 - **Status Verification with App Logo:** For validation and verified status checkpoints (e.g. valid cellphone verification, completed step verification), the app's brand logo emblem (`assets/icon.png` with `borderRadius: 0`) is used.
 - **Pure Text Throughout Application:** All other screens, forms, headers, alerts, and buttons use crisp native typography and typographic indicators (`→`, `←`, `▼`, `SHOW` / `HIDE`).
@@ -141,6 +142,7 @@ competitor/
 |   |   |   |-- PasswordStrengthMeter.tsx # 4-segment 8+ char password validator
 |   |   |   |-- SwipeToSignUp.tsx      # Custom pan-responder swipe slider
 |   |   |   |-- ThemedAlert.tsx        # 60-30-10 modal alert system replacing OS alerts
+|   |   |   |-- ThemedDropdown.tsx     # Reusable 60-30-10 dropdown with SVG indicators
 |   |   |   `-- UpdateModal.tsx        # Rule 21 dual-action OTA update modal
 |   |   |-- game/
 |   |   |   `-- MorabarabaBoard.tsx    # 24-vertex board layout and interactive pieces
