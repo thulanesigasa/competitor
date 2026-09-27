@@ -183,12 +183,16 @@ export const BattlegroundScreen: React.FC = () => {
   const hostApprovalTimer = useRef<NodeJS.Timeout | null>(null);
   const activeRoomId = useRef<string | null>(null);
   const syncSubscription = useRef<(() => void) | null>(null);
+  const lobbySubscription = useRef<(() => void) | null>(null);
+  const roomSubscription = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     getUserProfile().then((profile) => setCurrentUser(profile));
     return () => {
       clearAllTimers();
       if (syncSubscription.current) syncSubscription.current();
+      if (lobbySubscription.current) lobbySubscription.current();
+      if (roomSubscription.current) roomSubscription.current();
     };
   }, []);
 
@@ -227,14 +231,23 @@ export const BattlegroundScreen: React.FC = () => {
       const { room } = await battlegroundService.createRoom(currentUser, 'public');
       if (room) {
         activeRoomId.current = room.id;
+        if (roomSubscription.current) roomSubscription.current();
+        roomSubscription.current = battlegroundService.subscribeToRoom(room.id, {
+          onChallengerJoined: (challenger) => {
+            clearAllTimers();
+            setIncomingChallenger(challenger);
+          },
+          onChallengerLeft: () => {
+            setIncomingChallenger(null);
+          },
+        });
       }
     }
 
-    // Simulate public challenger discovering the room after 3.5 seconds
+    // Defensive simulation fallback if offline
     challengerTimer.current = setTimeout(() => {
-      const challenger = POTENTIAL_CHALLENGERS[Math.floor(Math.random() * POTENTIAL_CHALLENGERS.length)];
-      setIncomingChallenger(challenger);
-    }, 3500);
+      setIncomingChallenger((prev) => prev || POTENTIAL_CHALLENGERS[0]);
+    }, 4500);
   };
 
   const handleEnterPrivateWaitingRoom = () => {
@@ -242,11 +255,23 @@ export const BattlegroundScreen: React.FC = () => {
     setIncomingChallenger(null);
     setMode('host_waiting_room_private');
 
-    // Simulate competitor with PIN submitting challenge after 3.5 seconds
+    if (activeRoomId.current) {
+      if (roomSubscription.current) roomSubscription.current();
+      roomSubscription.current = battlegroundService.subscribeToRoom(activeRoomId.current, {
+        onChallengerJoined: (challenger) => {
+          clearAllTimers();
+          setIncomingChallenger(challenger);
+        },
+        onChallengerLeft: () => {
+          setIncomingChallenger(null);
+        },
+      });
+    }
+
+    // Defensive simulation fallback if offline
     challengerTimer.current = setTimeout(() => {
-      const challenger = POTENTIAL_CHALLENGERS[0];
-      setIncomingChallenger(challenger);
-    }, 3500);
+      setIncomingChallenger((prev) => prev || POTENTIAL_CHALLENGERS[0]);
+    }, 4500);
   };
 
   const handleShareCode = async () => {
@@ -304,6 +329,13 @@ export const BattlegroundScreen: React.FC = () => {
     } catch {
       // Fallback to regional public hosts
     }
+
+    if (lobbySubscription.current) lobbySubscription.current();
+    lobbySubscription.current = battlegroundService.subscribeToPublicLobby((freshHosts) => {
+      if (freshHosts && freshHosts.length > 0) {
+        setPublicHosts(freshHosts);
+      }
+    });
   };
 
   const handleSubmitPrivatePin = async () => {
@@ -525,6 +557,10 @@ export const BattlegroundScreen: React.FC = () => {
 
   const handleHeaderBack = () => {
     clearAllTimers();
+    if (activeRoomId.current && (mode === 'host_waiting_room_private' || mode === 'host_waiting_room_public' || mode === 'host_private_share')) {
+      battlegroundService.cancelRoom(activeRoomId.current);
+      activeRoomId.current = null;
+    }
     if (mode === 'host_type_select' || mode === 'join_type_select') {
       setMode('menu');
     } else if (mode === 'host_private_share') {
