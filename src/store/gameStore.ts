@@ -46,7 +46,10 @@ export const INITIAL_REGIONAL_LEADERBOARD: LeaderboardEntry[] = [
 export async function getUserProfile(): Promise<UserProfile | null> {
   try {
     const raw = await AsyncStorage.getItem(STORAGE_KEYS.USER_PROFILE);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (typeof parsed !== 'object' || parsed === null) return null;
+    return parsed as UserProfile;
   } catch {
     return null;
   }
@@ -89,7 +92,19 @@ export async function markOnboarded(): Promise<void> {
 export async function getCareerStats(): Promise<UserCareerStats> {
   try {
     const raw = await AsyncStorage.getItem(STORAGE_KEYS.CAREER_STATS);
-    return raw ? JSON.parse(raw) : DEFAULT_STATS;
+    if (!raw) return DEFAULT_STATS;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return DEFAULT_STATS;
+    return {
+      gamesPlayed: typeof parsed.gamesPlayed === 'number' ? parsed.gamesPlayed : DEFAULT_STATS.gamesPlayed,
+      gamesWon: typeof parsed.gamesWon === 'number' ? parsed.gamesWon : DEFAULT_STATS.gamesWon,
+      gamesLost: typeof parsed.gamesLost === 'number' ? parsed.gamesLost : DEFAULT_STATS.gamesLost,
+      millsFormed: typeof parsed.millsFormed === 'number' ? parsed.millsFormed : DEFAULT_STATS.millsFormed,
+      cowsCaptured: typeof parsed.cowsCaptured === 'number' ? parsed.cowsCaptured : DEFAULT_STATS.cowsCaptured,
+      flownCowCount: typeof parsed.flownCowCount === 'number' ? parsed.flownCowCount : DEFAULT_STATS.flownCowCount,
+      winStreak: typeof parsed.winStreak === 'number' ? parsed.winStreak : DEFAULT_STATS.winStreak,
+      eloRating: typeof parsed.eloRating === 'number' ? parsed.eloRating : DEFAULT_STATS.eloRating,
+    };
   } catch {
     return DEFAULT_STATS;
   }
@@ -103,19 +118,35 @@ export async function recordGameResult(
 ): Promise<UserCareerStats> {
   try {
     const current = await getCareerStats();
+    const safeMills = Number.isFinite(millsFormed) ? millsFormed : 0;
+    const safeCows = Number.isFinite(cowsCaptured) ? cowsCaptured : 0;
+    const currentElo = Number.isFinite(current.eloRating) ? current.eloRating : 1200;
+
     const newStats: UserCareerStats = {
-      gamesPlayed: current.gamesPlayed + 1,
-      gamesWon: current.gamesWon + (won ? 1 : 0),
-      gamesLost: current.gamesLost + (won ? 0 : 1),
-      millsFormed: current.millsFormed + millsFormed,
-      cowsCaptured: current.cowsCaptured + cowsCaptured,
-      flownCowCount: current.flownCowCount + (didFly ? 1 : 0),
-      winStreak: won ? current.winStreak + 1 : 0,
-      eloRating: Math.max(800, current.eloRating + (won ? 25 : -18)),
+      gamesPlayed: (current.gamesPlayed || 0) + 1,
+      gamesWon: (current.gamesWon || 0) + (won ? 1 : 0),
+      gamesLost: (current.gamesLost || 0) + (won ? 0 : 1),
+      millsFormed: (current.millsFormed || 0) + safeMills,
+      cowsCaptured: (current.cowsCaptured || 0) + safeCows,
+      flownCowCount: (current.flownCowCount || 0) + (didFly ? 1 : 0),
+      winStreak: won ? (current.winStreak || 0) + 1 : 0,
+      eloRating: Math.max(800, currentElo + (won ? 25 : -18)),
     };
     await AsyncStorage.setItem(STORAGE_KEYS.CAREER_STATS, JSON.stringify(newStats));
     return newStats;
   } catch {
     return DEFAULT_STATS;
+  }
+}
+
+export async function clearAllGameData(): Promise<void> {
+  try {
+    await Promise.all([
+      AsyncStorage.removeItem(STORAGE_KEYS.USER_PROFILE),
+      AsyncStorage.removeItem(STORAGE_KEYS.IS_ONBOARDED),
+      AsyncStorage.removeItem(STORAGE_KEYS.CAREER_STATS),
+    ]);
+  } catch (e) {
+    console.error('Error clearing game data', e);
   }
 }

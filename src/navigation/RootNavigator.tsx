@@ -22,11 +22,17 @@ export const RootNavigator: React.FC = () => {
   }, []);
 
   const checkInitialState = async () => {
+    const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 1500));
     try {
-      const user = await getUserProfile();
-      const onboarded = await getIsOnboarded();
-      setCurrentUser(user);
-      setHasCompletedOnboarding(onboarded || user !== null);
+      await Promise.race([
+        (async () => {
+          const user = await getUserProfile();
+          const onboarded = await getIsOnboarded();
+          setCurrentUser(user);
+          setHasCompletedOnboarding(onboarded || user !== null);
+        })(),
+        timeoutPromise,
+      ]);
     } catch {
       // Default initial state
     } finally {

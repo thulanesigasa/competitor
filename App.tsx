@@ -8,20 +8,23 @@ import { RootNavigator } from './src/navigation/RootNavigator';
 import { UpdateModal } from './src/components/common/UpdateModal';
 import { COLORS } from './src/constants/theme';
 import { ThemedAlertProvider } from './src/components/common/ThemedAlert';
+import { ErrorBoundary } from './src/components/common/ErrorBoundary';
 
 export default function App() {
   return (
-    <GestureHandlerRootView style={styles.container}>
-      <SafeAreaProvider>
-        <ThemedAlertProvider>
-          <View style={styles.container}>
-            <StatusBar style="dark" />
-            <RootNavigator />
-            <UpdateModal />
-          </View>
-        </ThemedAlertProvider>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={styles.container}>
+        <SafeAreaProvider>
+          <ThemedAlertProvider>
+            <View style={styles.container}>
+              <StatusBar style="dark" />
+              <RootNavigator />
+              <UpdateModal />
+            </View>
+          </ThemedAlertProvider>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
 

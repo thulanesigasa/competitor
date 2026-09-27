@@ -148,12 +148,13 @@ competitor/
 |   |-- components/
 |   |   |-- Typography.tsx             # Standardized Text component with variants & weights
 |   |   |-- common/
+|   |   |   |-- ErrorBoundary.tsx      # Graceful crash shield with reload & cache reset actions
 |   |   |   |-- Header.tsx             # Standard header with 24x24 brand logo (0 border radius)
 |   |   |   |-- PasswordStrengthMeter.tsx # 4-segment 8+ char password validator
 |   |   |   |-- SwipeToSignUp.tsx      # Custom pan-responder swipe slider
 |   |   |   |-- ThemedAlert.tsx        # 60-30-10 modal alert system replacing OS alerts
 |   |   |   |-- ThemedDropdown.tsx     # Reusable 60-30-10 dropdown with SVG indicators
-|   |   |   `-- UpdateModal.tsx        # Rule 21 dual-action OTA update modal
+|   |   |   `-- UpdateModal.tsx        # Rule 21 dual-action on-demand OTA update modal
 |   |   |-- game/
 |   |   |   |-- CoinTossModal.tsx      # Fair animated 3D coin toss turn decider
 |   |   |   |-- MorabarabaBoard.tsx    # 24-vertex pure line intersection board layout
@@ -254,7 +255,8 @@ Native Android APK binaries compile directly on GitHub Actions runners without c
 - **EAS CLI:** Strictly reserved for OTA JavaScript bundle updates (`eas update`), never for building native binaries.
 - **EAS Configuration (`eas.json`):** Defines `development`, `preview`, and `production` channels with auto-increment.
 - **Prebuild Embedding:** Native APKs embed `updates.url` and `projectId` in their build manifests so installed standalone APKs continuously check for and download OTA updates.
-- **In-App Modal (`UpdateModal.tsx`):** Dual-action update prompt (Update Now / Remind Me Later) triggered on app launch and foreground resume (`AppState`), with 30-minute snooze timestamp persisted in `AsyncStorage` and 0-border-radius unrounded brand emblem. Tapping "Update Now" instantly reloads the runtime with the fresh update bundle.
+- **In-App Modal (`UpdateModal.tsx`):** Dual-action update prompt (Update Now / Remind Me Later) triggered on app launch and foreground resume (`AppState`), with 30-minute snooze timestamp persisted in `AsyncStorage` and 0-border-radius unrounded brand emblem. Bundle downloads are strictly deferred until the competitor confirms "Update Now", eliminating corrupted partial background cache builds.
+- **Application Crash Shield (`ErrorBoundary.tsx`):** Root-level ErrorBoundary protecting against OS crash popups ("Morabaraba keeps stopping"), offering instant reload and cache reset actions.
 
 ### Managed Workflow & Ephemeral Android Directory Architecture
 The repository operates under a standard **Expo Managed Workflow**:
