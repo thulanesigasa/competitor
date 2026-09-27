@@ -175,7 +175,7 @@ competitor/
 |   |   |-- ai.ts                      # Heuristic & Minimax AI across 3 difficulties
 |   |   `-- morabaraba.ts              # Mathematical board model and rule validator
 |   |-- navigation/
-|   |   |-- RootNavigator.tsx          # Auth stack and main app coordinator
+|   |   |-- RootNavigator.tsx          # Dynamic initialRoute auth coordinator & unconditional stack screens
 |   |   `-- TabNavigator.tsx           # Rule 20 floating pill bottom navigation with CustomTabBar
 |   |-- screens/
 |   |   |-- auth/

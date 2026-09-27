@@ -48,51 +48,78 @@ export const RootNavigator: React.FC = () => {
     );
   }
 
+  // Determine initial route accurately based on current state
+  const initialRouteName = currentUser
+    ? 'MainTabs'
+    : hasCompletedOnboarding
+    ? 'Login'
+    : 'Onboarding';
+
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName={hasCompletedOnboarding ? 'Login' : 'Onboarding'}
+        initialRouteName={initialRouteName}
         screenOptions={{ headerShown: false, animation: 'fade' }}
       >
-        {currentUser ? (
-          <Stack.Screen name="MainTabs">
-            {() => <TabNavigator onLogout={() => setCurrentUser(null)} />}
-          </Stack.Screen>
-        ) : (
-          <>
-            <Stack.Screen name="Onboarding">
-              {(props) => (
-                <OnboardingScreen
-                  onSwipeToSignUp={() => props.navigation.navigate('SignUp')}
-                  onNavigateToLogin={() => props.navigation.navigate('Login')}
-                />
-              )}
-            </Stack.Screen>
-            <Stack.Screen name="SignUp">
-              {(props) => (
-                <SignUpScreen
-                  onSignUpSuccess={(user) => setCurrentUser(user)}
-                  onNavigateToLogin={() => props.navigation.navigate('Login')}
-                  onNavigateBack={() => {
-                    if (props.navigation.canGoBack()) {
-                      props.navigation.goBack();
-                    } else {
-                      props.navigation.navigate('Onboarding');
-                    }
-                  }}
-                />
-              )}
-            </Stack.Screen>
-            <Stack.Screen name="Login">
-              {(props) => (
-                <LoginScreen
-                  onLoginSuccess={(user) => setCurrentUser(user)}
-                  onNavigateToSignUp={() => props.navigation.navigate('SignUp')}
-                />
-              )}
-            </Stack.Screen>
-          </>
-        )}
+        <Stack.Screen name="MainTabs">
+          {(props) => (
+            <TabNavigator
+              onLogout={() => {
+                setCurrentUser(null);
+                props.navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'Login' }],
+                });
+              }}
+            />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen name="Onboarding">
+          {(props) => (
+            <OnboardingScreen
+              onSwipeToSignUp={() => props.navigation.navigate('SignUp')}
+              onNavigateToLogin={() => props.navigation.navigate('Login')}
+            />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen name="SignUp">
+          {(props) => (
+            <SignUpScreen
+              onSignUpSuccess={(user) => {
+                setCurrentUser(user);
+                props.navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'MainTabs' }],
+                });
+              }}
+              onNavigateToLogin={() => props.navigation.navigate('Login')}
+              onNavigateBack={() => {
+                if (props.navigation.canGoBack()) {
+                  props.navigation.goBack();
+                } else {
+                  props.navigation.navigate('Onboarding');
+                }
+              }}
+            />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen name="Login">
+          {(props) => (
+            <LoginScreen
+              onLoginSuccess={(user) => {
+                setCurrentUser(user);
+                props.navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'MainTabs' }],
+                });
+              }}
+              onNavigateToSignUp={() => props.navigation.navigate('SignUp')}
+            />
+          )}
+        </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>
   );
