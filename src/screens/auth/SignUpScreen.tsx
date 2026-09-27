@@ -11,6 +11,7 @@ import {
   BackHandler,
   Image,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { colors } from '../../theme/colors';
@@ -26,6 +27,7 @@ import {
 import { UserProfile } from '../../types/auth';
 import { saveUserProfile } from '../../store/gameStore';
 import { SOUTHERN_AFRICAN_COUNTRIES } from '../../constants/regions';
+import { authService } from '../../services/authService';
 
 interface SignUpScreenProps {
   onSignUpSuccess: (user: UserProfile) => void;
@@ -97,6 +99,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Hardware Back Handler: return to previous step, or back to onboarding if on step 1
   useEffect(() => {
@@ -230,10 +233,6 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
       showAlert({ title: 'Invalid Email', message: 'Please enter a valid email address.' });
       return;
     }
-    if (email.trim().toLowerCase() !== confirmEmail.trim().toLowerCase()) {
-      showAlert({ title: 'Email Mismatch', message: 'Email and Confirm Email do not match.' });
-      return;
-    }
 
     const { hasMinLength } = evaluatePasswordStrength(password);
     if (!hasMinLength) {
@@ -249,23 +248,33 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
       return;
     }
 
-    const newUser: UserProfile = {
-      id: `user_${Date.now()}`,
-      name: name.trim(),
-      surname: surname.trim(),
-      dob: dob.trim(),
-      cellphone: `${dialCode} ${cellphone}`,
-      country: selectedCountryName,
-      countryCode: currentCountry.code,
-      province: selectedProvince,
-      town: town.trim(),
-      gamerTag: gamerTag.trim(),
-      email: email.trim().toLowerCase(),
-      createdAt: new Date().toISOString(),
-    };
+    setIsSubmitting(true);
+    try {
+      const { user, error } = await authService.signUp({
+        name: name.trim(),
+        surname: surname.trim(),
+        dob: dob.trim(),
+        cellphone: `${dialCode} ${cellphone}`,
+        country: selectedCountryName,
+        countryCode: currentCountry.code,
+        province: selectedProvince,
+        town: town.trim(),
+        gamerTag: gamerTag.trim(),
+        email: email.trim().toLowerCase(),
+        password,
+      });
 
-    await saveUserProfile(newUser);
-    onSignUpSuccess(newUser);
+      if (error) {
+        showAlert({ title: 'Registration Notice', message: error });
+        return;
+      }
+
+      if (user) {
+        onSignUpSuccess(user);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -578,26 +587,6 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
                   value={email}
                   onChangeText={setEmail}
                   returnKeyType="next"
-                  onSubmitEditing={() => confirmEmailRef.current?.focus()}
-                />
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text variant="caption" weight="700" color={colors.textSecondary} style={styles.inputLabel}>
-                CONFIRM EMAIL ADDRESS
-              </Text>
-              <View style={[styles.inputWrapper, shadow.sm]}>
-                <TextInput
-                  ref={confirmEmailRef}
-                  style={styles.textInput}
-                  placeholder="Re-enter your email"
-                  placeholderTextColor="#94A3B8"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  value={confirmEmail}
-                  onChangeText={setConfirmEmail}
-                  returnKeyType="next"
                   onSubmitEditing={() => passwordRef.current?.focus()}
                 />
               </View>
@@ -672,13 +661,18 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.primaryBtnFlex, shadow.sm]}
+                style={[styles.primaryBtnFlex, shadow.sm, isSubmitting && { opacity: 0.7 }]}
                 activeOpacity={0.85}
+                disabled={isSubmitting}
                 onPress={handleFinalSubmit}
               >
-                <Text variant="h3" style={styles.primaryBtnText}>
-                  Create Account ✓
-                </Text>
+                {isSubmitting ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text variant="h3" style={styles.primaryBtnText}>
+                    Create Account
+                  </Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>

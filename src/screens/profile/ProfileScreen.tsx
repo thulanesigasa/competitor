@@ -17,6 +17,7 @@ import {
   getCareerStats,
   getUserProfile,
 } from '../../store/gameStore';
+import { authService } from '../../services/authService';
 
 interface ProfileScreenProps {
   onLogout: () => void;
@@ -32,7 +33,8 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
   }, []);
 
   const loadProfile = async () => {
-    const profile = await getUserProfile();
+    const liveProfile = await authService.getCurrentProfile();
+    const profile = liveProfile || (await getUserProfile());
     const career = await getCareerStats();
     setUser(profile);
     setStats(career);
@@ -48,6 +50,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
           text: 'Sign Out',
           style: 'destructive',
           onPress: async () => {
+            await authService.signOut();
             await clearUserProfile();
             onLogout();
           },

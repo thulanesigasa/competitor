@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   ScrollView,
   SafeAreaView,
   TouchableOpacity,
+  RefreshControl,
 } from 'react-native';
 import { COLORS, SPACING } from '../../constants/theme';
 import { Header } from '../../components/common/Header';
@@ -13,6 +14,7 @@ import {
   INITIAL_REGIONAL_LEADERBOARD,
   LeaderboardEntry,
 } from '../../store/gameStore';
+import { leaderboardService } from '../../services/leaderboardService';
 
 const COUNTRY_FILTERS = [
   'All Nations',
@@ -27,13 +29,29 @@ const COUNTRY_FILTERS = [
 
 export const LeaderboardScreen: React.FC = () => {
   const [selectedFilter, setSelectedFilter] = useState('All Nations');
+  const [rankings, setRankings] = useState<LeaderboardEntry[]>(INITIAL_REGIONAL_LEADERBOARD);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const filteredList: LeaderboardEntry[] =
-    selectedFilter === 'All Nations'
-      ? INITIAL_REGIONAL_LEADERBOARD
-      : INITIAL_REGIONAL_LEADERBOARD.filter(
-          (entry) => entry.country.toLowerCase() === selectedFilter.toLowerCase()
-        );
+  useEffect(() => {
+    loadLeaderboard();
+  }, [selectedFilter]);
+
+  const loadLeaderboard = async () => {
+    try {
+      const liveData = await leaderboardService.getRegionalLeaderboard(selectedFilter);
+      if (liveData && liveData.length > 0) {
+        setRankings(liveData);
+      }
+    } catch {
+      // Keep existing rankings
+    }
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await loadLeaderboard();
+    setIsRefreshing(false);
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -42,7 +60,17 @@ export const LeaderboardScreen: React.FC = () => {
         subtitle="SOUTHERN AFRICAN RANKINGS"
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor={COLORS.accent}
+            colors={[COLORS.accent]}
+          />
+        }
+      >
         {/* Country Filter Scroll */}
         <ScrollView
           horizontal
@@ -72,8 +100,8 @@ export const LeaderboardScreen: React.FC = () => {
 
         {/* Competitor Rankings */}
         <View style={styles.rankingsList}>
-          {filteredList.map((entry) => (
-            <View key={entry.gamerTag} style={styles.rankRow}>
+          {rankings.map((entry) => (
+            <View key={`${entry.gamerTag}-${entry.rank}`} style={styles.rankRow}>
               {/* Rank Number - Pure clean typography */}
               <Text
                 style={[
