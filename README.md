@@ -217,20 +217,19 @@ npm start
 ---
 
 ## CI/CD & Native Compilation (Rule 21)
-
-### Direct GitHub Actions Native Compilation
-Native Android APK binaries compile directly on GitHub Actions runners without consuming cloud build credits:
+### Direct GitHub Actions Native Compilation (Version-Driven)
+Native Android APK binaries compile directly on GitHub Actions runners without consuming cloud build credits, triggered **strictly when a new native version is needed**:
+- **Trigger Policy:** Only runs when `app.json` is modified on `main` (declaring a new native version e.g. `1.0.1`, `1.0.2`), when a version tag (`v*`) is pushed, or via manual `workflow_dispatch`. Standard codebase updates bypass native compilation and flow through OTA.
 - **Runner Environment:** `ubuntu-latest`
-- **JDK:** Eclipse Temurin Java 17 (`actions/setup-java@v4`)
+- **JDK:** Eclipse Temurin Java 17 (`actions/setup-java@v5`)
 - **Android SDK:** Command-line tools and build-tools (`android-actions/setup-android@v3`)
 - **Prebuild:** `npx expo prebuild --platform android --no-install`
-- **Gradle:** `./gradlew assembleRelease -x lint -x test --no-daemon`
+- **Gradle:** `./gradlew assembleRelease -Pexpo.inlineModules.watchedDirectories="[]" -x lint -x test --no-daemon --stacktrace`
 - **Release Distribution:** Automatically uploads compiled APK to GitHub Releases via `gh release upload` and saves CI build artifacts.
 
-### Dual-Channel Over-The-Air (OTA) Updates
+### Dual-Channel Over-The-Air (OTA) Updates (Continuous Delivery)
+- **Continuous Deployment:** Every regular commit and pull request merged to `main` immediately publishes an OTA JavaScript and asset update to the `production` channel in ~45 seconds.
 - **EAS CLI:** Strictly reserved for OTA JavaScript bundle updates (`eas update`), never for building native binaries.
 - **EAS Configuration (`eas.json`):** Defines `development`, `preview`, and `production` channels with auto-increment.
-- **Automated EAS Project Auto-Linking:** CI workflows dynamically verify if `projectId` exists in `app.json`. If missing, CI executes `eas init --account thulanesigasa0 --force --non-interactive` with `EXPO_TOKEN` and commits the linked `projectId` back to `app.json`.
-- **Prebuild Embedding:** During native APK compilation, `updates.url` and `projectId` are permanently injected into native build manifests so installed standalone APKs can check for and download OTA updates.
-- **Channels:** Dual-channel distribution supporting `production` (default on `main` branch) and `preview` (staging/testing).
-- **In-App Modal (`UpdateModal.tsx`):** Dual-action update prompt (Update Now / Remind Me Later) triggered on app launch and foreground resume (`AppState`), with 30-minute snooze timestamp persisted in `AsyncStorage` and 0-border-radius unrounded brand emblem.
+- **Prebuild Embedding:** Native APKs embed `updates.url` and `projectId` in their build manifests so installed standalone APKs continuously check for and download OTA updates.
+- **In-App Modal (`UpdateModal.tsx`):** Dual-action update prompt (Update Now / Remind Me Later) triggered on app launch and foreground resume (`AppState`), with 30-minute snooze timestamp persisted in `AsyncStorage` and 0-border-radius unrounded brand emblem. Tapping "Update Now" instantly reloads the runtime with the fresh update bundle.
