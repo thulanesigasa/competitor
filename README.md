@@ -60,9 +60,13 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
   - **Flying Phase (*Ku-fofa*):** When a competitor is reduced to 3 cows, their cows gain the ability to fly to any empty board intersection.
 - **Victory Evaluation:** A player wins when the opponent has fewer than 3 cows in the moving phase or has zero legal moves available.
 
-### 2. Transparent In-Game Coin Toss (`CoinTossModal.tsx`)
+### 2. Transparent In-Game Coin Toss & Pattern 1 Mutual Exclusion (`CoinTossModal.tsx`)
 - **Seamless Game Integration:** Rendered as a transparent overlay directly over the live board with zero card/div enclosures, keeping the competitor immersed in the game arena.
-- **Instant 1-Tap Trigger:** Competitors tap Heads or Tails to immediately launch the 3D coin flip without intermediate confirmation steps.
+- **Pattern 1 Role-Based Calling Protocol:** In online matches, prevents coin side selection clashes between simultaneous participants through deterministic mutual exclusion:
+  - **Challenger Calls:** The incoming challenger is designated as the caller and presented with the interactive Heads / Tails selection buttons.
+  - **Host Receives Complement:** The host's interface displays a waiting status indicator (*"WAITING FOR [CHALLENGER] TO CALL..."*) with disabled manual selection. As soon as the challenger calls, the host is automatically assigned the opposite side.
+  - **Sub-50ms WebSocket Broadcast:** The challenger's selection is broadcast via `gameSyncService.broadcastCoinCall()`. Both clients lock in their assigned sides simultaneously and execute the synchronized 3D flip animation.
+- **Instant 1-Tap Trigger:** In local Pass & Play or solo arenas, competitors tap Heads or Tails to immediately launch the 3D coin flip without intermediate confirmation steps.
 - **Realistic 3D Physics Flip:** Randomized 50/50 flip animation with smooth perspective rotation, scale dynamics, and gold/bronze metallic styling.
 - **Automatic Head-Back-To-Game Transition:** Upon landing on the winning face and announcing the starting player, the coin toss automatically dismisses after 1.2s and heads directly into the live match.
 - **In-Game Re-Toss:** Competitors can trigger a new coin toss at any time from the match header controls or during victory rematch flows.
@@ -84,7 +88,7 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
   - **Collision-Free Cloud PIN Generation:** Automatically generates a 4-digit numeric code validated against active rooms in PostgreSQL (`public.battle_rooms`), ensuring zero duplicate active battle codes.
   - **Public Room Hosting (`'host_waiting_room_public'`):** Instantly inserts a room into Supabase with `room_type = 'public'` and `status = 'waiting'`. Realtime updates (`battle_room_events:${roomId}`) stream incoming challenger arrivals directly to the host's screen with profile cards and Accept/Decline actions. Exiting cancels the room (`status = 'abandoned'`), keeping the lobby clean.
   - **Private Room Hosting (`'host_private_share'` & `'host_waiting_room_private'`):** Generates a dynamic 4-digit battle code with one-tap clipboard copy and native share sheet triggering (`Share.share`), followed by a private waiting room awaiting the PIN connection and challenger profile inspection.
-  - **Realtime Public Lobby Joining (`'join_public_lobby'`):** Realtime WebSocket feed (`public_battle_rooms_feed`) streaming active regional hosts directly to joiners as soon as rooms are created. Includes interactive profile cards, stats inspection, and direct challenge dispatch (`CHALLENGE HOST →`).
+  - **Realtime Public Lobby Joining (`'join_public_lobby'`):** Realtime WebSocket feed (`public_battle_rooms_feed`) streaming active regional hosts directly to joiners as soon as rooms are created. Includes interactive profile cards, stats inspection, and direct challenge dispatch (`CHALLENGE HOST ->`).
   - **Private PIN Joining (`'join_private_enter_code'` & `'join_waiting_approval'`):** Dedicated 4-digit numeric code entry querying active rooms directly from Supabase, linking the challenger to the host and awaiting real-time approval.
   - **Competitor Profile Inspection Card (`CompetitorProfileCard.tsx`):** Unified 60-30-10 component showcasing initials avatar, gamer tag, competitive title chip, Southern African province/country, win rate percentage, total victories, and match volume, empowering both hosts and challengers to inspect full profiles before accepting or starting a battle.
 
@@ -96,10 +100,10 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 ### 6. Multi-Step Registration with DatePicker & Seamless Keyboard Navigation
 - **Step Progression Indicator:** Sequential 3-step navigation preserving bold step numbers across active and completed states with solid accent fill and crisp white typography on completed steps, ensuring clear numeric progress tracking without image replacements.
 - **Step 1 (Personal Details):**
-  - **Interactive Native DatePicker:** Date of birth input uses `@react-native-community/datetimepicker` with a clean button trigger displaying `SELECT ▼` or formatted calendar dates (`YYYY-MM-DD`), preventing manual entry errors.
+  - **Interactive Native DatePicker:** Date of birth input uses `@react-native-community/datetimepicker` with a clean button trigger displaying `SELECT \/` or formatted calendar dates (`YYYY-MM-DD`), preventing manual entry errors.
   - **Sequential Keyboard Navigation:** Pressing keyboard `Next` automatically transfers cursor focus from First Name to Surname, then to Phone number.
   - **Numeric Keypad:** Cellphone input explicitly opens `keyboardType="number-pad"` for smooth, dedicated numeric input.
-  - **Split Phone Input Group:** Left dedicated dropdown button (`+27 ▼`) opening a modal picker of Southern African regional country codes.
+  - **Split Phone Input Group:** Left dedicated dropdown button (`+27 \/`) opening a modal picker of Southern African regional country codes.
   - **Automatic Leading Zero Sanitization:** Inputs like `082 123 4567` are automatically sanitized to `821234567` for storage without duplicate zeros.
   - **Navigation Stack Preservation:** Back button on Step 1 takes the competitor back to onboarding screens without closing the app.
 - **Step 2 (Location & Gamer Tag):** Sleek, reusable **ThemedDropdown** menus for both Country and Province / Region selection. Clean province names are displayed without extraneous town counts, featuring SVG chevrons, active checkmark indicators, accent focus styling, and dynamic province population based on the chosen nation, alongside Town/City and unique Gamer Tag inputs.
@@ -110,8 +114,9 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 - Streamlined statistics tracking matches played, victories, win rate percentage, mills formed, cows captured, and career competitive titles (e.g. Grandmaster, Warrior Chief).
 
 ### 8. Backend & Cloud Infrastructure (Supabase)
-- **Supabase Client Integration (`src/lib/supabase.ts`):** Initialized using `@supabase/supabase-js` and `react-native-url-polyfill`, configured with `AsyncStorage` session persistence and auto-token refreshing. Exports both standard authenticated client and administrative client for frictionless session provisioning.
-- **Instant Authentication & Verification Bypass (`authService.ts`):** Players register and sign in seamlessly using either their Gamer Tag or email address. Email confirmation is automatically completed on signup, issuing valid JWT sessions immediately without requiring confirmation email inbox checks.
+- **Zero-Exposure Credential Architecture (`.env` & `.env.example`):** Supabase endpoint URLs and public anon keys are strictly injected via `process.env.EXPO_PUBLIC_SUPABASE_URL` and `process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY`. Privileged service role keys and administrative clients have been completely purged from the client distribution bundle.
+- **Supabase Client Integration (`src/lib/supabase.ts`):** Initialized using `@supabase/supabase-js` and `react-native-url-polyfill`, configured with `AsyncStorage` session persistence and auto-token refreshing using strictly the public anonymous key.
+- **Instant Authentication (`authService.ts`):** Players register and sign in seamlessly using either their Gamer Tag or email address. Standard client authentication issues valid JWT sessions immediately, with email confirmation bypass configured on the backend provider (Confirm email = Off).
 - **Live Southern African Regional Leaderboards (`leaderboardService.ts`):** Direct queries against `public.career_stats` joined with `public.profiles`, supporting real-time ranking and filtering across South Africa, Zimbabwe, Zambia, Botswana, Malawi, Lesotho, and Eswatini.
 - **Online Matchmaking & Battle Rooms (`battlegroundService.ts`):** Enables dynamic creation of public regional rooms and private 4-digit PIN rooms, complete with challenger profile inspection and live lobby discovery.
 - **Sub-50ms Realtime Broadcasting (`gameSyncService.ts`):** Low-latency WebSockets broadcast channel (`room:${roomId}`) for synchronized turn dispatch, cow placement, moves, and transparent coin toss results.
@@ -211,12 +216,12 @@ competitor/
 |   |   `-- profile/
 |   |       `-- ProfileScreen.tsx      # Gamer Tag career stats and settings
 |   |-- lib/
-|   |   `-- supabase.ts                # Supabase client with AsyncStorage session persistence & admin client
+|   |   `-- supabase.ts                # Supabase client with AsyncStorage session persistence (anon key only)
 |   |-- services/
-|   |   |-- authService.ts             # Direct authentication with skipped email verification & gamer tag login
+|   |   |-- authService.ts             # Direct authentication with gamer tag / email credential login
 |   |   |-- leaderboardService.ts      # Live regional Southern African leaderboard queries & stats
 |   |   |-- battlegroundService.ts     # Public & private battle room creation & lobby discovery
-|   |   `-- gameSyncService.ts         # High-frequency WebSocket match move broadcasting
+|   |   `-- gameSyncService.ts         # High-frequency WebSocket match move & coin call broadcasting
 |   |-- store/
 |   |   `-- gameStore.ts               # Local persistence via AsyncStorage
 |   |-- theme/
@@ -229,7 +234,8 @@ competitor/
 |   |-- config.toml                    # Supabase local and remote configuration
 |   `-- migrations/
 |       `-- 20260927113651_new-migration.sql # Profiles, career_stats, battle_rooms, and match_logs schema
-|-- .gitignore                         # Excludes .agents, node_modules, android/
+|-- .env.example                       # Template for client-safe EXPO_PUBLIC environment variables
+|-- .gitignore                         # Excludes .agents, .env, node_modules, android/
 |-- .npmrc                             # legacy-peer-deps=true (Rule 21)
 |-- app.json                           # Locked runtimeVersion 1.0.0, dynamic versionCode, owner thulanesigasa0
 |-- App.tsx                            # Root application entry with SafeAreaProvider
@@ -253,6 +259,10 @@ competitor/
 # Clone the repository
 git clone https://github.com/thulanesigasa/competitor.git
 cd competitor
+
+# Configure environment variables
+cp .env.example .env
+# Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in .env
 
 # Install dependencies using pinned peer dependencies flag
 npm install --legacy-peer-deps --prefer-offline --no-audit
