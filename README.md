@@ -101,9 +101,9 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 - **Pure Text Throughout Application:** All other screens, forms, headers, alerts, and buttons use crisp native typography and typographic indicators (`→`, `←`, `▼`, `SHOW` / `HIDE`).
 - **Typography Component (`Typography.tsx`):** Standardized `<Text>` abstraction with variants (`h1`, `h2`, `h3`, `body`, `caption`, `label`), font weights (`400`, `500`, `600`, `700`, `800`, `900`), and automatic color defaults.
 - **Multiples-of-8 Spacing (Rule 15):** Strict `spacing` system (`sm: 8`, `md: 16`, `lg: 24`, `xl: 32`, `xxl: 48`, `nav: 56`, `huge: 64`).
-- **Zero Card/Div Box Wrappers:** Onboarding and authentication content flows directly on the full-bleed body canvas.
+- **Complete Body Canvas Streamlining (Zero Divs / Zero Enclosing Cards):** All screens across the application (Battleground local duels, Offline Solo Arena, Regional Leaderboard, and Gamer Profile) eliminate card boxes, nested panel divs, and rounded container wrappers in favor of continuous body rows with subtle hairline dividers (`borderBottomColor: 'rgba(15, 23, 42, 0.08)'`).
+- **Unrounded Body Images (0 Border Radius):** All images and brand emblems maintain zero border radius (`borderRadius: 0`) and unclipped bounds, seamlessly integrating into the dominant `#FFFFFF` body canvas.
 - **Themed Popup System:** All user dialogs, errors, and alerts are rendered via custom `ThemedAlert` modals matching the 60-30-10 palette.
-- **Unrounded Brand Logos:** All app brand logo displays maintain sharp, unrounded geometry (`borderRadius: 0`) across all screens and modals.
 - **Centered Floating Pill Bottom Navigation (`CustomTabBar.tsx`):** Rule 20 compliant floating curved bottom navigation bar (`width: 280`, `height: 50`) with dynamic horizontal centering via `useWindowDimensions()` (`left: (width - 280) / 2`) to guarantee mathematically perfect horizontal centering across all Android and iOS display widths.
 - **Optimized Asset Pipeline:**
   - **Onboarding Assets (`assets/onboarding/1.png`, `2.png`, `3.png`):** Standard non-progressive PNGs with clean, space-free filenames, eliminating Android Fresco image decode crashes.
@@ -129,7 +129,6 @@ competitor/
 |   `-- generate_assets.py             # Rule 15/19 asset calibration generator
 |-- src/
 |   |-- components/
-|   |   |-- Card.tsx                   # Surface card with shadow.sm and radius tokens
 |   |   |-- Typography.tsx             # Standardized Text component with variants & weights
 |   |   |-- common/
 |   |   |   |-- Header.tsx             # Standard header with 24x24 brand logo (0 border radius)

@@ -203,16 +203,16 @@ export const BattlegroundScreen: React.FC = () => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {mode === 'menu' && (
           <View style={styles.menuContainer}>
-            <View style={styles.introCard}>
-              <Text style={styles.cardTitle}>ZERO-DATA LOCAL DUELS</Text>
-              <Text style={styles.cardDesc}>
+            <View style={styles.introSection}>
+              <Text style={styles.sectionTitle}>ZERO-DATA LOCAL DUELS</Text>
+              <Text style={styles.sectionDesc}>
                 Compete against friends face-to-face. Play on the same screen or over local Wi-Fi without burning any cellular data.
               </Text>
             </View>
 
             <TouchableOpacity
-              style={styles.actionCard}
-              activeOpacity={0.8}
+              style={styles.actionRow}
+              activeOpacity={0.7}
               onPress={startPassAndPlay}
             >
               <Text style={styles.actionTitle}>PASS & PLAY (SAME DEVICE)</Text>
@@ -223,8 +223,8 @@ export const BattlegroundScreen: React.FC = () => {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.actionCard}
-              activeOpacity={0.8}
+              style={styles.actionRow}
+              activeOpacity={0.7}
               onPress={startHostWifi}
             >
               <Text style={styles.actionTitle}>HOST WI-FI MATCH</Text>
@@ -235,8 +235,8 @@ export const BattlegroundScreen: React.FC = () => {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.actionCard}
-              activeOpacity={0.8}
+              style={styles.actionRow}
+              activeOpacity={0.7}
               onPress={() => setMode('wifi_join')}
             >
               <Text style={styles.actionTitle}>JOIN WI-FI MATCH</Text>
@@ -249,7 +249,7 @@ export const BattlegroundScreen: React.FC = () => {
         )}
 
         {mode === 'wifi_host' && (
-          <View style={styles.dialogCard}>
+          <View style={styles.dialogSection}>
             <Text style={styles.dialogTitle}>HOSTING LOCAL MATCH</Text>
             <Text style={styles.dialogDesc}>
               Ask Player 2 to open Battleground → Join Wi-Fi Match, and enter this PIN:
@@ -271,7 +271,7 @@ export const BattlegroundScreen: React.FC = () => {
         )}
 
         {mode === 'wifi_join' && (
-          <View style={styles.dialogCard}>
+          <View style={styles.dialogSection}>
             <Text style={styles.dialogTitle}>JOIN LOCAL MATCH</Text>
             <Text style={styles.dialogDesc}>
               Enter the 4-digit PIN displayed on the host's screen:
@@ -348,33 +348,32 @@ const styles = StyleSheet.create({
     paddingBottom: 90,
   },
   menuContainer: {
-    gap: SPACING.md,
+    gap: 0,
   },
-  introCard: {
-    backgroundColor: COLORS.surface,
-    padding: SPACING.md,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
+  introSection: {
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.xs,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(15, 23, 42, 0.08)',
+    marginBottom: SPACING.xs,
   },
-  cardTitle: {
+  sectionTitle: {
     color: COLORS.textPrimary,
     fontSize: 16,
     fontWeight: '800',
     letterSpacing: 0.5,
     marginBottom: 4,
   },
-  cardDesc: {
+  sectionDesc: {
     color: COLORS.textSecondary,
     fontSize: 13,
     lineHeight: 20,
   },
-  actionCard: {
-    backgroundColor: COLORS.surface,
-    padding: SPACING.md,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
+  actionRow: {
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.xs,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(15, 23, 42, 0.08)',
   },
   actionTitle: {
     color: COLORS.textPrimary,
@@ -387,19 +386,16 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontSize: 12,
     lineHeight: 18,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   actionTag: {
     color: COLORS.accentHover,
     fontSize: 13,
     fontWeight: '700',
   },
-  dialogCard: {
-    backgroundColor: COLORS.surface,
-    padding: SPACING.lg,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
+  dialogSection: {
+    paddingVertical: SPACING.lg,
+    paddingHorizontal: SPACING.sm,
     alignItems: 'center',
   },
   dialogTitle: {
@@ -415,12 +411,10 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   pinDisplay: {
-    backgroundColor: '#FFFFFF',
     paddingVertical: 14,
     paddingHorizontal: 32,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: COLORS.accent,
+    borderBottomWidth: 2,
+    borderBottomColor: COLORS.accent,
     marginBottom: SPACING.lg,
   },
   pinText: {
@@ -430,10 +424,8 @@ const styles = StyleSheet.create({
     letterSpacing: 8,
   },
   pinInput: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: COLORS.accent,
-    borderRadius: 14,
+    borderBottomWidth: 2,
+    borderBottomColor: COLORS.accent,
     width: 160,
     height: 52,
     fontSize: 24,
@@ -446,7 +438,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.accent,
     width: '100%',
     height: 48,
-    borderRadius: 24,
+    borderRadius: 0,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -456,13 +448,9 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   statusBox: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 14,
-    padding: SPACING.sm,
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
-    marginBottom: SPACING.xs,
+    paddingVertical: SPACING.xs,
     alignItems: 'center',
+    marginBottom: SPACING.xs,
   },
   statusTurn: {
     color: COLORS.accentHover,
@@ -481,11 +469,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
-    padding: SPACING.sm,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.xs,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(15, 23, 42, 0.08)',
+    marginBottom: SPACING.xs,
   },
   playerInfo: {
     flex: 1,
