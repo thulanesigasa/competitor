@@ -85,7 +85,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
             {user?.town || 'Johannesburg'}, {user?.province || 'Gauteng'} •{' '}
             {user?.country || 'South Africa'}
           </Text>
-          <Text style={styles.eloText}>{stats?.eloRating || 1200} ELO</Text>
         </View>
 
         {/* Career Stats Grid (Direct Body Metrics) */}

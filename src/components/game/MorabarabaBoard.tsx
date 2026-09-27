@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   useWindowDimensions,
@@ -13,6 +12,7 @@ import {
   getLegalShotVertices,
   VERTICES,
 } from '../../engine/morabaraba';
+import { MorabarabaPiece } from './MorabarabaPiece';
 
 interface MorabarabaBoardProps {
   gameState: GameState;
@@ -222,32 +222,23 @@ export const MorabarabaBoard: React.FC<MorabarabaBoardProps> = ({
             disabled={disabled}
             onPress={() => onVertexPress(vertex.id)}
             style={[
-              styles.vertex,
+              piece ? styles.vertexWithPiece : styles.vertexEmpty,
               {
                 width: vertexSize,
                 height: vertexSize,
-                borderRadius: vertexSize / 2,
                 top: posY,
                 left: posX,
               },
-              piece === 'player1' && styles.piecePlayer1,
-              piece === 'player2' && styles.piecePlayer2,
-              isSelected && styles.pieceSelected,
               isLegalDest && styles.vertexDestination,
-              isLegalShot && styles.vertexShootable,
             ]}
           >
             {piece ? (
-              <Text
-                style={[
-                  styles.pieceSymbol,
-                  piece === 'player1'
-                    ? styles.symbolPlayer1
-                    : styles.symbolPlayer2,
-                ]}
-              >
-                ●
-              </Text>
+              <MorabarabaPiece
+                player={piece}
+                size={vertexSize}
+                isSelected={isSelected}
+                isShootable={isLegalShot}
+              />
             ) : isLegalDest ? (
               <View style={styles.destinationDot} />
             ) : null}
@@ -274,62 +265,35 @@ const styles = StyleSheet.create({
     position: 'absolute',
     backgroundColor: '#94A3B8',
   },
-  vertex: {
+  vertexEmpty: {
     position: 'absolute',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 2,
-    borderColor: '#CBD5E1',
+    backgroundColor: 'transparent',
+    borderWidth: 0,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
-    elevation: 2,
+  },
+  vertexWithPiece: {
+    position: 'absolute',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 20,
+    elevation: 3,
     shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  piecePlayer1: {
-    backgroundColor: COLORS.player1,
-    borderColor: '#FFFFFF',
-    borderWidth: 2,
-    elevation: 3,
-  },
-  piecePlayer2: {
-    backgroundColor: COLORS.player2,
-    borderColor: '#FFFFFF',
-    borderWidth: 2,
-    elevation: 3,
-  },
-  pieceSelected: {
-    borderWidth: 3,
-    borderColor: COLORS.accent,
-    transform: [{ scale: 1.15 }],
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
   },
   vertexDestination: {
-    borderColor: COLORS.accent,
+    borderRadius: 999,
     backgroundColor: 'rgba(229, 169, 60, 0.15)',
-    borderWidth: 2,
   },
   destinationDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     backgroundColor: COLORS.accent,
-  },
-  vertexShootable: {
-    borderColor: '#EF4444',
-    borderWidth: 3,
-    transform: [{ scale: 1.15 }],
-  },
-  pieceSymbol: {
-    fontSize: 16,
-    fontWeight: '900',
-    lineHeight: 18,
-  },
-  symbolPlayer1: {
-    color: '#FFFFFF',
-  },
-  symbolPlayer2: {
-    color: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
   },
 });

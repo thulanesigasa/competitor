@@ -49,8 +49,10 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 
 ## Key Features
 
-### 1. Authentic Morabaraba Game Engine
+### 1. Authentic Morabaraba Game Engine & Pure Line Board
 - **Mathematical Board Modeling:** 24 vertices spanning three concentric squares connected by orthogonal and diagonal lines.
+- **Pure Line Intersection Board Architecture (`MorabarabaBoard.tsx`):** Empty board vertices are pure line intersections with zero circle backgrounds or borders, keeping the aesthetic focused strictly on the authentic grid lines.
+- **Authentic Concentric Carved Pieces (`MorabarabaPiece.tsx`):** Hand-crafted multi-layered SVG game pieces modeled after authentic carved stone/wood tokens, featuring outer granite rims, deep terracotta/slate concentric rings, inner shadow grooves, and centered concentric bullseyes.
 - **20 Mill Triplets:** Full automated detection of 3-in-a-row mills (*umphahlo*).
 - **Three Progressive Phases:**
   - **Placing Phase:** 12 cows per player placed sequentially; forming a mill unlocks immediate cow shooting.
@@ -58,23 +60,31 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
   - **Flying Phase (*Ku-fofa*):** When a competitor is reduced to 3 cows, their cows gain the ability to fly to any empty board intersection.
 - **Victory Evaluation:** A player wins when the opponent has fewer than 3 cows in the moving phase or has zero legal moves available.
 
-### 2. Intelligent Offline AI Arena (Solo Mode)
+### 2. Fair Interactive Coin Toss Turn Determination (`CoinTossModal.tsx`)
+- **First Turn Decider:** Who takes the first turn is determined by an authentic, fair animated coin toss.
+- **Competitor Selection:** Players pick Heads or Tails before the toss.
+- **Realistic 3D Coin Animation:** Randomized 50/50 flip animation with smooth 3D perspective rotation, scale dynamics, and gold/bronze metallic styling.
+- **Turn Initialization:** The toss winner takes the first placement move across both Pass & Play, Online Battle, and Solo Offline matches.
+- **In-Game Re-Toss:** Competitors can trigger a new coin toss at any time from the match header controls or during victory rematch flows.
+
+### 3. Intelligent Offline AI Arena (Solo Mode)
 - **Heuristic & Minimax Engine:**
   - **Novice (*Dumela*):** Balanced learning AI that recognizes basic mills with casual play.
   - **Warrior (*Inkosi*):** 2-ply search minimax evaluating material advantage, mill potential, and blocking traps.
   - **Grandmaster (*Isangoma*):** Deep alpha-beta pruning minimax with tactical board dominance evaluation.
+- **Autonomous First-Move AI:** When the offline competitor loses the coin toss, the CPU takes the first move automatically.
 - **Zero Internet Requirement:** Completely operational offline without consuming cellular data.
 
-### 3. Zero-Data Local Battleground (2-Player Duel)
-- **Same-Device Pass & Play:** Interactive tabletop mode for direct head-to-head dueling on one screen.
-- **Local Wi-Fi Match:** Direct peer room creation with 4-digit PIN exchange over local Wi-Fi or mobile hotspots without cloud dependencies.
+### 4. Zero-Data Local Battleground (2-Player Duel)
+- **Pass & Play:** Direct tabletop mode for head-to-head dueling on one screen.
+- **Online Battle:** Direct peer room creation with 4-digit PIN exchange over local Wi-Fi or mobile hotspots without cloud dependencies.
 
-### 4. Full-Bleed 3-Screen Onboarding & Gesture Slider
+### 5. Full-Bleed 3-Screen Onboarding & Gesture Slider
 - High-impact visual introduction to heritage, zero-data competitive modes, and regional ranking rendered directly on the pure white body canvas without card/div box wrappers.
 - Custom interactive **Swipe to Sign Up** gesture slider with pan tracking.
 - Seamless authentication toggle leading to direct Sign In.
 
-### 5. Multi-Step Registration with DatePicker & Seamless Keyboard Navigation
+### 6. Multi-Step Registration with DatePicker & Seamless Keyboard Navigation
 - **Step 1 (Personal Details):**
   - **Interactive Native DatePicker:** Date of birth input uses `@react-native-community/datetimepicker` with a clean button trigger displaying `SELECT ▼` or formatted calendar dates (`YYYY-MM-DD`), preventing manual entry errors.
   - **Sequential Keyboard Navigation:** Pressing keyboard `Next` automatically transfers cursor focus from First Name to Surname, then to Phone number.
@@ -82,12 +92,12 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
   - **Split Phone Input Group:** Left dedicated dropdown button (`+27 ▼`) opening a modal picker of Southern African regional country codes.
   - **Automatic Leading Zero Sanitization:** Inputs like `082 123 4567` are automatically sanitized to `821234567` for storage without duplicate zeros.
   - **Navigation Stack Preservation:** Back button on Step 1 takes the competitor back to onboarding screens without closing the app.
-- **Step 2 (Location & Gamer Tag):** Replaced horizontal chip rows with sleek, reusable **ThemedDropdown** menus for both Country and Province / Region selection. The dropdowns adhere strictly to the 60-30-10 design system, featuring SVG chevrons, active checkmark indicators, accent focus styling, and dynamic province population based on the chosen nation, alongside Town/City and unique Gamer Tag inputs.
+- **Step 2 (Location & Gamer Tag):** Sleek, reusable **ThemedDropdown** menus for both Country and Province / Region selection. Clean province names are displayed without extraneous town counts, featuring SVG chevrons, active checkmark indicators, accent focus styling, and dynamic province population based on the chosen nation, alongside Town/City and unique Gamer Tag inputs.
 - **Step 3 (Security & Credentials):** Email, email confirmation, password, and password confirmation with `returnKeyType="next"` advancing sequentially to password submission (`handleFinalSubmit`), paired with a real-time password strength meter requiring 8+ characters.
 
-### 6. Regional Leaderboard & Gamer Profile
+### 7. Regional Leaderboard & Gamer Profile
 - Southern African regional ranking filterable across all 7 nations.
-- Gamer Tag identity card tracking matches played, victories, win rate percentage, mills formed, cows captured, and Elo rating.
+- Streamlined statistics tracking matches played, victories, win rate percentage, mills formed, cows captured, and career competitive titles (e.g. Grandmaster, Warrior Chief).
 
 ---
 
@@ -145,7 +155,9 @@ competitor/
 |   |   |   |-- ThemedDropdown.tsx     # Reusable 60-30-10 dropdown with SVG indicators
 |   |   |   `-- UpdateModal.tsx        # Rule 21 dual-action OTA update modal
 |   |   |-- game/
-|   |   |   `-- MorabarabaBoard.tsx    # 24-vertex board layout and interactive pieces
+|   |   |   |-- CoinTossModal.tsx      # Fair animated 3D coin toss turn decider
+|   |   |   |-- MorabarabaBoard.tsx    # 24-vertex pure line intersection board layout
+|   |   |   `-- MorabarabaPiece.tsx    # Authentic concentric carved African tokens
 |   |   `-- navigation/
 |   |       |-- CustomTabBar.tsx       # Centered floating pill tab bar with active indicator dot
 |   |       `-- TabIcons.tsx           # 16px bottom tab bar SVGs (Rule 20)

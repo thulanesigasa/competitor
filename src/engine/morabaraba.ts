@@ -85,10 +85,10 @@ export const BOARD_LINES: [number, number][] = [
 
 export const TOTAL_COWS_PER_PLAYER = 12;
 
-export function createInitialGameState(): GameState {
+export function createInitialGameState(startingPlayer: Player = 'player1'): GameState {
   return {
     board: Array(24).fill(null),
-    currentPlayer: 'player1',
+    currentPlayer: startingPlayer,
     phase: {
       player1: 'placing',
       player2: 'placing',
