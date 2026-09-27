@@ -2,12 +2,13 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import {
   Modal,
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   TouchableWithoutFeedback,
 } from 'react-native';
-import { COLORS, SPACING } from '../../constants/theme';
+import { colors } from '../../theme/colors';
+import { spacing, radius, shadow } from '../../theme';
+import { Text } from '../Typography';
 
 export interface ThemedAlertButton {
   text: string;
@@ -58,7 +59,6 @@ export const ThemedAlertProvider: React.FC<ThemedAlertProviderProps> = ({ childr
   return (
     <ThemedAlertContext.Provider value={{ showAlert, hideAlert }}>
       {children}
-
       <Modal
         transparent
         animationType="fade"
@@ -68,13 +68,17 @@ export const ThemedAlertProvider: React.FC<ThemedAlertProviderProps> = ({ childr
         <TouchableWithoutFeedback onPress={hideAlert}>
           <View style={styles.overlay}>
             <TouchableWithoutFeedback>
-              <View style={styles.container}>
+              <View style={[styles.container, shadow.lg]}>
                 {alertOptions?.title ? (
-                  <Text style={styles.title}>{alertOptions.title.toUpperCase()}</Text>
+                  <Text variant="h3" weight="800" color={colors.textPrimary} style={styles.title}>
+                    {alertOptions.title.toUpperCase()}
+                  </Text>
                 ) : null}
 
                 {alertOptions?.message ? (
-                  <Text style={styles.message}>{alertOptions.message}</Text>
+                  <Text variant="body" color={colors.textSecondary} style={styles.message}>
+                    {alertOptions.message}
+                  </Text>
                 ) : null}
 
                 <View style={styles.buttonContainer}>
@@ -98,12 +102,16 @@ export const ThemedAlertProvider: React.FC<ThemedAlertProviderProps> = ({ childr
                         }}
                       >
                         <Text
-                          style={[
-                            styles.buttonText,
-                            isPrimary && styles.buttonTextPrimary,
-                            isCancel && styles.buttonTextCancel,
-                            isDestructive && styles.buttonTextDestructive,
-                          ]}
+                          variant="body"
+                          weight="700"
+                          color={
+                            isPrimary
+                              ? '#FFFFFF'
+                              : isDestructive
+                              ? '#EF4444'
+                              : colors.textSecondary
+                          }
+                          style={styles.buttonText}
                         >
                           {btn.text}
                         </Text>
@@ -123,40 +131,30 @@ export const ThemedAlertProvider: React.FC<ThemedAlertProviderProps> = ({ childr
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: SPACING.md,
+    padding: spacing.md,
   },
   container: {
     width: '100%',
     maxWidth: 320,
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: SPACING.lg,
+    borderRadius: radius.xl,
+    padding: spacing.lg,
     borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.1)',
+    borderColor: colors.border,
     alignItems: 'center',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
-    shadowRadius: 16,
-    elevation: 8,
   },
   title: {
-    color: COLORS.textPrimary,
-    fontSize: 16,
-    fontWeight: '800',
     letterSpacing: 1,
-    marginBottom: SPACING.xs,
+    marginBottom: spacing.sm,
     textAlign: 'center',
   },
   message: {
-    color: COLORS.textSecondary,
-    fontSize: 13,
     lineHeight: 20,
     textAlign: 'center',
-    marginBottom: SPACING.lg,
+    marginBottom: spacing.lg,
   },
   buttonContainer: {
     width: '100%',
@@ -165,30 +163,20 @@ const styles = StyleSheet.create({
   button: {
     width: '100%',
     height: 46,
-    borderRadius: 23,
+    borderRadius: radius.xl,
     justifyContent: 'center',
     alignItems: 'center',
   },
   buttonPrimary: {
-    backgroundColor: COLORS.accent,
+    backgroundColor: colors.accent,
   },
   buttonSecondary: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.1)',
+    borderColor: colors.border,
   },
   buttonText: {
-    fontSize: 13,
-    fontWeight: '700',
     letterSpacing: 0.5,
   },
-  buttonTextPrimary: {
-    color: COLORS.white,
-  },
-  buttonTextCancel: {
-    color: COLORS.textSecondary,
-  },
-  buttonTextDestructive: {
-    color: '#EF4444',
-  },
 });
+
