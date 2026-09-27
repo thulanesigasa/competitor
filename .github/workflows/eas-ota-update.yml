@@ -73,6 +73,20 @@ jobs:
               fi
             fi
 
+            # Explicitly create and link dual branches and channels (production and preview)
+            echo "Initializing EAS branches and channels..."
+            npx --yes eas-cli branch:create production --non-interactive || true
+            npx --yes eas-cli branch:create preview --non-interactive || true
+            npx --yes eas-cli channel:create production --non-interactive || true
+            npx --yes eas-cli channel:create preview --non-interactive || true
+            npx --yes eas-cli channel:edit production --branch production --non-interactive || true
+            npx --yes eas-cli channel:edit preview --branch preview --non-interactive || true
+
+            echo "Current EAS Channels:"
+            npx --yes eas-cli channel:list --non-interactive || true
+            echo "Current EAS Branches:"
+            npx --yes eas-cli branch:list --non-interactive || true
+
             TARGET_CHANNEL="${{ steps.channel.outputs.channel }}"
             echo "Publishing OTA update to channel(s): $TARGET_CHANNEL..."
 
