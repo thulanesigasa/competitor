@@ -20,6 +20,9 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
       - name: Setup Node.js 22 LTS
         uses: actions/setup-node@v4
@@ -43,6 +46,25 @@ jobs:
       - name: Install Dependencies
         run: npm install --legacy-peer-deps --prefer-offline --no-audit
 
+      - name: Ensure EAS Project is Linked
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -n "$EXPO_TOKEN" ] && ! grep -q "projectId" app.json; then
+            echo "Initializing/linking EAS project under account thulanesigasa0..."
+            npx --yes eas-cli init --account thulanesigasa0 --force --non-interactive || true
+            if git diff --name-only | grep -q "app.json"; then
+              echo "EAS project linked. Committing updated app.json back to repository..."
+              git config user.name "github-actions[bot]"
+              git config user.email "github-actions[bot]@users.noreply.github.com"
+              git add app.json
+              git commit -m "ci: link EAS project ID to app.json [skip ci]"
+              git pull --rebase origin ${{ github.ref_name }} || true
+              git push origin HEAD:${{ github.ref_name }} || true
+            fi
+          fi
+
       - name: Inject Dynamic Version Code
         run: |
           node -e "
@@ -54,7 +76,13 @@ jobs:
           "
 
       - name: Prebuild Native Android Project
-        run: npx expo prebuild --platform android --no-install
+        run: |
+          npx expo prebuild --platform android --no-install
+          # Configure Gradle memory limits to prevent Metaspace OutOfMemoryError on GitHub runners
+          echo "org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" >> android/gradle.properties
+          echo "org.gradle.parallel=false" >> android/gradle.properties
+          # Prevent 504 Gateway Timeout from services.gradle.org
+          sed -i 's|services.gradle.org/distributions/gradle-\([0-9.]*\)-bin.zip|github.com/gradle/gradle-distributions/releases/download/v\1/gradle-\1-bin.zip|g' android/gradle/wrapper/gradle-wrapper.properties || true
 
       - name: Compile Release APK
         working-directory: android
@@ -87,7 +115,7 @@ jobs:
           APP_VERSION=$(node -p "require('./app.json').expo.version")
           RELEASE_TAG="v${APP_VERSION}-build${{ github.run_number }}"
           RELEASE_TITLE="Morabaraba v${APP_VERSION} (Build ${{ github.run_number }})"
-          RELEASE_NOTES="Automated native Android release build v${APP_VERSION} compiled directly on GitHub Actions runner."
+          RELEASE_NOTES="Automated native Android release build v${APP_VERSION} compiled directly on GitHub Actions runner with dynamic build number ${{ github.run_number }} and locked runtimeVersion 1.0.0."
 
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             echo "Updating existing release $RELEASE_TAG..."
