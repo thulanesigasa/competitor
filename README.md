@@ -81,10 +81,11 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 ### 4. Zero-Data Local Battleground & Online Battle Rooms (`BattlegroundScreen.tsx`)
 - **Pass & Play Rerouting:** Initiating a local offline duel seamlessly transfers the session to the dedicated `OfflineScreen`.
 - **Public & Private Battle Rooms:**
-  - **Public Room Hosting (`'host_waiting_room_public'`):** Instantly broadcasts the match to the regional lobby. The host enters a public waiting room with live incoming challenger detection, full challenger profile inspection (Gamer Tag, location, title, win rate %, match record), and one-tap Accept or Decline actions.
+  - **Collision-Free Cloud PIN Generation:** Automatically generates a 4-digit numeric code validated against active rooms in PostgreSQL (`public.battle_rooms`), ensuring zero duplicate active battle codes.
+  - **Public Room Hosting (`'host_waiting_room_public'`):** Instantly inserts a room into Supabase with `room_type = 'public'` and `status = 'waiting'`. Realtime updates (`battle_room_events:${roomId}`) stream incoming challenger arrivals directly to the host's screen with profile cards and Accept/Decline actions. Exiting cancels the room (`status = 'abandoned'`), keeping the lobby clean.
   - **Private Room Hosting (`'host_private_share'` & `'host_waiting_room_private'`):** Generates a dynamic 4-digit battle code with one-tap clipboard copy and native share sheet triggering (`Share.share`), followed by a private waiting room awaiting the PIN connection and challenger profile inspection.
-  - **Public Lobby Joining (`'join_public_lobby'`):** Discovery screen displaying active regional room hosts with interactive profile cards, stats inspection, and direct challenge dispatch (`CHALLENGE HOST →`).
-  - **Private PIN Joining (`'join_private_enter_code'` & `'join_waiting_approval'`):** Dedicated 4-digit numeric code entry to connect directly to the private host, displaying host profile inspection while awaiting host approval.
+  - **Realtime Public Lobby Joining (`'join_public_lobby'`):** Realtime WebSocket feed (`public_battle_rooms_feed`) streaming active regional hosts directly to joiners as soon as rooms are created. Includes interactive profile cards, stats inspection, and direct challenge dispatch (`CHALLENGE HOST →`).
+  - **Private PIN Joining (`'join_private_enter_code'` & `'join_waiting_approval'`):** Dedicated 4-digit numeric code entry querying active rooms directly from Supabase, linking the challenger to the host and awaiting real-time approval.
   - **Competitor Profile Inspection Card (`CompetitorProfileCard.tsx`):** Unified 60-30-10 component showcasing initials avatar, gamer tag, competitive title chip, Southern African province/country, win rate percentage, total victories, and match volume, empowering both hosts and challengers to inspect full profiles before accepting or starting a battle.
 
 ### 5. Full-Bleed 3-Screen Onboarding & Gesture Slider

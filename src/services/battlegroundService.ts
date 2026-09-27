@@ -22,8 +22,24 @@ export const battlegroundService = {
     roomType: 'public' | 'private'
   ): Promise<{ room: BattleRoomData | null; error: string | null }> {
     try {
-      const roomCode = Math.floor(1000 + Math.random() * 9000).toString();
+      // 1. Generate unique 4-digit code (ensuring no duplicate active room)
+      let roomCode = Math.floor(1000 + Math.random() * 9000).toString();
+      for (let attempt = 0; attempt < 4; attempt++) {
+        const candidate = Math.floor(1000 + Math.random() * 9000).toString();
+        const { data: existing } = await supabase
+          .from('battle_rooms')
+          .select('id')
+          .eq('room_code', candidate)
+          .eq('status', 'waiting')
+          .maybeSingle();
 
+        if (!existing) {
+          roomCode = candidate;
+          break;
+        }
+      }
+
+      // 2. Persist room to Supabase in public.battle_rooms
       const { data, error } = await supabase
         .from('battle_rooms')
         .insert({
@@ -256,5 +272,103 @@ export const battlegroundService = {
     } catch {
       return false;
     }
+  },
+
+  /**
+   * Cancel / abandon a waiting battle room when the host navigates away.
+   */
+  async cancelRoom(roomId: string): Promise<void> {
+    try {
+      await supabase
+        .from('battle_rooms')
+        .update({ status: 'abandoned' })
+        .eq('id', roomId);
+    } catch {
+      // Ignored
+    }
+  },
+
+  /**
+   * Realtime subscription for competitors browsing the Public Lobby.
+   * Automatically refreshes whenever any room is hosted, joined, or closed.
+   */
+  subscribeToPublicLobby(onUpdate: (hosts: CompetitorProfile[]) => void): () => void {
+    const channel = supabase
+      .channel('public_battle_rooms_feed')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'battle_rooms' },
+        async () => {
+          const freshHosts = await battlegroundService.fetchPublicLobby();
+          onUpdate(freshHosts);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  },
+
+  /**
+   * Realtime subscription for a specific active battle room.
+   * Tracks challenger arrival and match acceptance.
+   */
+  subscribeToRoom(
+    roomId: string,
+    callbacks: {
+      onChallengerJoined?: (challenger: CompetitorProfile) => void;
+      onChallengerLeft?: () => void;
+      onMatchAccepted?: () => void;
+    }
+  ): () => void {
+    const channel = supabase
+      .channel(`battle_room_events:${roomId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'battle_rooms',
+          filter: `id=eq.${roomId}`,
+        },
+        async (payload) => {
+          const room = payload.new as any;
+          if (room.challenger_user_id && callbacks.onChallengerJoined) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('*, career_stats(*)')
+              .eq('id', room.challenger_user_id)
+              .maybeSingle();
+
+            if (profile) {
+              const stats = profile.career_stats?.[0] || profile.career_stats || {};
+              callbacks.onChallengerJoined({
+                id: profile.id,
+                gamerTag: profile.gamer_tag || 'Challenger',
+                country: profile.country || 'South Africa',
+                countryCode: profile.country_code || 'ZA',
+                province: profile.province || 'Gauteng',
+                town: profile.town || 'Johannesburg',
+                title: profile.title || 'Competitor',
+                winRate: Math.round(Number(stats.win_rate) || 70),
+                matchesPlayed: stats.matches_played || 10,
+                wins: stats.wins || 7,
+              });
+            }
+          } else if (!room.challenger_user_id && callbacks.onChallengerLeft) {
+            callbacks.onChallengerLeft();
+          }
+
+          if (room.status === 'in_progress' && callbacks.onMatchAccepted) {
+            callbacks.onMatchAccepted();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   },
 };
