@@ -66,6 +66,7 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
   - **Challenger Calls:** The incoming challenger is designated as the caller and presented with the interactive Heads / Tails selection buttons.
   - **Host Receives Complement:** The host's interface displays a waiting status indicator (*"WAITING FOR [CHALLENGER] TO CALL..."*) with disabled manual selection. As soon as the challenger calls, the host is automatically assigned the opposite side.
   - **Sub-50ms WebSocket Broadcast:** The challenger's selection is broadcast via `gameSyncService.broadcastCoinCall()`. Both clients lock in their assigned sides simultaneously and execute the synchronized 3D flip animation.
+- **Dynamic 'H' and 'T' Metallic Face Animation:** Rapidly alternates between bold metallic **'H'** (Heads) and **'T'** (Tails) throughout the 1500ms 3D flip rotation, strictly settling on the winning face ('H' or 'T') with zero placeholder or brand artifacts.
 - **Instant 1-Tap Trigger:** In local Pass & Play or solo arenas, competitors tap Heads or Tails to immediately launch the 3D coin flip without intermediate confirmation steps.
 - **Realistic 3D Physics Flip:** Randomized 50/50 flip animation with smooth perspective rotation, scale dynamics, and gold/bronze metallic styling.
 - **Automatic Head-Back-To-Game Transition:** Upon landing on the winning face and announcing the starting player, the coin toss automatically dismisses after 1.2s and heads directly into the live match.
@@ -82,15 +83,16 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 - **Dynamic Cross-Screen Rerouting:** Starting a Pass & Play match from the Battleground automatically switches tabs and navigates directly to the Offline arena with match parameters and instant coin toss initialization.
 - **Zero Internet Requirement:** Completely operational offline without consuming cellular data.
 
-### 4. Zero-Data Local Battleground & Online Battle Rooms (`BattlegroundScreen.tsx`)
+### 4. Zero-Data Local Battleground & Pure Live Online Rooms (`BattlegroundScreen.tsx`)
 - **Pass & Play Rerouting:** Initiating a local offline duel seamlessly transfers the session to the dedicated `OfflineScreen`.
-- **Public & Private Battle Rooms:**
+- **Pure Live Cloud Matchmaking (Zero Mock Fallbacks):**
   - **Collision-Free Cloud PIN Generation:** Automatically generates a 4-digit numeric code validated against active rooms in PostgreSQL (`public.battle_rooms`), ensuring zero duplicate active battle codes.
-  - **Public Room Hosting (`'host_waiting_room_public'`):** Instantly inserts a room into Supabase with `room_type = 'public'` and `status = 'waiting'`. Realtime updates (`battle_room_events:${roomId}`) stream incoming challenger arrivals directly to the host's screen with profile cards and Accept/Decline actions. Exiting cancels the room (`status = 'abandoned'`), keeping the lobby clean.
-  - **Private Room Hosting (`'host_private_share'` & `'host_waiting_room_private'`):** Generates a dynamic 4-digit battle code with one-tap clipboard copy and native share sheet triggering (`Share.share`), followed by a private waiting room awaiting the PIN connection and challenger profile inspection.
-  - **Realtime Public Lobby Joining (`'join_public_lobby'`):** Realtime WebSocket feed (`public_battle_rooms_feed`) streaming active regional hosts directly to joiners as soon as rooms are created. Includes interactive profile cards, stats inspection, and direct challenge dispatch (`CHALLENGE HOST ->`).
+  - **Unclipped High-Legibility Code Display:** Calibrated with explicit line height (`lineHeight: 56`), Android native font padding elimination (`includeFontPadding: false`), and comfortable container headroom (`minHeight: 104`), ensuring numeric digits are 100% visible without clipping at top or bottom.
+  - **Public Room Hosting (`'host_waiting_room_public'`):** Instantly inserts a room into Supabase with `room_type = 'public'` and `status = 'waiting'`. Real-time PostgreSQL changes (`battle_room_events:${roomId}`) stream genuine incoming challenger arrivals directly to the host's screen with profile cards and Accept/Decline actions. Zero simulated mock timer challengers.
+  - **Private Room Hosting (`'host_private_share'` & `'host_waiting_room_private'`):** Generates a dynamic 4-digit battle code with one-tap clipboard copy and native share sheet triggering (`Share.share`), followed by a private waiting room awaiting the PIN connection and genuine challenger profile inspection.
+  - **Realtime Public Lobby Joining (`'join_public_lobby'`):** Realtime WebSocket feed (`public_battle_rooms_feed`) streaming active regional hosts directly to joiners as soon as rooms are created. If no public rooms are active, displays a clean 60-30-10 empty state with direct "Host a Room Now" action.
   - **Private PIN Joining (`'join_private_enter_code'` & `'join_waiting_approval'`):** Dedicated 4-digit numeric code entry querying active rooms directly from Supabase, linking the challenger to the host and awaiting real-time approval.
-  - **Competitor Profile Inspection Card (`CompetitorProfileCard.tsx`):** Unified 60-30-10 component showcasing initials avatar, gamer tag, competitive title chip, Southern African province/country, win rate percentage, total victories, and match volume, empowering both hosts and challengers to inspect full profiles before accepting or starting a battle.
+  - **Competitor Profile Inspection Card (`CompetitorProfileCard.tsx`):** Unified 60-30-10 component showcasing initials avatar, gamer tag, dynamic 10-tier competitive title chip, Southern African province/country, win rate percentage, total victories, and match volume.
 
 ### 5. Full-Bleed 3-Screen Onboarding & Gesture Slider
 - High-impact visual introduction to heritage, zero-data competitive modes, and regional ranking rendered directly on the pure white body canvas without card/div box wrappers.
@@ -109,9 +111,20 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 - **Step 2 (Location & Gamer Tag):** Sleek, reusable **ThemedDropdown** menus for both Country and Province / Region selection. Clean province names are displayed without extraneous town counts, featuring SVG chevrons, active checkmark indicators, accent focus styling, and dynamic province population based on the chosen nation, alongside Town/City and unique Gamer Tag inputs.
 - **Step 3 (Security & Credentials):** Email, email confirmation, password, and password confirmation with `returnKeyType="next"` advancing sequentially to password submission (`handleFinalSubmit`), paired with a real-time password strength meter requiring 8+ characters.
 
-### 7. Regional Leaderboard & Gamer Profile
-- Southern African regional ranking filterable across all 7 nations.
-- Streamlined statistics tracking matches played, victories, win rate percentage, mills formed, cows captured, and career competitive titles (e.g. Grandmaster, Warrior Chief).
+### 7. 10-Tier Southern African Ranking System & Dynamic Ranks (`ranks.ts`, `LeaderboardScreen.tsx`, `ProfileScreen.tsx`)
+- **10 Distinct Progressive Competitive Tiers:** Based on career Win Rate percentage, victories, and match volume:
+  - **Tier 1: Novice Scout (*Umfana*):** Starting rank (0% WR, 0 wins, 0 matches) for newcomers learning board intersections.
+  - **Tier 2: Apprentice (*Murwisi*):** 35%+ WR, 3+ wins, 5+ matches.
+  - **Tier 3: Warrior (*Iqhawe*):** 45%+ WR, 6+ wins, 10+ matches.
+  - **Tier 4: Vanguard (*Umlweli*):** 52%+ WR, 12+ wins, 18+ matches.
+  - **Tier 5: Tactician (*Ingcweti*):** 58%+ WR, 20+ wins, 28+ matches.
+  - **Tier 6: Commander (*Induna*):** 64%+ WR, 30+ wins, 40+ matches.
+  - **Tier 7: Warrior Chief (*Mambo*):** 70%+ WR, 45+ wins, 55+ matches.
+  - **Tier 8: Champion (*Shasha*):** 76%+ WR, 65+ wins, 75+ matches.
+  - **Tier 9: Grandmaster (*Isangoma*):** 82%+ WR, 90+ wins, 100+ matches.
+  - **Tier 10: Supreme Paramount (*Kgosi*):** 88%+ WR, 120+ wins, 130+ matches - legendary undisputed sovereign.
+- **Pure Live Regional Leaderboard:** Direct queries against Supabase PostgreSQL `career_stats` joined with `profiles`. Mock fallback data has been eradicated; if a region has no recorded matches, a clean empty state invites the player to claim the #1 spot.
+- **Gamer Profile Integration:** Gamer profile renders their current rank tier chip and the full 10-tier progression roadmap.
 
 ### 8. Backend & Cloud Infrastructure (Supabase)
 - **Zero-Exposure Credential Architecture (`.env` & `.env.example`):** Supabase endpoint URLs and public anon keys are strictly injected via `process.env.EXPO_PUBLIC_SUPABASE_URL` and `process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY`. Privileged service role keys and administrative clients have been completely purged from the client distribution bundle.
@@ -193,6 +206,7 @@ competitor/
 |   |       |-- CustomTabBar.tsx       # Centered floating pill tab bar with active indicator dot
 |   |       `-- TabIcons.tsx           # 16px bottom tab bar SVGs (Rule 20)
 |   |-- constants/
+|   |   |-- ranks.ts                   # 10-tier Southern African ranking system & dynamic title evaluation
 |   |   |-- regions.ts                 # Southern African countries, provinces, and towns
 |   |   `-- theme.ts                   # Legacy theme metrics re-exported to src/theme
 |   |-- engine/

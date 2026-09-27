@@ -32,16 +32,7 @@ export interface LeaderboardEntry {
   title: string;
 }
 
-export const INITIAL_REGIONAL_LEADERBOARD: LeaderboardEntry[] = [
-  { rank: 1, gamerTag: 'Kgosi_Sipho', country: 'South Africa', countryCode: 'ZA', province: 'Gauteng', town: 'Soweto', elo: 2180, winRate: 84, wins: 242, title: 'Grandmaster' },
-  { rank: 2, gamerTag: 'Mambo_Tinashe', country: 'Zimbabwe', countryCode: 'ZW', province: 'Harare', town: 'Harare Central', elo: 2095, winRate: 81, wins: 198, title: 'Warrior Chief' },
-  { rank: 3, gamerTag: 'Mophato_Kabo', country: 'Botswana', countryCode: 'BW', province: 'South-East', town: 'Gaborone', elo: 2040, winRate: 79, wins: 176, title: 'Vanguard' },
-  { rank: 4, gamerTag: 'Inyatsi_Sibusiso', country: 'Eswatini', countryCode: 'SZ', province: 'Hhohho', town: 'Mbabane', elo: 1980, winRate: 76, wins: 154, title: 'Tactician' },
-  { rank: 5, gamerTag: 'Tau_Maseru', country: 'Lesotho', countryCode: 'LS', province: 'Maseru District', town: 'Maseru', elo: 1920, winRate: 74, wins: 140, title: 'Tactician' },
-  { rank: 6, gamerTag: 'Eagle_Lusaka', country: 'Zambia', countryCode: 'ZM', province: 'Lusaka', town: 'Lusaka', elo: 1890, winRate: 72, wins: 125, title: 'Champion' },
-  { rank: 7, gamerTag: 'Lake_Chikondi', country: 'Malawi', countryCode: 'MW', province: 'Southern Region', town: 'Blantyre', elo: 1830, winRate: 70, wins: 110, title: 'Champion' },
-  { rank: 8, gamerTag: 'Veldt_Lethabo', country: 'South Africa', countryCode: 'ZA', province: 'Limpopo', town: 'Polokwane', elo: 1790, winRate: 68, wins: 98, title: 'Warrior' },
-];
+export const INITIAL_REGIONAL_LEADERBOARD: LeaderboardEntry[] = [];
 
 export async function getUserProfile(): Promise<UserProfile | null> {
   try {

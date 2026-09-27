@@ -29,7 +29,8 @@ const COUNTRY_FILTERS = [
 
 export const LeaderboardScreen: React.FC = () => {
   const [selectedFilter, setSelectedFilter] = useState('All Nations');
-  const [rankings, setRankings] = useState<LeaderboardEntry[]>(INITIAL_REGIONAL_LEADERBOARD);
+  const [rankings, setRankings] = useState<LeaderboardEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
@@ -38,12 +39,13 @@ export const LeaderboardScreen: React.FC = () => {
 
   const loadLeaderboard = async () => {
     try {
+      setIsLoading(true);
       const liveData = await leaderboardService.getRegionalLeaderboard(selectedFilter);
-      if (liveData && liveData.length > 0) {
-        setRankings(liveData);
-      }
+      setRankings(liveData || []);
     } catch {
-      // Keep existing rankings
+      setRankings([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -99,40 +101,51 @@ export const LeaderboardScreen: React.FC = () => {
         </ScrollView>
 
         {/* Competitor Rankings */}
-        <View style={styles.rankingsList}>
-          {rankings.map((entry) => (
-            <View key={`${entry.gamerTag}-${entry.rank}`} style={styles.rankRow}>
-              {/* Rank Number - Pure clean typography */}
-              <Text
-                style={[
-                  styles.rankNumber,
-                  entry.rank === 1 && styles.rankNumberGold,
-                  entry.rank === 2 && styles.rankNumberSilver,
-                  entry.rank === 3 && styles.rankNumberBronze,
-                ]}
-              >
-                #{entry.rank}
-              </Text>
-
-              {/* Player Info */}
-              <View style={styles.playerDetails}>
-                <View style={styles.nameRow}>
-                  <Text style={styles.gamerTag}>{entry.gamerTag}</Text>
-                  <Text style={styles.countryCode}>[{entry.countryCode}]</Text>
-                </View>
-                <Text style={styles.locationText}>
-                  {entry.town}, {entry.province}
+        {rankings.length > 0 ? (
+          <View style={styles.rankingsList}>
+            {rankings.map((entry) => (
+              <View key={`${entry.gamerTag}-${entry.rank}`} style={styles.rankRow}>
+                {/* Rank Number - Pure clean typography */}
+                <Text
+                  style={[
+                    styles.rankNumber,
+                    entry.rank === 1 && styles.rankNumberGold,
+                    entry.rank === 2 && styles.rankNumberSilver,
+                    entry.rank === 3 && styles.rankNumberBronze,
+                  ]}
+                >
+                  #{entry.rank}
                 </Text>
-              </View>
 
-              {/* Performance Stats */}
-              <View style={styles.statsColumn}>
-                <Text style={styles.eloScore}>{entry.title}</Text>
-                <Text style={styles.winRate}>{entry.winRate}% Win Rate ({entry.wins}W)</Text>
+                {/* Player Info */}
+                <View style={styles.playerDetails}>
+                  <View style={styles.nameRow}>
+                    <Text style={styles.gamerTag}>{entry.gamerTag}</Text>
+                    <Text style={styles.countryCode}>[{entry.countryCode}]</Text>
+                  </View>
+                  <Text style={styles.locationText}>
+                    {entry.town ? `${entry.town}, ` : ''}{entry.province} • {entry.country}
+                  </Text>
+                </View>
+
+                {/* Performance Stats with 10-Tier Dynamic Title */}
+                <View style={styles.statsColumn}>
+                  <Text style={styles.eloScore}>{entry.title.toUpperCase()}</Text>
+                  <Text style={styles.winRate}>{entry.winRate}% Win Rate ({entry.wins}W)</Text>
+                </View>
               </View>
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
+        ) : (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyTitle}>NO RANKED COMPETITORS YET</Text>
+            <Text style={styles.emptySubtitle}>
+              {selectedFilter === 'All Nations'
+                ? 'No match statistics recorded on the live database yet. Compete in online battleground rooms to claim the #1 ranking!'
+                : `No ranked competitors recorded yet in ${selectedFilter}. Host or join a battle room to claim the top spot!`}
+            </Text>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -241,5 +254,28 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontSize: 11,
     marginTop: 2,
+  },
+  emptyContainer: {
+    paddingVertical: SPACING.xxl,
+    paddingHorizontal: SPACING.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: 'rgba(15, 23, 42, 0.08)',
+    marginTop: SPACING.md,
+  },
+  emptyTitle: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: COLORS.textPrimary,
+    letterSpacing: 0.8,
+    marginBottom: SPACING.xs,
+  },
+  emptySubtitle: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    lineHeight: 18,
   },
 });

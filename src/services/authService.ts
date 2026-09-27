@@ -73,7 +73,7 @@ export const authService = {
           country_code: params.countryCode,
           province: params.province,
           town: params.town.trim(),
-          title: 'Warrior',
+          title: 'Novice Scout',
         });
 
         // Initialize career stats if not present

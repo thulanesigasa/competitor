@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { CompetitorProfile } from '../types/game';
 import { UserProfile } from '../types/auth';
+import { getRankTitle } from '../constants/ranks';
 
 export interface BattleRoomData {
   id: string;
@@ -131,17 +132,22 @@ export const battlegroundService = {
         if (!p) continue;
         const stats = p.career_stats?.[0] || p.career_stats || {};
 
+        const winRate = Math.round(Number(stats.win_rate) || 0);
+        const wins = stats.wins || 0;
+        const matches = stats.matches_played || (wins + (stats.losses || 0));
+        const dynamicTitle = getRankTitle(winRate, wins, matches);
+
         hosts.push({
-          id: p.id,
-          gamerTag: p.gamer_tag || 'Warrior',
+          id: row.id,
+          gamerTag: p.gamer_tag || 'Competitor',
           country: p.country || 'South Africa',
           countryCode: p.country_code || 'ZA',
           province: p.province || 'Gauteng',
-          town: p.town || 'Johannesburg',
-          title: p.title || 'Warrior',
-          winRate: Math.round(Number(stats.win_rate) || 75),
-          matchesPlayed: stats.matches_played || 10,
-          wins: stats.wins || 7,
+          town: p.town || '',
+          title: dynamicTitle,
+          winRate,
+          matchesPlayed: matches,
+          wins,
         });
       }
 
@@ -198,6 +204,10 @@ export const battlegroundService = {
 
       const p: any = data.profiles;
       const stats = p?.career_stats?.[0] || p?.career_stats || {};
+      const winRate = Math.round(Number(stats.win_rate) || 0);
+      const wins = stats.wins || 0;
+      const matches = stats.matches_played || (wins + (stats.losses || 0));
+      const dynamicTitle = getRankTitle(winRate, wins, matches);
 
       const hostProfile: CompetitorProfile = {
         id: data.host_user_id,
@@ -205,11 +215,11 @@ export const battlegroundService = {
         country: p?.country || 'South Africa',
         countryCode: p?.country_code || 'ZA',
         province: p?.province || 'Gauteng',
-        town: p?.town || 'Johannesburg',
-        title: p?.title || 'Warrior Chief',
-        winRate: Math.round(Number(stats.win_rate) || 75),
-        matchesPlayed: stats.matches_played || 20,
-        wins: stats.wins || 15,
+        town: p?.town || '',
+        title: dynamicTitle,
+        winRate,
+        matchesPlayed: matches,
+        wins,
       };
 
       return {
@@ -343,17 +353,22 @@ export const battlegroundService = {
 
             if (profile) {
               const stats = profile.career_stats?.[0] || profile.career_stats || {};
+              const winRate = Math.round(Number(stats.win_rate) || 0);
+              const wins = stats.wins || 0;
+              const matches = stats.matches_played || (wins + (stats.losses || 0));
+              const dynamicTitle = getRankTitle(winRate, wins, matches);
+
               callbacks.onChallengerJoined({
                 id: profile.id,
                 gamerTag: profile.gamer_tag || 'Challenger',
                 country: profile.country || 'South Africa',
                 countryCode: profile.country_code || 'ZA',
                 province: profile.province || 'Gauteng',
-                town: profile.town || 'Johannesburg',
-                title: profile.title || 'Competitor',
-                winRate: Math.round(Number(stats.win_rate) || 70),
-                matchesPlayed: stats.matches_played || 10,
-                wins: stats.wins || 7,
+                town: profile.town || '',
+                title: dynamicTitle,
+                winRate,
+                matchesPlayed: matches,
+                wins,
               });
             }
           } else if (!room.challenger_user_id && callbacks.onChallengerLeft) {
