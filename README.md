@@ -108,6 +108,17 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 - Southern African regional ranking filterable across all 7 nations.
 - Streamlined statistics tracking matches played, victories, win rate percentage, mills formed, cows captured, and career competitive titles (e.g. Grandmaster, Warrior Chief).
 
+### 8. Backend & Cloud Infrastructure (Supabase)
+- **Supabase Client Integration (`src/lib/supabase.ts`):** Initialized using `@supabase/supabase-js` and `react-native-url-polyfill`, configured with `AsyncStorage` session persistence and auto-token refreshing.
+- **Relational PostgreSQL Schema (`supabase/migrations/20260927113651_new-migration.sql`):**
+  - `public.profiles`: UUID-keyed identity linked to Supabase Auth (`auth.users`), storing Gamer Tag, personal details, date of birth, cellphone, regional location, and competitive title.
+  - `public.career_stats`: Persistent tracking of ELO ratings, match records, victories, defeats, win streak, best win streak, win rate %, mills formed, and cows captured.
+  - `public.battle_rooms`: Realtime matchmaking for public broadcast and private PIN battle rooms.
+  - `public.match_logs`: Comprehensive turn history and board state snapshots.
+- **Automated ELO & Stats Stored Procedure (`handle_match_completion`):** Automatically computes win rate, updates win streaks, and recalculates ELO ratings upon match completion.
+- **Automated Profile Initializer (`handle_new_user`):** Automatically provisions a profile and career statistics record when a user signs up.
+- **Sub-50ms Realtime Broadcasting:** Low-latency WebSockets broadcast channel (`room:${roomId}`) for synchronized turn dispatch, cow placement, moves, and transparent coin toss results.
+
 ---
 
 ## Design System & Theme Architecture (Strict 60-30-10 & Tab-Only SVGs)
@@ -195,6 +206,8 @@ competitor/
 |   |   |   `-- OnboardingScreen.tsx   # 3-slide crossfade art canvas, liquid sliding pill & SwipeToStartButton
 |   |   `-- profile/
 |   |       `-- ProfileScreen.tsx      # Gamer Tag career stats and settings
+|   |-- lib/
+|   |   `-- supabase.ts                # Supabase client with AsyncStorage session persistence
 |   |-- store/
 |   |   `-- gameStore.ts               # Local persistence via AsyncStorage
 |   |-- theme/
@@ -203,6 +216,10 @@ competitor/
 |   `-- types/
 |       |-- auth.ts                    # User profile and registration models
 |       `-- game.ts                    # Game state, phase, player, and board types
+|-- supabase/
+|   |-- config.toml                    # Supabase local and remote configuration
+|   `-- migrations/
+|       `-- 20260927113651_new-migration.sql # Profiles, career_stats, battle_rooms, and match_logs schema
 |-- .gitignore                         # Excludes .agents, node_modules, android/
 |-- .npmrc                             # legacy-peer-deps=true (Rule 21)
 |-- app.json                           # Locked runtimeVersion 1.0.0, dynamic versionCode, owner thulanesigasa0
