@@ -100,7 +100,7 @@ export const UpdateModal: React.FC = () => {
 
           <Text style={styles.title}>UPDATE AVAILABLE</Text>
           <Text style={styles.description}>
-            A new version of Morabaraba is ready with enhanced board responsiveness and regional ranking updates.
+            A new version of morabaraba is ready with enhanced board responsiveness and regional ranking updates.
           </Text>
 
           <View style={styles.actions}>
