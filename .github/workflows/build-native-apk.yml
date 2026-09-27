@@ -28,7 +28,7 @@ jobs:
           cache: 'npm'
 
       - name: Setup Java 17 (Temurin)
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -81,11 +81,21 @@ jobs:
 
       - name: Publish GitHub Release Asset
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           APP_VERSION=$(node -p "require('./app.json').expo.version")
           RELEASE_TAG="v${APP_VERSION}-build${{ github.run_number }}"
-          gh release create "$RELEASE_TAG" build-output/*.apk \
-            --title "Morabaraba v${APP_VERSION} (Build ${{ github.run_number }})" \
-            --notes "Automated native Android release build v${APP_VERSION} compiled directly on GitHub Actions runner." \
-            --clobber || gh release upload "$RELEASE_TAG" build-output/*.apk --clobber
+          RELEASE_TITLE="Morabaraba v${APP_VERSION} (Build ${{ github.run_number }})"
+          RELEASE_NOTES="Automated native Android release build v${APP_VERSION} compiled directly on GitHub Actions runner."
+
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Updating existing release $RELEASE_TAG..."
+            gh release edit "$RELEASE_TAG" --title "$RELEASE_TITLE" --notes "$RELEASE_NOTES"
+          else
+            echo "Creating new release $RELEASE_TAG..."
+            gh release create "$RELEASE_TAG" --title "$RELEASE_TITLE" --notes "$RELEASE_NOTES"
+          fi
+
+          echo "Uploading APK asset to release $RELEASE_TAG..."
+          gh release upload "$RELEASE_TAG" build-output/*.apk --clobber
