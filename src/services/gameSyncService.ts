@@ -18,6 +18,7 @@ export const gameSyncService = {
     roomId: string,
     callbacks: {
       onMove: (payload: MoveBroadcastPayload) => void;
+      onCoinCall?: (side: 'heads' | 'tails') => void;
       onCoinToss: (firstPlayer: Player) => void;
       onMatchEnded?: (winnerId: string) => void;
     }
@@ -32,6 +33,9 @@ export const gameSyncService = {
       .on('broadcast', { event: 'move' }, ({ payload }) => {
         callbacks.onMove(payload);
       })
+      .on('broadcast', { event: 'coin_call' }, ({ payload }) => {
+        if (callbacks.onCoinCall) callbacks.onCoinCall(payload.side);
+      })
       .on('broadcast', { event: 'coin_toss' }, ({ payload }) => {
         callbacks.onCoinToss(payload.firstPlayer);
       })
@@ -43,6 +47,22 @@ export const gameSyncService = {
     return () => {
       supabase.removeChannel(channel);
     };
+  },
+
+  /**
+   * Broadcast side selection in Pattern 1 coin toss (Challenger calls Heads or Tails).
+   */
+  async broadcastCoinCall(roomId: string, side: 'heads' | 'tails'): Promise<void> {
+    try {
+      const channel = supabase.channel(`room:${roomId}`);
+      await channel.send({
+        type: 'broadcast',
+        event: 'coin_call',
+        payload: { side },
+      });
+    } catch {
+      // Ignored
+    }
   },
 
   /**

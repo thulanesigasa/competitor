@@ -177,6 +177,8 @@ export const BattlegroundScreen: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>(createInitialGameState());
   const [statusMessage, setStatusMessage] = useState('Place your cow on any empty intersection.');
   const [showCoinToss, setShowCoinToss] = useState(false);
+  const [isHostRole, setIsHostRole] = useState(false);
+  const [calledCoinSide, setCalledCoinSide] = useState<'heads' | 'tails' | null>(null);
 
   // Timers & Realtime Sync
   const challengerTimer = useRef<NodeJS.Timeout | null>(null);
@@ -204,6 +206,8 @@ export const BattlegroundScreen: React.FC = () => {
   // --- HOST FLOWS ---
   const handleStartHostFlow = () => {
     clearAllTimers();
+    setIsHostRole(true);
+    setCalledCoinSide(null);
     setMode('host_type_select');
   };
 
@@ -295,6 +299,10 @@ export const BattlegroundScreen: React.FC = () => {
   const handleAcceptChallenger = (challenger: CompetitorProfile) => {
     clearAllTimers();
     setOpponentName(challenger.gamerTag);
+    if (activeRoomId.current) {
+      battlegroundService.acceptChallenger(activeRoomId.current);
+      startOnlineMatchSync();
+    }
     setShowCoinToss(true);
   };
 
@@ -310,6 +318,8 @@ export const BattlegroundScreen: React.FC = () => {
   // --- JOIN FLOWS ---
   const handleStartJoinFlow = () => {
     clearAllTimers();
+    setIsHostRole(false);
+    setCalledCoinSide(null);
     setEnteredPin('');
     setMode('join_type_select');
   };
@@ -391,9 +401,36 @@ export const BattlegroundScreen: React.FC = () => {
     }, 2800);
   };
 
+  const startOnlineMatchSync = () => {
+    if (activeRoomId.current) {
+      if (syncSubscription.current) syncSubscription.current();
+      syncSubscription.current = gameSyncService.subscribeToMatch(activeRoomId.current, {
+        onCoinCall: (side) => {
+          setCalledCoinSide(side);
+        },
+        onCoinToss: (firstPlayer) => {
+          handleTossComplete(firstPlayer);
+        },
+        onMove: (payload) => {
+          // Live opponent move handling
+        },
+      });
+    }
+  };
+
   const handleHostApproved = () => {
     clearAllTimers();
+    if (activeRoomId.current) {
+      startOnlineMatchSync();
+    }
     setShowCoinToss(true);
+  };
+
+  const handleSideCalled = (side: 'heads' | 'tails') => {
+    setCalledCoinSide(side);
+    if (activeRoomId.current) {
+      gameSyncService.broadcastCoinCall(activeRoomId.current, side);
+    }
   };
 
   // --- PASS & PLAY FLOW ---
@@ -409,6 +446,10 @@ export const BattlegroundScreen: React.FC = () => {
     const firstPlayerLabel = firstPlayer === 'player1' ? 'You (Gold)' : `${opponentName} (Charcoal)`;
     setStatusMessage(`${firstPlayerLabel} won the coin toss! Place your cow.`);
     setMode('match_in_progress');
+
+    if (activeRoomId.current) {
+      gameSyncService.broadcastCoinToss(activeRoomId.current, firstPlayer);
+    }
   };
 
   // --- GAME BOARD INTERACTIONS ---
@@ -1053,13 +1094,17 @@ export const BattlegroundScreen: React.FC = () => {
         )}
       </ScrollView>
 
-      {/* Transparent In-Game Coin Toss (1-Tap & Auto-Return) */}
+      {/* Transparent In-Game Coin Toss (Pattern 1 Role-Based Calling) */}
       <CoinTossModal
         visible={showCoinToss}
         onClose={() => setShowCoinToss(false)}
         onTossComplete={handleTossComplete}
         player1Name={currentUser?.gamerTag || 'You'}
         player2Name={opponentName}
+        isOnline={mode === 'match_in_progress' || !!activeRoomId.current}
+        isHost={isHostRole}
+        externalCalledSide={calledCoinSide}
+        onSideCalled={handleSideCalled}
       />
     </SafeAreaView>
   );

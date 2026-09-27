@@ -1,4 +1,4 @@
-import { supabase, supabaseAdmin } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { UserProfile } from '../types/auth';
 import {
   getUserProfile as getLocalProfile,
@@ -22,21 +22,19 @@ export interface SignUpParams {
 
 export const authService = {
   /**
-   * Register a new player with Supabase Auth (skipping email verification) and provision profile.
+   * Register a new player with Supabase Auth and provision profile.
    */
   async signUp(params: SignUpParams): Promise<{ user: UserProfile | null; error: string | null }> {
     try {
       const email = params.email.trim().toLowerCase();
       const gamerTag = params.gamerTag.trim();
-      let userId: string = '';
 
-      // 1. Create user with email_confirm: true (skips email verification completely)
-      try {
-        const { data: adminCreated, error: adminErr } = await supabaseAdmin.auth.admin.createUser({
-          email,
-          password: params.password,
-          email_confirm: true,
-          user_metadata: {
+      // 1. Register with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password: params.password,
+        options: {
+          data: {
             gamer_tag: gamerTag,
             name: params.name.trim(),
             surname: params.surname.trim(),
@@ -47,51 +45,14 @@ export const authService = {
             province: params.province,
             town: params.town.trim(),
           },
-        });
+        },
+      });
 
-        if (!adminErr && adminCreated?.user) {
-          userId = adminCreated.user.id;
-        } else if (adminErr && !adminErr.message.toLowerCase().includes('already')) {
-          // Non-duplicate error
-        }
-      } catch {
-        // Fallback to standard client signup
+      if (authError && !authError.message.toLowerCase().includes('already')) {
+        return { user: null, error: authError.message };
       }
 
-      // If admin creation was skipped or errored, try standard signup
-      if (!userId) {
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email,
-          password: params.password,
-          options: {
-            data: {
-              gamer_tag: gamerTag,
-              name: params.name.trim(),
-              surname: params.surname.trim(),
-              dob: params.dob.trim(),
-              cellphone: params.cellphone.trim(),
-              country: params.country,
-              country_code: params.countryCode,
-              province: params.province,
-              town: params.town.trim(),
-            },
-          },
-        });
-
-        if (authError && !authError.message.toLowerCase().includes('already')) {
-          return { user: null, error: authError.message };
-        }
-
-        if (authData?.user) {
-          userId = authData.user.id;
-          // Auto-confirm via admin in case it was created unconfirmed
-          try {
-            await supabaseAdmin.auth.admin.updateUserById(userId, { email_confirm: true });
-          } catch {
-            // Ignore
-          }
-        }
-      }
+      const userId = authData?.user?.id || `user_${Date.now()}`;
 
       // 2. Establish live client session
       await supabase.auth.signInWithPassword({
@@ -167,52 +128,33 @@ export const authService = {
       const cleanId = identifier.trim();
       let targetEmail = cleanId.toLowerCase();
 
-      // If user typed Gamer Tag rather than email, resolve email from profiles table or admin
+      // If user typed Gamer Tag rather than email, resolve email from local session cache or profile
       if (!cleanId.includes('@')) {
-        try {
-          const { data: profileRow } = await supabase
-            .from('profiles')
-            .select('id')
-            .ilike('gamer_tag', cleanId)
-            .maybeSingle();
+        const local = await getLocalProfile();
+        if (local && local.gamerTag.toLowerCase() === cleanId.toLowerCase()) {
+          targetEmail = local.email;
+        } else {
+          try {
+            const { data: profileRow } = await supabase
+              .from('profiles')
+              .select('id')
+              .ilike('gamer_tag', cleanId)
+              .maybeSingle();
 
-          if (profileRow?.id) {
-            const { data: userData } = await supabaseAdmin.auth.admin.getUserById(profileRow.id);
-            if (userData?.user?.email) {
-              targetEmail = userData.user.email;
+            if (profileRow?.id) {
+              targetEmail = `${cleanId.toLowerCase()}@morabaraba.africa`;
             }
+          } catch {
+            // fallback
           }
-        } catch {
-          // fallback
         }
       }
 
       // 1. Attempt Supabase Auth login
-      let { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: targetEmail,
         password,
       });
-
-      // If email not confirmed, auto-confirm via admin and retry
-      if (authError && authError.message.toLowerCase().includes('confirm')) {
-        try {
-          const { data: listData } = await supabaseAdmin.auth.admin.listUsers();
-          const targetUser = listData?.users.find(
-            (u) => u.email?.toLowerCase() === targetEmail.toLowerCase()
-          );
-          if (targetUser) {
-            await supabaseAdmin.auth.admin.updateUserById(targetUser.id, { email_confirm: true });
-            const retry = await supabase.auth.signInWithPassword({
-              email: targetEmail,
-              password,
-            });
-            authData = retry.data;
-            authError = retry.error;
-          }
-        } catch {
-          // Ignore
-        }
-      }
 
 
       if (!authError && authData.user) {

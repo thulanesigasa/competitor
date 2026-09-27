@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Animated,
   Easing,
+  ActivityIndicator,
 } from 'react-native';
 import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 import { Text } from '../Typography';
@@ -19,6 +20,10 @@ interface CoinTossModalProps {
   onTossComplete: (firstPlayer: Player) => void;
   player1Name?: string;
   player2Name?: string;
+  isOnline?: boolean;
+  isHost?: boolean;
+  externalCalledSide?: CoinSide | null;
+  onSideCalled?: (side: CoinSide) => void;
 }
 
 type CoinSide = 'heads' | 'tails';
@@ -28,7 +33,11 @@ export const CoinTossModal: React.FC<CoinTossModalProps> = ({
   onClose,
   onTossComplete,
   player1Name = 'You',
-  player2Name = 'CPU',
+  player2Name = 'Opponent',
+  isOnline = false,
+  isHost = false,
+  externalCalledSide = null,
+  onSideCalled,
 }) => {
   const [selectedSide, setSelectedSide] = useState<CoinSide | null>(null);
   const [isFlipping, setIsFlipping] = useState(false);
@@ -52,7 +61,14 @@ export const CoinTossModal: React.FC<CoinTossModalProps> = ({
     };
   }, [visible]);
 
-  const handlePickAndToss = (side: CoinSide) => {
+  // When Host receives Challenger's call externally via WebSockets
+  useEffect(() => {
+    if (visible && isOnline && isHost && externalCalledSide && !isFlipping && !tossResult) {
+      executeToss(externalCalledSide, 'player2');
+    }
+  }, [visible, isOnline, isHost, externalCalledSide]);
+
+  const executeToss = (side: CoinSide, caller: Player = 'player1') => {
     if (isFlipping) return;
 
     setSelectedSide(side);
@@ -93,7 +109,9 @@ export const CoinTossModal: React.FC<CoinTossModalProps> = ({
       setIsFlipping(false);
       setTossResult(outcome);
 
-      const first: Player = side === outcome ? 'player1' : 'player2';
+      // If outcome matches caller's call, caller wins; else opponent wins
+      const other: Player = caller === 'player1' ? 'player2' : 'player1';
+      const first: Player = side === outcome ? caller : other;
       setWinnerPlayer(first);
 
       // Automatically head back to the game after a brief celebration pause
@@ -101,6 +119,16 @@ export const CoinTossModal: React.FC<CoinTossModalProps> = ({
         finishAndReturn(first);
       }, 1200);
     });
+  };
+
+  const handlePickAndToss = (side: CoinSide) => {
+    if (isFlipping) return;
+
+    if (onSideCalled) {
+      onSideCalled(side);
+    }
+    // For local or challenger (player1 locally)
+    executeToss(side, isOnline && isHost ? 'player2' : 'player1');
   };
 
   const finishAndReturn = (first: Player) => {
@@ -161,6 +189,10 @@ export const CoinTossModal: React.FC<CoinTossModalProps> = ({
                 ? `LANDED ON ${tossResult.toUpperCase()}`
                 : isFlipping
                 ? 'FLIPPING COIN...'
+                : isOnline && isHost
+                ? 'CHALLENGER IS CALLING'
+                : isOnline
+                ? 'CALL THE COIN'
                 : 'WHO GOES FIRST?'}
             </Text>
             <Text variant="caption" align="center" color="rgba(255, 255, 255, 0.85)" style={styles.headerSubtitle}>
@@ -169,7 +201,17 @@ export const CoinTossModal: React.FC<CoinTossModalProps> = ({
                   ? `${player1Name} won the toss and moves first!`
                   : `${player2Name} won the toss and moves first!`
                 : isFlipping
-                ? 'Determining who places the first cow...'
+                ? selectedSide
+                  ? isOnline
+                    ? isHost
+                      ? `${player2Name} called ${selectedSide.toUpperCase()}. You are ${selectedSide === 'heads' ? 'TAILS' : 'HEADS'}!`
+                      : `You called ${selectedSide.toUpperCase()}. ${player2Name} is ${selectedSide === 'heads' ? 'TAILS' : 'HEADS'}!`
+                    : `Coin is spinning for ${selectedSide.toUpperCase()}...`
+                  : 'Determining who places the first cow...'
+                : isOnline && isHost
+                ? `${player2Name} is choosing Heads or Tails...`
+                : isOnline
+                ? 'You are the Challenger. Tap Heads or Tails to flip:'
                 : 'Tap Heads or Tails to flip and start match'}
             </Text>
           </View>
@@ -211,35 +253,47 @@ export const CoinTossModal: React.FC<CoinTossModalProps> = ({
             </Animated.View>
           </View>
 
-          {/* Quick 1-Tap Heads or Tails Choices (Floating directly over game) */}
+          {/* Choice Row or Host Waiting State */}
           {!isFlipping && !tossResult && (
-            <View style={styles.choicesRow}>
-              <TouchableOpacity
-                style={[styles.floatingPill, styles.headsPill]}
-                onPress={() => handlePickAndToss('heads')}
-                activeOpacity={0.8}
-              >
-                <Text variant="h3" weight="800" color="#FFFFFF">
-                  HEADS (H)
+            isOnline && isHost ? (
+              <View style={styles.waitingCallerBlock}>
+                <ActivityIndicator size="small" color="#FFFFFF" style={{ marginBottom: 6 }} />
+                <Text variant="body" weight="800" color="#FFFFFF" align="center">
+                  WAITING FOR {player2Name.toUpperCase()} TO CALL...
                 </Text>
-                <Text variant="caption" color="rgba(255, 255, 255, 0.8)">
-                  Tap to Flip
+                <Text variant="caption" color="rgba(255, 255, 255, 0.75)" align="center">
+                  The challenger calls the coin. You will automatically receive the opposite side.
                 </Text>
-              </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.choicesRow}>
+                <TouchableOpacity
+                  style={[styles.floatingPill, styles.headsPill]}
+                  onPress={() => handlePickAndToss('heads')}
+                  activeOpacity={0.8}
+                >
+                  <Text variant="h3" weight="800" color="#FFFFFF">
+                    HEADS (H)
+                  </Text>
+                  <Text variant="caption" color="rgba(255, 255, 255, 0.8)">
+                    {isOnline ? 'Call Heads' : 'Tap to Flip'}
+                  </Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[styles.floatingPill, styles.tailsPill]}
-                onPress={() => handlePickAndToss('tails')}
-                activeOpacity={0.8}
-              >
-                <Text variant="h3" weight="800" color="#FFFFFF">
-                  TAILS (T)
-                </Text>
-                <Text variant="caption" color="rgba(255, 255, 255, 0.8)">
-                  Tap to Flip
-                </Text>
-              </TouchableOpacity>
-            </View>
+                <TouchableOpacity
+                  style={[styles.floatingPill, styles.tailsPill]}
+                  onPress={() => handlePickAndToss('tails')}
+                  activeOpacity={0.8}
+                >
+                  <Text variant="h3" weight="800" color="#FFFFFF">
+                    TAILS (T)
+                  </Text>
+                  <Text variant="caption" color="rgba(255, 255, 255, 0.8)">
+                    {isOnline ? 'Call Tails' : 'Tap to Flip'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )
           )}
 
           {/* Auto Heading Back Notice */}
@@ -334,5 +388,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 20,
+  },
+  waitingCallerBlock: {
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    marginTop: spacing.lg,
   },
 });
