@@ -56,3 +56,16 @@ export interface UserCareerStats {
   winStreak: number;
   eloRating: number;
 }
+
+export interface CompetitorProfile {
+  id: string;
+  gamerTag: string;
+  country: string;
+  countryCode: string;
+  province: string;
+  town?: string;
+  title: string;
+  winRate: number;
+  matchesPlayed: number;
+  wins: number;
+}

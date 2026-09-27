@@ -75,9 +75,14 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 - **Autonomous First-Move AI:** When the offline competitor loses the coin toss, the CPU takes the first move automatically.
 - **Zero Internet Requirement:** Completely operational offline without consuming cellular data.
 
-### 4. Zero-Data Local Battleground (2-Player Duel)
+### 4. Zero-Data Local Battleground & Online Battle Rooms (`BattlegroundScreen.tsx`)
 - **Pass & Play:** Direct tabletop mode for head-to-head dueling on one screen.
-- **Online Battle:** Direct peer room creation with 4-digit PIN exchange over local Wi-Fi or mobile hotspots without cloud dependencies.
+- **Public & Private Battle Rooms:**
+  - **Public Room Hosting (`'host_waiting_room_public'`):** Instantly broadcasts the match to the regional lobby. The host enters a public waiting room with live incoming challenger detection, full challenger profile inspection (Gamer Tag, location, title, win rate %, match record), and one-tap Accept or Decline actions.
+  - **Private Room Hosting (`'host_private_share'` & `'host_waiting_room_private'`):** Generates a dynamic 4-digit battle code with one-tap clipboard copy and native share sheet triggering (`Share.share`), followed by a private waiting room awaiting the PIN connection and challenger profile inspection.
+  - **Public Lobby Joining (`'join_public_lobby'`):** Discovery screen displaying active regional room hosts with interactive profile cards, stats inspection, and direct challenge dispatch (`CHALLENGE HOST →`).
+  - **Private PIN Joining (`'join_private_enter_code'` & `'join_waiting_approval'`):** Dedicated 4-digit numeric code entry to connect directly to the private host, displaying host profile inspection while awaiting host approval.
+  - **Competitor Profile Inspection Card (`CompetitorProfileCard.tsx`):** Unified 60-30-10 component showcasing initials avatar, gamer tag, competitive title chip, Southern African province/country, win rate percentage, total victories, and match volume, empowering both hosts and challengers to inspect full profiles before accepting or starting a battle.
 
 ### 5. Full-Bleed 3-Screen Onboarding & Gesture Slider
 - High-impact visual introduction to heritage, zero-data competitive modes, and regional ranking rendered directly on the pure white body canvas without card/div box wrappers.
@@ -157,6 +162,7 @@ competitor/
 |   |   |   `-- UpdateModal.tsx        # Rule 21 dual-action on-demand OTA update modal
 |   |   |-- game/
 |   |   |   |-- CoinTossModal.tsx      # Fair animated 3D coin toss turn decider
+|   |   |   |-- CompetitorProfileCard.tsx # 60-30-10 player profile inspection card with stats & actions
 |   |   |   |-- MorabarabaBoard.tsx    # 24-vertex pure line intersection board layout
 |   |   |   `-- MorabarabaPiece.tsx    # Authentic concentric carved African tokens
 |   |   `-- navigation/
