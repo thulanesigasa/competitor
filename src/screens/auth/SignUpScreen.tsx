@@ -8,11 +8,11 @@ import {
   ScrollView,
   SafeAreaView,
   StatusBar,
-  Alert,
 } from 'react-native';
 import { COLORS, METRICS, SPACING } from '../../constants/theme';
 import { SOUTHERN_AFRICAN_COUNTRIES } from '../../constants/regions';
 import { Header } from '../../components/common/Header';
+import { useThemedAlert } from '../../components/common/ThemedAlert';
 import {
   PasswordStrengthMeter,
   evaluatePasswordStrength,
@@ -29,6 +29,7 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
   onSignUpSuccess,
   onNavigateToLogin,
 }) => {
+  const { showAlert } = useThemedAlert();
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
 
   // Step 1: Personal Details
@@ -57,19 +58,19 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
   // Step 1 Validation
   const handleNextStep1 = () => {
     if (!name.trim()) {
-      Alert.alert('Required Field', 'Please enter your first name.');
+      showAlert({ title: 'Required Field', message: 'Please enter your first name.' });
       return;
     }
     if (!surname.trim()) {
-      Alert.alert('Required Field', 'Please enter your surname.');
+      showAlert({ title: 'Required Field', message: 'Please enter your surname.' });
       return;
     }
     if (!dob.trim()) {
-      Alert.alert('Required Field', 'Please enter your date of birth (YYYY-MM-DD).');
+      showAlert({ title: 'Required Field', message: 'Please enter your date of birth (YYYY-MM-DD).' });
       return;
     }
     if (!cellphone.trim() || cellphone.trim().length < 7) {
-      Alert.alert('Invalid Number', 'Please enter a valid cellphone number.');
+      showAlert({ title: 'Invalid Number', message: 'Please enter a valid cellphone number.' });
       return;
     }
     setCurrentStep(2);
@@ -78,19 +79,19 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
   // Step 2 Validation
   const handleNextStep2 = () => {
     if (!selectedCountryName) {
-      Alert.alert('Required Field', 'Please select your country.');
+      showAlert({ title: 'Required Field', message: 'Please select your country.' });
       return;
     }
     if (!selectedProvince) {
-      Alert.alert('Required Field', 'Please select your province or region.');
+      showAlert({ title: 'Required Field', message: 'Please select your province or region.' });
       return;
     }
     if (!town.trim()) {
-      Alert.alert('Required Field', 'Please enter your town or city.');
+      showAlert({ title: 'Required Field', message: 'Please enter your town or city.' });
       return;
     }
     if (!gamerTag.trim() || gamerTag.trim().length < 3) {
-      Alert.alert('Gamer Tag Required', 'Your gamer tag must be at least 3 characters.');
+      showAlert({ title: 'Gamer Tag Required', message: 'Your gamer tag must be at least 3 characters.' });
       return;
     }
     setCurrentStep(3);
@@ -99,25 +100,25 @@ export const SignUpScreen: React.FC<SignUpScreenProps> = ({
   // Step 3 Validation & Final Submission
   const handleFinalSubmit = async () => {
     if (!email.trim() || !email.includes('@')) {
-      Alert.alert('Invalid Email', 'Please enter a valid email address.');
+      showAlert({ title: 'Invalid Email', message: 'Please enter a valid email address.' });
       return;
     }
     if (email.trim().toLowerCase() !== confirmEmail.trim().toLowerCase()) {
-      Alert.alert('Email Mismatch', 'Email and Confirm Email do not match.');
+      showAlert({ title: 'Email Mismatch', message: 'Email and Confirm Email do not match.' });
       return;
     }
 
     const { hasMinLength } = evaluatePasswordStrength(password);
     if (!hasMinLength) {
-      Alert.alert(
-        'Weak Password',
-        'Your password must contain at least 8 characters with letters, numbers, and symbols.'
-      );
+      showAlert({
+        title: 'Weak Password',
+        message: 'Your password must contain at least 8 characters with letters, numbers, and symbols.',
+      });
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Password Mismatch', 'Password and Confirm Password do not match.');
+      showAlert({ title: 'Password Mismatch', message: 'Password and Confirm Password do not match.' });
       return;
     }
 

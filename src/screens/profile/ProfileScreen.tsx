@@ -6,10 +6,10 @@ import {
   ScrollView,
   SafeAreaView,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
 import { COLORS, SPACING } from '../../constants/theme';
 import { Header } from '../../components/common/Header';
+import { useThemedAlert } from '../../components/common/ThemedAlert';
 import { UserProfile } from '../../types/auth';
 import { UserCareerStats } from '../../types/game';
 import {
@@ -23,6 +23,7 @@ interface ProfileScreenProps {
 }
 
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
+  const { showAlert } = useThemedAlert();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [stats, setStats] = useState<UserCareerStats | null>(null);
 
@@ -38,10 +39,10 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out of this competitor profile?',
-      [
+    showAlert({
+      title: 'Sign Out',
+      message: 'Are you sure you want to sign out of this competitor profile?',
+      buttons: [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Sign Out',
@@ -51,8 +52,8 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
             onLogout();
           },
         },
-      ]
-    );
+      ],
+    });
   };
 
   const winRate =

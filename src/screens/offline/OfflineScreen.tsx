@@ -6,10 +6,10 @@ import {
   TouchableOpacity,
   ScrollView,
   SafeAreaView,
-  Alert,
 } from 'react-native';
 import { COLORS, SPACING } from '../../constants/theme';
 import { Header } from '../../components/common/Header';
+import { useThemedAlert } from '../../components/common/ThemedAlert';
 import { MorabarabaBoard } from '../../components/game/MorabarabaBoard';
 import {
   AiDifficulty,
@@ -29,6 +29,7 @@ import { computeAiMove } from '../../engine/ai';
 import { recordGameResult } from '../../store/gameStore';
 
 export const OfflineScreen: React.FC = () => {
+  const { showAlert } = useThemedAlert();
   const [gameState, setGameState] = useState<GameState>(createInitialGameState());
   const [difficulty, setDifficulty] = useState<AiDifficulty>('warrior');
   const [statusMessage, setStatusMessage] = useState('Place your cow on any empty intersection.');
@@ -149,7 +150,7 @@ export const OfflineScreen: React.FC = () => {
       if (legalShots.includes(vertexId)) {
         executeShot(vertexId, human);
       } else {
-        Alert.alert('Cannot Shoot Cow', 'This cow is protected in a mill or not an opponent cow.');
+        showAlert({ title: 'Cannot Shoot Cow', message: 'This cow is protected in a mill or not an opponent cow.' });
       }
       return;
     }
@@ -157,7 +158,7 @@ export const OfflineScreen: React.FC = () => {
     // Case 2: Placing Phase
     if (humanPhase === 'placing') {
       if (gameState.board[vertexId] !== null) {
-        Alert.alert('Occupied', 'This intersection already has a cow.');
+        showAlert({ title: 'Occupied', message: 'This intersection already has a cow.' });
         return;
       }
 
@@ -214,7 +215,7 @@ export const OfflineScreen: React.FC = () => {
       );
 
       if (!legalDests.includes(vertexId)) {
-        Alert.alert('Invalid Move', 'You can only move to adjacent connected intersections.');
+        showAlert({ title: 'Invalid Move', message: 'You can only move to adjacent connected intersections.' });
         return;
       }
 
@@ -288,13 +289,13 @@ export const OfflineScreen: React.FC = () => {
     if (winner) {
       const isHumanWin = winner === 'player1';
       recordGameResult(isHumanWin, 1, 1, gameState.phase.player1 === 'flying');
-      Alert.alert(
-        isHumanWin ? 'Victory!' : 'Defeated',
-        isHumanWin
+      showAlert({
+        title: isHumanWin ? 'Victory!' : 'Defeated',
+        message: isHumanWin
           ? 'Congratulations! You outmaneuvered the CPU in true Morabaraba tradition.'
           : 'The CPU captured your herd. Train further and rematch!',
-        [{ text: 'Play Again', onPress: resetGame }]
-      );
+        buttons: [{ text: 'Play Again', onPress: resetGame }],
+      });
     } else {
       setStatusMessage(
         shooter === 'player1'

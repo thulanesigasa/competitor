@@ -7,10 +7,10 @@ import {
   ScrollView,
   SafeAreaView,
   TextInput,
-  Alert,
 } from 'react-native';
 import { COLORS, SPACING } from '../../constants/theme';
 import { Header } from '../../components/common/Header';
+import { useThemedAlert } from '../../components/common/ThemedAlert';
 import { MorabarabaBoard } from '../../components/game/MorabarabaBoard';
 import { GamePhase, GameState, Player } from '../../types/game';
 import {
@@ -24,6 +24,7 @@ import {
 type DuelMode = 'menu' | 'pass_and_play' | 'wifi_host' | 'wifi_join';
 
 export const BattlegroundScreen: React.FC = () => {
+  const { showAlert } = useThemedAlert();
   const [mode, setMode] = useState<DuelMode>('menu');
   const [roomPin, setRoomPin] = useState('');
   const [enteredPin, setEnteredPin] = useState('');
@@ -44,7 +45,7 @@ export const BattlegroundScreen: React.FC = () => {
 
   const joinWifiMatch = () => {
     if (enteredPin.length < 4) {
-      Alert.alert('Invalid PIN', 'Please enter a 4-digit match PIN.');
+      showAlert({ title: 'Invalid PIN', message: 'Please enter a 4-digit match PIN.' });
       return;
     }
     setGameState(createInitialGameState());
@@ -94,16 +95,16 @@ export const BattlegroundScreen: React.FC = () => {
         }));
 
         if (winner) {
-          Alert.alert(
-            'Victory!',
-            `${winner === 'player1' ? 'Player 1 (Gold)' : 'Player 2 (Ivory)'} has won the match!`,
-            [{ text: 'Play Again', onPress: () => setGameState(createInitialGameState()) }]
-          );
+          showAlert({
+            title: 'Victory!',
+            message: `${winner === 'player1' ? 'Player 1 (Gold)' : 'Player 2 (Ivory)'} has won the match!`,
+            buttons: [{ text: 'Play Again', onPress: () => setGameState(createInitialGameState()) }],
+          });
         } else {
           setStatusMessage(`${opponent === 'player1' ? 'Player 1' : 'Player 2'}'s turn.`);
         }
       } else {
-        Alert.alert('Cannot Shoot', 'Selected cow is protected in a mill or not an opponent cow.');
+        showAlert({ title: 'Cannot Shoot', message: 'Selected cow is protected in a mill or not an opponent cow.' });
       }
       return;
     }
@@ -111,7 +112,7 @@ export const BattlegroundScreen: React.FC = () => {
     // Case 2: Placing Phase
     if (currentPhase === 'placing') {
       if (gameState.board[vertexId] !== null) {
-        Alert.alert('Occupied', 'This intersection is already occupied.');
+        showAlert({ title: 'Occupied', message: 'This intersection is already occupied.' });
         return;
       }
 
@@ -158,7 +159,7 @@ export const BattlegroundScreen: React.FC = () => {
     if (gameState.selectedVertex !== null && gameState.board[vertexId] === null) {
       const legalDests = getLegalDestinations(gameState.board, gameState.selectedVertex, currentPhase);
       if (!legalDests.includes(vertexId)) {
-        Alert.alert('Invalid Move', 'Must move to connected adjacent empty intersection.');
+        showAlert({ title: 'Invalid Move', message: 'Must move to connected adjacent empty intersection.' });
         return;
       }
 

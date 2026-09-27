@@ -89,6 +89,8 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 - **30% Panel & Surface:** Deep Slate Navy (`#161F30`) for cards, boards, inputs, and tab navigation.
 - **10% Accent:** Radiant Gold / Ochre (`#E5A93C`) strictly reserved for active states, primary CTAs, and winning moves.
 - **Zero SVG Icons:** Clean typographic indicators, geometric board coordinates, and native rendering without external SVG icon fonts or icon libraries.
+- **Themed Popup System:** All user dialogs, errors, and victory prompts are rendered via custom `ThemedAlert` modals matching the 60-30-10 palette rather than unstyled system alerts.
+- **Unrounded Brand Logos:** All app brand logo displays maintain sharp, unrounded geometry (`borderRadius: 0`) across all screens and modals.
 - **No Div Clutter & No Pill Badges:** Full-bleed body canvas, seamless surfaces, and zero status badges or chips.
 - **Floating Pill Bottom Navigation:** Rule 20 compliant floating curved bottom navigation bar with dynamically centered geometry, compact height, and focused indicator dots.
 
@@ -100,7 +102,7 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 competitor/
 |-- .github/
 |   `-- workflows/
-|       |-- build-native-apk.yml       # Direct GitHub Actions runner APK compilation
+|       |-- build-native-apk.yml       # Direct GitHub Actions runner APK compilation with dynamic app.json versioning
 |       `-- eas-ota-update.yml         # Dual-channel EAS OTA workflow
 |-- assets/
 |   |-- android-icon-foreground.png    # 512x512 canvas with 96px centered glyph (Rule 15/19)
@@ -112,9 +114,10 @@ competitor/
 |-- src/
 |   |-- components/
 |   |   |-- common/
-|   |   |   |-- Header.tsx             # Standard header with 24x24 brand logo
+|   |   |   |-- Header.tsx             # Standard header with 24x24 brand logo (0 border radius)
 |   |   |   |-- PasswordStrengthMeter.tsx # 4-segment 8+ char password validator
 |   |   |   |-- SwipeToSignUp.tsx      # Custom pan-responder swipe slider
+|   |   |   |-- ThemedAlert.tsx        # 60-30-10 modal alert system replacing OS alerts
 |   |   |   `-- UpdateModal.tsx        # Rule 21 dual-action OTA update modal
 |   |   `-- game/
 |   |       `-- MorabarabaBoard.tsx    # 24-vertex board layout and interactive pieces

@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   logo: {
     width: METRICS.brandLogoAuth,
     height: METRICS.brandLogoAuth,
-    borderRadius: 6,
+    borderRadius: 0,
   },
   brandTitle: {
     color: COLORS.white,

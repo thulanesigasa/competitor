@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
   logoContainer: {
     width: 68,
     height: 68,
-    borderRadius: 18,
+    borderRadius: 0,
     backgroundColor: COLORS.surfaceLight,
     justifyContent: 'center',
     alignItems: 'center',
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
   logoImage: {
     width: METRICS.brandLogoModal,
     height: METRICS.brandLogoModal,
-    borderRadius: 12,
+    borderRadius: 0,
   },
   title: {
     color: COLORS.white,

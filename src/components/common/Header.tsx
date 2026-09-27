@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
   brandLogo: {
     width: METRICS.brandLogoHeader,
     height: METRICS.brandLogoHeader,
-    borderRadius: 5,
+    borderRadius: 0,
   },
   backButton: {
     paddingVertical: 6,
