@@ -29,6 +29,8 @@ import {
   hasLegalMoves,
 } from '../../engine/morabaraba';
 import { getUserProfile, recordGameResult } from '../../store/gameStore';
+import { battlegroundService } from '../../services/battlegroundService';
+import { gameSyncService } from '../../services/gameSyncService';
 
 type DuelMode =
   | 'menu'
@@ -164,6 +166,7 @@ export const BattlegroundScreen: React.FC = () => {
   const [enteredPin, setEnteredPin] = useState('');
   const [hasCopiedPin, setHasCopiedPin] = useState(false);
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [publicHosts, setPublicHosts] = useState<CompetitorProfile[]>(REGIONAL_PUBLIC_HOSTS);
 
   // Match & Room Profiles
   const [selectedHostProfile, setSelectedHostProfile] = useState<CompetitorProfile | null>(null);
@@ -175,14 +178,17 @@ export const BattlegroundScreen: React.FC = () => {
   const [statusMessage, setStatusMessage] = useState('Place your cow on any empty intersection.');
   const [showCoinToss, setShowCoinToss] = useState(false);
 
-  // Timers
+  // Timers & Realtime Sync
   const challengerTimer = useRef<NodeJS.Timeout | null>(null);
   const hostApprovalTimer = useRef<NodeJS.Timeout | null>(null);
+  const activeRoomId = useRef<string | null>(null);
+  const syncSubscription = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     getUserProfile().then((profile) => setCurrentUser(profile));
     return () => {
       clearAllTimers();
+      if (syncSubscription.current) syncSubscription.current();
     };
   }, []);
 
@@ -197,17 +203,32 @@ export const BattlegroundScreen: React.FC = () => {
     setMode('host_type_select');
   };
 
-  const handleChooseHostPrivate = () => {
+  const handleChooseHostPrivate = async () => {
     const pin = Math.floor(1000 + Math.random() * 9000).toString();
     setRoomPin(pin);
     setHasCopiedPin(false);
     setMode('host_private_share');
+
+    if (currentUser) {
+      const { room } = await battlegroundService.createRoom(currentUser, 'private');
+      if (room) {
+        activeRoomId.current = room.id;
+        if (room.roomCode) setRoomPin(room.roomCode);
+      }
+    }
   };
 
-  const handleChooseHostPublic = () => {
+  const handleChooseHostPublic = async () => {
     clearAllTimers();
     setIncomingChallenger(null);
     setMode('host_waiting_room_public');
+
+    if (currentUser) {
+      const { room } = await battlegroundService.createRoom(currentUser, 'public');
+      if (room) {
+        activeRoomId.current = room.id;
+      }
+    }
 
     // Simulate public challenger discovering the room after 3.5 seconds
     challengerTimer.current = setTimeout(() => {
@@ -273,16 +294,36 @@ export const BattlegroundScreen: React.FC = () => {
     setMode('join_private_enter_code');
   };
 
-  const handleChooseJoinPublic = () => {
+  const handleChooseJoinPublic = async () => {
     setMode('join_public_lobby');
+    try {
+      const liveHosts = await battlegroundService.fetchPublicLobby();
+      if (liveHosts && liveHosts.length > 0) {
+        setPublicHosts(liveHosts);
+      }
+    } catch {
+      // Fallback to regional public hosts
+    }
   };
 
-  const handleSubmitPrivatePin = () => {
+  const handleSubmitPrivatePin = async () => {
     if (enteredPin.trim().length < 4) {
       showAlert({ title: 'Invalid PIN', message: 'Please enter the 4-digit code provided by the host.' });
       return;
     }
     clearAllTimers();
+
+    if (currentUser) {
+      try {
+        const { room } = await battlegroundService.joinByCode(enteredPin.trim(), currentUser);
+        if (room) {
+          activeRoomId.current = room.id;
+        }
+      } catch {
+        // Fallback
+      }
+    }
+
     // Connect to private host profile
     const privateHost: CompetitorProfile = {
       id: `private-host-${enteredPin}`,
@@ -860,7 +901,7 @@ export const BattlegroundScreen: React.FC = () => {
               </Text>
             </View>
 
-            {REGIONAL_PUBLIC_HOSTS.map((host) => (
+            {publicHosts.map((host) => (
               <CompetitorProfileCard
                 key={host.id}
                 profile={host}

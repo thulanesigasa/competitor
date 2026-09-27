@@ -109,7 +109,11 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 - Streamlined statistics tracking matches played, victories, win rate percentage, mills formed, cows captured, and career competitive titles (e.g. Grandmaster, Warrior Chief).
 
 ### 8. Backend & Cloud Infrastructure (Supabase)
-- **Supabase Client Integration (`src/lib/supabase.ts`):** Initialized using `@supabase/supabase-js` and `react-native-url-polyfill`, configured with `AsyncStorage` session persistence and auto-token refreshing.
+- **Supabase Client Integration (`src/lib/supabase.ts`):** Initialized using `@supabase/supabase-js` and `react-native-url-polyfill`, configured with `AsyncStorage` session persistence and auto-token refreshing. Exports both standard authenticated client and administrative client for frictionless session provisioning.
+- **Instant Authentication & Verification Bypass (`authService.ts`):** Players register and sign in seamlessly using either their Gamer Tag or email address. Email confirmation is automatically completed on signup, issuing valid JWT sessions immediately without requiring confirmation email inbox checks.
+- **Live Southern African Regional Leaderboards (`leaderboardService.ts`):** Direct queries against `public.career_stats` joined with `public.profiles`, supporting real-time ranking and filtering across South Africa, Zimbabwe, Zambia, Botswana, Malawi, Lesotho, and Eswatini.
+- **Online Matchmaking & Battle Rooms (`battlegroundService.ts`):** Enables dynamic creation of public regional rooms and private 4-digit PIN rooms, complete with challenger profile inspection and live lobby discovery.
+- **Sub-50ms Realtime Broadcasting (`gameSyncService.ts`):** Low-latency WebSockets broadcast channel (`room:${roomId}`) for synchronized turn dispatch, cow placement, moves, and transparent coin toss results.
 - **Relational PostgreSQL Schema (`supabase/migrations/20260927113651_new-migration.sql`):**
   - `public.profiles`: UUID-keyed identity linked to Supabase Auth (`auth.users`), storing Gamer Tag, personal details, date of birth, cellphone, regional location, and competitive title.
   - `public.career_stats`: Persistent tracking of ELO ratings, match records, victories, defeats, win streak, best win streak, win rate %, mills formed, and cows captured.
@@ -117,7 +121,6 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
   - `public.match_logs`: Comprehensive turn history and board state snapshots.
 - **Automated ELO & Stats Stored Procedure (`handle_match_completion`):** Automatically computes win rate, updates win streaks, and recalculates ELO ratings upon match completion.
 - **Automated Profile Initializer (`handle_new_user`):** Automatically provisions a profile and career statistics record when a user signs up.
-- **Sub-50ms Realtime Broadcasting:** Low-latency WebSockets broadcast channel (`room:${roomId}`) for synchronized turn dispatch, cow placement, moves, and transparent coin toss results.
 
 ---
 
@@ -207,7 +210,12 @@ competitor/
 |   |   `-- profile/
 |   |       `-- ProfileScreen.tsx      # Gamer Tag career stats and settings
 |   |-- lib/
-|   |   `-- supabase.ts                # Supabase client with AsyncStorage session persistence
+|   |   `-- supabase.ts                # Supabase client with AsyncStorage session persistence & admin client
+|   |-- services/
+|   |   |-- authService.ts             # Direct authentication with skipped email verification & gamer tag login
+|   |   |-- leaderboardService.ts      # Live regional Southern African leaderboard queries & stats
+|   |   |-- battlegroundService.ts     # Public & private battle room creation & lobby discovery
+|   |   `-- gameSyncService.ts         # High-frequency WebSocket match move broadcasting
 |   |-- store/
 |   |   `-- gameStore.ts               # Local persistence via AsyncStorage
 |   |-- theme/

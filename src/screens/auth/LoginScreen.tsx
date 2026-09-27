@@ -10,13 +10,14 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { colors } from '../../theme/colors';
 import { spacing, radius, shadow } from '../../theme';
 import { Text } from '../../components/Typography';
 import { Header } from '../../components/common/Header';
 import { useThemedAlert } from '../../components/common/ThemedAlert';
-import { getUserProfile, saveUserProfile } from '../../store/gameStore';
+import { authService } from '../../services/authService';
 import { UserProfile } from '../../types/auth';
 
 interface LoginScreenProps {
@@ -32,6 +33,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const identifierRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
@@ -46,35 +48,19 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       return;
     }
 
-    // Check stored profile or create session
-    const existing = await getUserProfile();
-    if (
-      existing &&
-      (existing.email.toLowerCase() === identifier.trim().toLowerCase() ||
-        existing.gamerTag.toLowerCase() === identifier.trim().toLowerCase())
-    ) {
-      onLoginSuccess(existing);
-      return;
+    setIsLoading(true);
+    try {
+      const { user, error } = await authService.signIn(identifier, password);
+      if (error) {
+        showAlert({ title: 'Sign In Failed', message: error });
+        return;
+      }
+      if (user) {
+        onLoginSuccess(user);
+      }
+    } finally {
+      setIsLoading(false);
     }
-
-    // Default player session fallback
-    const sessionUser: UserProfile = existing || {
-      id: `user_${Date.now()}`,
-      name: 'Warrior',
-      surname: 'Player',
-      dob: '2000-01-01',
-      cellphone: '+27 820000000',
-      country: 'South Africa',
-      countryCode: 'ZA',
-      province: 'Gauteng',
-      town: 'Johannesburg',
-      gamerTag: identifier.trim(),
-      email: identifier.includes('@') ? identifier.trim() : `${identifier.trim()}@morabaraba.africa`,
-      createdAt: new Date().toISOString(),
-    };
-
-    await saveUserProfile(sessionUser);
-    onLoginSuccess(sessionUser);
   };
 
   return (
@@ -159,13 +145,18 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             </View>
 
             <TouchableOpacity
-              style={[styles.primaryBtn, shadow.sm]}
+              style={[styles.primaryBtn, shadow.sm, isLoading && { opacity: 0.7 }]}
               activeOpacity={0.8}
+              disabled={isLoading}
               onPress={handleLogin}
             >
-              <Text variant="body" weight="800" color="#FFFFFF">
-                Sign In to Arena →
-              </Text>
+              {isLoading ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Text variant="body" weight="800" color="#FFFFFF">
+                  Sign In to Arena
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
 
