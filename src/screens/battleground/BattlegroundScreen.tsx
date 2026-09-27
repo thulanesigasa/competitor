@@ -8,6 +8,8 @@ import {
   TextInput,
   Share,
   ActivityIndicator,
+  BackHandler,
+  PanResponder,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { COLORS, SPACING } from '../../constants/theme';
@@ -31,7 +33,6 @@ import {
 import { getUserProfile, getCareerStats, recordGameResult } from '../../store/gameStore';
 import { battlegroundService } from '../../services/battlegroundService';
 import { gameSyncService } from '../../services/gameSyncService';
-import { getRankFromStats } from '../../constants/ranks';
 
 type DuelMode =
   | 'menu'
@@ -513,19 +514,41 @@ export const BattlegroundScreen: React.FC = () => {
     }
   };
 
-  const userWinRate =
-    userStats && userStats.gamesPlayed > 0
-      ? Math.round((userStats.gamesWon / userStats.gamesPlayed) * 100)
-      : 0;
+  // Hardware Back Handler & Edge Swipe Handler to prevent app exit during host / join flows
+  useEffect(() => {
+    const handleBackPress = () => {
+      if (mode !== 'menu') {
+        handleHeaderBack();
+        return true; // Consume event, prevent app exit
+      }
+      return false; // Allow system back on menu
+    };
 
-  const userRank = getRankFromStats(
-    userWinRate,
-    userStats?.gamesWon || 0,
-    userStats?.gamesPlayed || 0
-  );
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+    return () => backHandler.remove();
+  }, [mode]);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Intercept rightward swipe gestures when not in root menu and not in live match
+        return (
+          mode !== 'menu' &&
+          mode !== 'match_in_progress' &&
+          gestureState.dx > 30 &&
+          Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 1.5
+        );
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dx > 60 && Math.abs(gestureState.dy) < 60) {
+          handleHeaderBack();
+        }
+      },
+    })
+  ).current;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} {...panResponder.panHandlers}>
       <Header
         title="BATTLEGROUND"
         subtitle={
@@ -546,21 +569,6 @@ export const BattlegroundScreen: React.FC = () => {
         {mode === 'menu' && (
           <View style={styles.menuContainer}>
             <View style={styles.introSection}>
-              {currentUser && (
-                <View style={styles.userStatusBanner}>
-                  <View>
-                    <Text variant="caption" color={colors.textSecondary}>LOGGED IN COMPETITOR</Text>
-                    <Text variant="body" weight="900" color={colors.textPrimary}>
-                      {currentUser.gamerTag}
-                    </Text>
-                  </View>
-                  <View style={[styles.userRankPill, { borderColor: userRank.badgeColor }]}>
-                    <Text variant="caption" weight="800" color={userRank.badgeColor}>
-                      TIER {userRank.tier}: {userRank.title.toUpperCase()}
-                    </Text>
-                  </View>
-                </View>
-              )}
               <Text variant="h2" weight="900" color={colors.textPrimary}>
                 ONLINE BATTLEGROUND
               </Text>
@@ -1094,23 +1102,6 @@ const styles = StyleSheet.create({
   },
   flowHeader: {
     marginBottom: SPACING.lg,
-  },
-  userStatusBanner: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
-    marginBottom: SPACING.md,
-  },
-  userRankPill: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderWidth: 1,
-    backgroundColor: '#FFFFFF',
   },
   optionBox: {
     backgroundColor: '#FFFFFF',

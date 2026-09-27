@@ -22,7 +22,7 @@ import {
   getUserProfile,
 } from '../../store/gameStore';
 import { authService } from '../../services/authService';
-import { getRankFromStats, RANK_TIERS } from '../../constants/ranks';
+import { getRankFromStats } from '../../constants/ranks';
 import {
   ChevronRightSvg,
   EditSvg,
@@ -193,15 +193,13 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation: navPro
             {user?.name || 'Local'} {user?.surname || 'Competitor'}
           </Text>
           <Text style={styles.location}>
-            Residence: {user?.town ? `${user.town}, ` : ''}{user?.province || 'Gauteng'} •{' '}
+            {user?.town ? `${user.town}, ` : ''}{user?.province || 'Gauteng'} •{' '}
             {user?.country || 'South Africa'}
           </Text>
 
-          <View style={[styles.rankChip, { borderColor: rankInfo.badgeColor }]}>
-            <Text style={[styles.rankChipText, { color: rankInfo.badgeColor }]}>
-              TIER {rankInfo.tier}: {rankInfo.title.toUpperCase()} ({rankInfo.culturalTitle.toUpperCase()})
-            </Text>
-          </View>
+          <Text style={styles.rankTitleOrange}>
+            {rankInfo.title}
+          </Text>
         </View>
 
         {/* Career Stats Grid (Direct Body Metrics) */}
@@ -254,39 +252,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation: navPro
           </View>
         </View>
 
-        {/* 10-Tier Rank Progression */}
-        <Text style={[styles.sectionTitle, { marginTop: SPACING.lg }]}>
-          SOUTHERN AFRICAN RANK TIERS (10 TIERS)
-        </Text>
-        <View style={styles.tiersContainer}>
-          {RANK_TIERS.map((tier) => {
-            const isCurrent = rankInfo.tier === tier.tier;
-            return (
-              <View
-                key={tier.tier}
-                style={[
-                  styles.tierRow,
-                  isCurrent && styles.tierRowCurrent,
-                ]}
-              >
-                <View style={styles.tierLeft}>
-                  <Text style={[styles.tierNumber, isCurrent && { color: COLORS.accent }]}>
-                    #{tier.tier}
-                  </Text>
-                  <View style={{ flex: 1, paddingRight: 8 }}>
-                    <Text style={[styles.tierTitle, isCurrent && { color: COLORS.accent }]}>
-                      {tier.title} ({tier.culturalTitle})
-                    </Text>
-                    <Text style={styles.tierDesc}>{tier.description}</Text>
-                  </View>
-                </View>
-                <Text style={[styles.tierReq, isCurrent && { color: COLORS.accent, fontWeight: '800' }]}>
-                  {tier.minWinRate}% WR
-                </Text>
-              </View>
-            );
-          })}
-        </View>
 
         {/* ================================================================ */}
         {/* ALL SETTINGS DIRECTLY IN THE SCREEN BODY (ZERO ENCLOSING DIVS)    */}
@@ -657,9 +622,16 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   location: {
-    color: COLORS.accentHover,
+    color: COLORS.textSecondary,
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '500',
+    marginTop: 4,
+  },
+  rankTitleOrange: {
+    color: COLORS.accentHover,
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: 0.5,
     marginTop: 4,
   },
   sectionTitle: {
@@ -712,61 +684,6 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
     fontSize: 12,
     fontWeight: '700',
-  },
-  rankChip: {
-    marginTop: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderWidth: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  rankChipText: {
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-  },
-  tiersContainer: {
-    borderTopWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
-  },
-  tierRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(15, 23, 42, 0.08)',
-  },
-  tierRowCurrent: {
-    backgroundColor: 'rgba(229, 169, 60, 0.08)',
-    paddingHorizontal: 6,
-  },
-  tierLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    gap: 8,
-  },
-  tierNumber: {
-    fontSize: 12,
-    fontWeight: '900',
-    color: COLORS.textMuted,
-    width: 24,
-  },
-  tierTitle: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: COLORS.textPrimary,
-  },
-  tierDesc: {
-    fontSize: 10,
-    color: COLORS.textSecondary,
-    marginTop: 1,
-  },
-  tierReq: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
   },
   settingsSection: {
     borderTopWidth: 1,
