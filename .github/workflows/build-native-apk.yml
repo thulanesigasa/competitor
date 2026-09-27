@@ -81,6 +81,8 @@ jobs:
           # Configure Gradle memory limits to prevent Metaspace OutOfMemoryError on GitHub runners
           echo "org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" >> android/gradle.properties
           echo "org.gradle.parallel=false" >> android/gradle.properties
+          # Configure inline modules property to prevent ExpoAutolinkingPlugin from crashing on empty command line argument
+          echo "expo.inlineModules.watchedDirectories=[]" >> android/gradle.properties
           # Prevent 504 Gateway Timeout from services.gradle.org
           sed -i 's|services.gradle.org/distributions/gradle-\([0-9.]*\)-bin.zip|github.com/gradle/gradle-distributions/releases/download/v\1/gradle-\1-bin.zip|g' android/gradle/wrapper/gradle-wrapper.properties || true
 
@@ -88,7 +90,11 @@ jobs:
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease -x lint -x test --no-daemon
+          ./gradlew assembleRelease -Pexpo.inlineModules.watchedDirectories="[]" -x lint -x test --no-daemon --stacktrace || {
+            echo "First attempt encountered an issue. Retrying assembleRelease..."
+            sleep 5
+            ./gradlew assembleRelease -Pexpo.inlineModules.watchedDirectories="[]" -x lint -x test --no-daemon --stacktrace
+          }
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+HeapDumpOnOutOfMemoryError -Dorg.gradle.parallel=false"
