@@ -37,6 +37,7 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "owner": "thulanesigasa0"
   }
 }
