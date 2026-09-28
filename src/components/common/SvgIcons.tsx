@@ -383,3 +383,68 @@ export const CrownSvg: React.FC<SvgIconProps> = ({
   </Svg>
 );
 
+export const FingerprintSvg: React.FC<SvgIconProps> = ({
+  size = 20,
+  color = '#0F172A',
+  strokeWidth = 2,
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Path
+      d="M14 13.12c0 2.38 0 6.38-1 8.88"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Path
+      d="M2 16a7.97 7.97 0 0 1 1.76-5.04C5.1 9.25 7 8 9.5 8c2.15 0 4 1 5.3 2.5"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Path
+      d="M17 16c.33-2 .5-4.5.5-7a8.5 8.5 0 0 0-14.86-5.8"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Path
+      d="M5 21a11.3 11.3 0 0 0 1.8-4"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Path
+      d="M19 12a14 14 0 0 1 1 5"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Path
+      d="M2 8a13 13 0 0 1 3-5"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Path
+      d="M12 2a11 11 0 0 1 8.5 4"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+

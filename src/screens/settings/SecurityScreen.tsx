@@ -13,6 +13,8 @@ import { UiverseSwitch } from '../../components/common/UiverseSwitch';
 import { ChevronRightSvg } from '../../components/common/SvgIcons';
 import { PrivacyService, LOCK_TIMEOUT_OPTIONS } from '../../services/privacyService';
 import { PinSecurityService } from '../../services/pinSecurityService';
+import { BiometricService } from '../../services/biometricService';
+import { SessionSecurityService } from '../../services/sessionSecurityService';
 import { useThemedAlert } from '../../components/common/ThemedAlert';
 
 export const SecurityScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
@@ -44,8 +46,57 @@ export const SecurityScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
     LOCK_TIMEOUT_OPTIONS[2];
 
   const handleToggleBiometric = async (val: boolean) => {
-    setBiometricEnabled(val);
-    await PrivacyService.setBiometricEnabled(val);
+    if (val) {
+      // 1. Check hardware support
+      const capability = await BiometricService.getCapability();
+      if (!capability.hasHardware) {
+        showAlert({
+          title: 'Hardware Unavailable',
+          message: 'This device does not have compatible biometric hardware (fingerprint sensor).',
+        });
+        return;
+      }
+
+      // 2. Check enrollment
+      if (!capability.isEnrolled) {
+        showAlert({
+          title: 'No Biometrics Registered',
+          message: 'No fingerprint or biometric credentials were found. Please configure a fingerprint in your device Settings first.',
+        });
+        return;
+      }
+
+      // 3. Test verification scan
+      const auth = await BiometricService.authenticate({
+        promptMessage: 'Scan your fingerprint to activate biometric lock',
+        cancelLabel: 'Cancel',
+      });
+
+      if (auth.success) {
+        setBiometricEnabled(true);
+        await PrivacyService.setBiometricEnabled(true);
+        await SessionSecurityService.recordAuditEvent(
+          'BIOMETRIC_ENABLED',
+          'Hardware fingerprint unlock activated after successful verification scan'
+        );
+        showAlert({
+          title: 'Fingerprint Activated',
+          message: 'Biometric unlock is now enabled. You can unlock Morabaraba anytime using your fingerprint scanner.',
+        });
+      } else if (!auth.cancelled) {
+        showAlert({
+          title: 'Scan Incomplete',
+          message: auth.error || 'Biometric scan could not be verified. Fingerprint unlock was not enabled.',
+        });
+      }
+    } else {
+      setBiometricEnabled(false);
+      await PrivacyService.setBiometricEnabled(false);
+      await SessionSecurityService.recordAuditEvent(
+        'BIOMETRIC_DISABLED',
+        'Hardware fingerprint unlock disabled'
+      );
+    }
   };
 
   const handleTogglePrivacyShield = async (val: boolean) => {

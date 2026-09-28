@@ -99,9 +99,9 @@ export const SecurityPinScreen: React.FC<{ navigation: any }> = ({ navigation })
 
     if (flow === 'setup') {
       if (step === 1) {
-        // Validation: No consecutive identical digits (e.g. 11, 22)
-        if (/(.)\1/.test(completedPin)) {
-          setErrorMessage('PIN cannot have consecutive identical digits (e.g. 11, 22)');
+        // Validation: No trivial 4 identical digits (e.g. 0000, 1111)
+        if (/^(\d)\1{3}$/.test(completedPin)) {
+          setErrorMessage('PIN cannot be 4 identical digits (e.g. 0000, 1111)');
           triggerShake(() => {
             setPin('');
             setIsProcessing(false);
@@ -160,9 +160,9 @@ export const SecurityPinScreen: React.FC<{ navigation: any }> = ({ navigation })
           });
         }
       } else if (step === 2) {
-        // Enter new PIN
-        if (/(.)\1/.test(completedPin)) {
-          setErrorMessage('PIN cannot have consecutive identical digits (e.g. 11, 22)');
+        // Enter new PIN (no trivial 4 identical digits)
+        if (/^(\d)\1{3}$/.test(completedPin)) {
+          setErrorMessage('PIN cannot be 4 identical digits (e.g. 0000, 1111)');
           triggerShake(() => {
             setPin('');
             setIsProcessing(false);

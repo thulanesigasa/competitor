@@ -152,11 +152,13 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
   - **Public Leaderboard Discoverability:** Controls public visibility in regional rankings.
   - **Public Career Statistics:** Toggles public visibility of win rates %, victories, and mill formation counts on profile cards.
   - **Blocked Competitors Management:** Restricts specific competitors from challenging the player or entering hosted battle rooms, with quick unblock actions.
-- **Access Controls & Terminal Security (`SecurityScreen.tsx`, `SecurityPinScreen.tsx`, `InactivityLockScreen.tsx`):**
-  - **4-Digit Security PIN Enclave:** Pure TypeScript SHA-256 (FIPS 180-4) with 256-bit pseudo-random salt. Features interactive keypad, dot indicators, consecutive-digit validation, and brute-force lockout safeguards (5 failed attempts = 30s lockout, 10 failed attempts = 5m lockout).
-  - **Inactivity Auto-Lock:** Configurable timeout (Immediate, 1 Minute, 5 Minutes, 15 Minutes, 30 Minutes, Never) triggering security verification when unattended.
-  - **Fingerprint / Biometric Unlock:** Biometric authentication toggle for instantaneous hardware unlocking.
-  - **App Switcher Privacy Shield (`AppSwitcherShield.tsx`):** Multitasking AppState listener that overlays a clean, branded privacy shield when the user switches apps or minimizes to background, concealing board states and private metrics.
+- **Access Controls, Biometric Authentication & Terminal Security (`SecurityScreen.tsx`, `SecurityPinScreen.tsx`, `InactivityLockScreen.tsx`, `TerminalLockGate.tsx`):**
+  - **Root Terminal Lock Gate (`TerminalLockGate.tsx`):** Sits unconditionally at the application root (`App.tsx`) to safeguard game states, wallet balances, and user credentials. Gating is automatically invoked on initial application startup and upon returning from background after the selected inactivity period.
+  - **Dual Unlock Architecture (Fingerprint & 4-Digit PIN):** Provides competitors with flexible, instantaneous unlocking:
+    - **Native Biometric Scanning (`biometricService.ts`, `expo-local-authentication`):** Seamless hardware fingerprint scan automatically triggered upon launch or foreground resume, with a dedicated re-scan button and SVG indicator for on-demand sensor triggering.
+    - **4-Digit Security PIN Enclave:** Pure TypeScript SHA-256 (FIPS 180-4) with 256-bit cryptographic salt, interactive keypad, dot indicators, non-trivial passcode validation (restricting 4 identical digits), and brute-force lockout safeguards (5 failed attempts = 30s lockout, 10 failed attempts = 5m lockout).
+  - **Inactivity Auto-Lock:** Configurable timeout (Immediate, 1 Minute, 5 Minutes, 15 Minutes, 30 Minutes, Never) triggering security verification when the terminal is left unattended.
+  - **App Switcher Privacy Shield:** Real-time `AppState` listener that immediately renders an opaque white branded privacy card when the competitor switches tasks or minimizes to background, concealing live game boards and financial balances from OS multitasker snapshots.
 - **Data Ownership & Cryptography (`ExportDataScreen.tsx`, `encryptionService.ts`):**
   - **Hardware-Encrypted (AES-256-CBC) Backup:** Pure TypeScript implementation of FIPS 197 standard AES-256-CBC with PKCS#7 padding and SHA-256 HMAC integrity verification, zero native compiler dependencies.
   - **Standard Open JSON Export:** Human-readable ECMA-404 JSON archive of profile and career statistics.
@@ -261,8 +263,9 @@ competitor/
 |   |   |   |-- ErrorBoundary.tsx      # Graceful crash shield with reload & cache reset actions
 |   |   |   |-- Header.tsx             # Standard header with 24x24 brand logo (0 border radius)
 |   |   |   |-- PasswordStrengthMeter.tsx # 4-segment 8+ char password validator
-|   |   |   |-- SvgIcons.tsx           # Pure SVG icon suite for Settings, Security, and Legal
+|   |   |   |-- SvgIcons.tsx           # Pure SVG icon suite for Settings, Security, and Legal (including FingerprintSvg)
 |   |   |   |-- SwipeToSignUp.tsx      # Custom pan-responder swipe slider
+|   |   |   |-- TerminalLockGate.tsx   # Root application lock gate with dual biometric/PIN authentication
 |   |   |   |-- ThemedAlert.tsx        # 60-30-10 modal alert system replacing OS alerts
 |   |   |   |-- ThemedDropdown.tsx     # Reusable 60-30-10 dropdown with SVG indicators
 |   |   |   |-- UiverseSwitch.tsx      # 60-30-10 animated toggle switch
@@ -318,6 +321,7 @@ competitor/
 |   |-- services/
 |   |   |-- authService.ts             # Direct authentication with gamer tag / email credential login & updates
 |   |   |-- battlegroundService.ts     # Public & private battle room creation & lobby discovery
+|   |   |-- biometricService.ts        # Native biometric hardware inspection and authentication via expo-local-authentication
 |   |   |-- encryptionService.ts       # Pure TypeScript FIPS 197 AES-256-CBC hardware encryption engine
 |   |   |-- gameSyncService.ts         # High-frequency WebSocket match move & coin call broadcasting
 |   |   |-- leaderboardService.ts      # Live regional Southern African leaderboard queries & stats
