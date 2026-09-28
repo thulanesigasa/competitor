@@ -30,7 +30,7 @@ export const ExportDataScreen: React.FC<{ navigation: any }> = ({ navigation }) 
 
       const exportBundle = {
         app: 'Morabaraba Competitor Arena',
-        version: '1.0.3',
+        version: '1.0.4',
         exportDate: new Date().toISOString(),
         profile: {
           id: profile?.id,
