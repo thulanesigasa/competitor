@@ -68,4 +68,6 @@ export interface CompetitorProfile {
   winRate: number;
   matchesPlayed: number;
   wins: number;
+  stakeAmount?: number;
 }
+

@@ -43,10 +43,14 @@ import {
   validateCowMove,
   validateCowShot,
 } from '../../engine/morabarabaValidator';
+import { walletService, UserWallet } from '../../services/walletService';
+import { WalletSubscriptionModal } from '../../components/game/WalletSubscriptionModal';
+import { WalletSvg, CrownSvg } from '../../components/common/SvgIcons';
 
 type DuelMode =
   | 'menu'
   | 'host_type_select'
+  | 'host_stakes_select'
   | 'host_private_share'
   | 'host_waiting_room_private'
   | 'host_waiting_room_public'
@@ -67,6 +71,15 @@ export const BattlegroundScreen: React.FC = () => {
   const [userStats, setUserStats] = useState<UserCareerStats | null>(null);
   const [publicHosts, setPublicHosts] = useState<CompetitorProfile[]>([]);
   const [isLoadingLobby, setIsLoadingLobby] = useState(false);
+
+  // Wallet & Monetization
+  const [userWallet, setUserWallet] = useState<UserWallet | null>(null);
+  const [showWalletModal, setShowWalletModal] = useState(false);
+  const [pendingHostType, setPendingHostType] = useState<'public' | 'private' | null>(null);
+  const [selectedStake, setSelectedStake] = useState<number>(5);
+  const [stakeInputText, setStakeInputText] = useState<string>('5');
+  const activeMatchStake = useRef<number>(0);
+  const activeEscrowAmount = useRef<number>(0);
 
   // Match & Room Profiles
   const [selectedHostProfile, setSelectedHostProfile] = useState<CompetitorProfile | null>(null);
@@ -98,7 +111,10 @@ export const BattlegroundScreen: React.FC = () => {
   useEffect(() => {
     getUserProfile().then((profile) => setCurrentUser(profile));
     getCareerStats().then((stats) => setUserStats(stats));
+    walletService.getWallet().then((w) => setUserWallet(w));
+    const unsubWallet = walletService.subscribeWallet((w) => setUserWallet(w));
     return () => {
+      unsubWallet();
       clearAllTimers();
       if (syncSubscription.current) syncSubscription.current();
       if (lobbySubscription.current) lobbySubscription.current();
@@ -141,43 +157,78 @@ export const BattlegroundScreen: React.FC = () => {
     clearAllTimers();
     setIsHostRole(true);
     setCalledCoinSide(null);
+    setPendingHostType(null);
     setMode('host_type_select');
   };
 
-  const handleChooseHostPrivate = async () => {
-    const pin = Math.floor(1000 + Math.random() * 9000).toString();
-    setRoomPin(pin);
-    setHasCopiedPin(false);
-    setMode('host_private_share');
-
-    if (currentUser) {
-      const { room } = await battlegroundService.createRoom(currentUser, 'private');
-      if (room) {
-        activeRoomId.current = room.id;
-        if (room.roomCode) setRoomPin(room.roomCode);
-      }
-    }
+  const handleSelectHostType = (type: 'public' | 'private') => {
+    setPendingHostType(type);
+    setMode('host_stakes_select');
   };
 
-  const handleChooseHostPublic = async () => {
-    clearAllTimers();
-    setIncomingChallenger(null);
-    setMode('host_waiting_room_public');
+  const handleConfirmHostStake = async () => {
+    if (selectedStake < 0.5) {
+      showAlert({ title: 'Invalid Stake', message: 'The minimum match stake is R0.50.' });
+      return;
+    }
+    const currentBalance = userWallet?.balance || 0;
+    if (currentBalance < selectedStake) {
+      showAlert({
+        title: 'Insufficient Balance',
+        message: `You need at least R${selectedStake.toFixed(2)} in your wallet to host with this stake. Available: R${currentBalance.toFixed(2)}.`,
+        buttons: [
+          { text: 'Top Up Wallet', onPress: () => setShowWalletModal(true) },
+          { text: 'Cancel', style: 'cancel' },
+        ],
+      });
+      return;
+    }
 
-    if (currentUser) {
-      const { room } = await battlegroundService.createRoom(currentUser, 'public');
-      if (room) {
-        activeRoomId.current = room.id;
-        if (roomSubscription.current) roomSubscription.current();
-        roomSubscription.current = battlegroundService.subscribeToRoom(room.id, {
-          onChallengerJoined: (challenger) => {
-            clearAllTimers();
-            setIncomingChallenger(challenger);
-          },
-          onChallengerLeft: () => {
-            setIncomingChallenger(null);
-          },
-        });
+    const escrowSuccess = await walletService.escrowStake(
+      selectedStake,
+      `Host ${pendingHostType === 'private' ? 'Private' : 'Public'} Battle`
+    );
+    if (!escrowSuccess) {
+      showAlert({ title: 'Escrow Error', message: 'Unable to reserve match stake from wallet.' });
+      return;
+    }
+
+    activeEscrowAmount.current = selectedStake;
+    activeMatchStake.current = selectedStake;
+
+    if (pendingHostType === 'private') {
+      const pin = Math.floor(1000 + Math.random() * 9000).toString();
+      setRoomPin(pin);
+      setHasCopiedPin(false);
+      setMode('host_private_share');
+
+      if (currentUser) {
+        const { room } = await battlegroundService.createRoom(currentUser, 'private', selectedStake);
+        if (room) {
+          activeRoomId.current = room.id;
+          if (room.roomCode) setRoomPin(room.roomCode);
+        }
+      }
+    } else {
+      clearAllTimers();
+      setIncomingChallenger(null);
+      setMode('host_waiting_room_public');
+
+      if (currentUser) {
+        const { room } = await battlegroundService.createRoom(currentUser, 'public', selectedStake);
+        if (room) {
+          activeRoomId.current = room.id;
+          if (roomSubscription.current) roomSubscription.current();
+          roomSubscription.current = battlegroundService.subscribeToRoom(room.id, {
+            onChallengerJoined: (challenger) => {
+              clearAllTimers();
+              setIncomingChallenger(challenger);
+            },
+            onChallengerLeft: () => {
+              setIncomingChallenger(null);
+            },
+          });
+        }
       }
     }
   };
@@ -204,7 +255,7 @@ export const BattlegroundScreen: React.FC = () => {
   const handleShareCode = async () => {
     try {
       await Share.share({
-        message: `Join my Morabaraba Online Battle with Code: ${roomPin}`,
+        message: `Join my Morabaraba Online Battle with Code: ${roomPin} (Stake: R${selectedStake.toFixed(2)})`,
       });
     } catch {
       // Ignore share dismissal
@@ -215,7 +266,7 @@ export const BattlegroundScreen: React.FC = () => {
     setHasCopiedPin(true);
     showAlert({
       title: 'Code Copied',
-      message: `Battle code ${roomPin} is ready to share with your opponent.`,
+      message: `Battle code ${roomPin} (Stake: R${selectedStake.toFixed(2)}) is ready to share with your opponent.`,
     });
   };
 
@@ -283,6 +334,33 @@ export const BattlegroundScreen: React.FC = () => {
           showAlert({ title: 'Room Not Found', message: error || 'No active room found with this 4-digit PIN.' });
           return;
         }
+
+        const requiredStake = room.stakeAmount || 0;
+        if (requiredStake > 0) {
+          const currentBalance = userWallet?.balance || 0;
+          if (currentBalance < requiredStake) {
+            showAlert({
+              title: 'Insufficient Balance',
+              message: `This private room requires matching a stake of R${requiredStake.toFixed(2)}. Your balance is R${currentBalance.toFixed(2)}.`,
+              buttons: [
+                { text: 'Top Up Wallet', onPress: () => setShowWalletModal(true) },
+                { text: 'Cancel', style: 'cancel' },
+              ],
+            });
+            return;
+          }
+
+          const escrowSuccess = await walletService.escrowStake(requiredStake, `Private Room Match (${pin})`);
+          if (!escrowSuccess) {
+            showAlert({ title: 'Escrow Error', message: 'Unable to reserve match stake.' });
+            return;
+          }
+          activeEscrowAmount.current = requiredStake;
+          activeMatchStake.current = requiredStake;
+        } else {
+          activeMatchStake.current = 0;
+        }
+
         activeRoomId.current = room.id;
         const host: CompetitorProfile = hostProfile || {
           id: room.hostUserId,
@@ -295,6 +373,7 @@ export const BattlegroundScreen: React.FC = () => {
           winRate: 50,
           matchesPlayed: 1,
           wins: 1,
+          stakeAmount: requiredStake,
         };
         setSelectedHostProfile(host);
         setOpponentName(host.gamerTag);
@@ -315,6 +394,32 @@ export const BattlegroundScreen: React.FC = () => {
 
   const handleSelectPublicHost = async (host: CompetitorProfile) => {
     clearAllTimers();
+    const requiredStake = host.stakeAmount || 0;
+    if (requiredStake > 0) {
+      const currentBalance = userWallet?.balance || 0;
+      if (currentBalance < requiredStake) {
+        showAlert({
+          title: 'Insufficient Balance',
+          message: `This host is playing for a stake of R${requiredStake.toFixed(2)}. Your balance is R${currentBalance.toFixed(2)}.`,
+          buttons: [
+            { text: 'Top Up Wallet', onPress: () => setShowWalletModal(true) },
+            { text: 'Cancel', style: 'cancel' },
+          ],
+        });
+        return;
+      }
+
+      const escrowSuccess = await walletService.escrowStake(requiredStake, `Challenge ${host.gamerTag}`);
+      if (!escrowSuccess) {
+        showAlert({ title: 'Escrow Error', message: 'Unable to reserve match stake.' });
+        return;
+      }
+      activeEscrowAmount.current = requiredStake;
+      activeMatchStake.current = requiredStake;
+    } else {
+      activeMatchStake.current = 0;
+    }
+
     setSelectedHostProfile(host);
     setOpponentName(host.gamerTag);
     setMode('join_waiting_approval');
@@ -346,6 +451,52 @@ export const BattlegroundScreen: React.FC = () => {
         onMove: (payload) => {
           handlePeerMove(payload);
         },
+      });
+    }
+  };
+
+  const handleMatchVictory = async () => {
+    if (activeMatchStake.current > 0) {
+      const stake = activeMatchStake.current;
+      activeEscrowAmount.current = 0;
+      activeMatchStake.current = 0;
+      const payout = await walletService.resolveMatchPayout(stake, true);
+      showAlert({
+        title: 'Victory!',
+        message: `Congratulations! You won the battleground match.\n\nPrize Won: R${payout.netPayout.toFixed(2)}${
+          payout.isSubscriber
+            ? ' (100% Pot Kept • VIP Pro 0% Rake)'
+            : ` (88% Payout • R${payout.rakeAmount.toFixed(2)} Platform Rake)`
+        }\nNew Balance: R${payout.newBalance.toFixed(2)}`,
+        buttons: [{ text: 'Return to Menu', onPress: () => setMode('menu') }],
+      });
+    } else {
+      showAlert({
+        title: 'Victory!',
+        message: 'Congratulations! Undisputed victory on the battleground.',
+        buttons: [{ text: 'Play Again', onPress: () => setShowCoinToss(true) }],
+      });
+    }
+  };
+
+  const handleMatchDefeat = async (reason: string) => {
+    recordGameResult(false, 0, 1, gameState.phase.player1 === 'flying');
+    if (activeMatchStake.current > 0) {
+      const pot = activeMatchStake.current * 2;
+      const stake = activeMatchStake.current;
+      activeEscrowAmount.current = 0;
+      activeMatchStake.current = 0;
+      await walletService.resolveMatchPayout(stake, false);
+      showAlert({
+        title: 'Defeated',
+        message: `${opponentName} ${reason} and claimed the R${pot.toFixed(2)} pot.`,
+        buttons: [{ text: 'Return to Menu', onPress: () => setMode('menu') }],
+      });
+    } else {
+      showAlert({
+        title: 'Defeated',
+        message: `${opponentName} ${reason} and claimed victory.`,
+        buttons: [{ text: 'Return to Menu', onPress: () => setMode('menu') }],
       });
     }
   };
@@ -450,12 +601,7 @@ export const BattlegroundScreen: React.FC = () => {
         }));
 
         if (winner) {
-          recordGameResult(false, 0, 1, gameState.phase.player1 === 'flying');
-          showAlert({
-            title: 'Defeated',
-            message: `${opponentName} has blocked all your legal moves and claimed victory.`,
-            buttons: [{ text: 'Return to Menu', onPress: () => setMode('menu') }],
-          });
+          handleMatchDefeat('has blocked all your legal moves');
         } else {
           setStatusMessage('Your turn to move.');
         }
@@ -504,12 +650,7 @@ export const BattlegroundScreen: React.FC = () => {
       }));
 
       if (winner) {
-        recordGameResult(false, 0, 1, gameState.phase.player1 === 'flying');
-        showAlert({
-          title: 'Defeated',
-          message: `${opponentName} has captured your herd and claimed victory.`,
-          buttons: [{ text: 'Return to Menu', onPress: () => setMode('menu') }],
-        });
+        handleMatchDefeat('has captured your herd');
       } else {
         setStatusMessage('Your turn.');
       }
@@ -634,11 +775,7 @@ export const BattlegroundScreen: React.FC = () => {
         if (activeRoomId.current && currentUser) {
           gameSyncService.finalizeMatch(activeRoomId.current, currentUser.id);
         }
-        showAlert({
-          title: 'Victory!',
-          message: 'Congratulations! You captured your opponent herd and triumphed on the battleground.',
-          buttons: [{ text: 'Play Again', onPress: () => setShowCoinToss(true) }],
-        });
+        handleMatchVictory();
       } else {
         setStatusMessage(`${opponentName}'s turn.`);
       }
@@ -787,11 +924,7 @@ export const BattlegroundScreen: React.FC = () => {
           if (activeRoomId.current && currentUser) {
             gameSyncService.finalizeMatch(activeRoomId.current, currentUser.id);
           }
-          showAlert({
-            title: 'Victory!',
-            message: 'You trapped all opponent cows! Undisputed victory on the battleground.',
-            buttons: [{ text: 'Play Again', onPress: () => setShowCoinToss(true) }],
-          });
+          handleMatchVictory();
         } else {
           setStatusMessage(`${opponentName}'s turn to move.`);
         }
@@ -799,16 +932,27 @@ export const BattlegroundScreen: React.FC = () => {
     }
   };
 
-  const handleHeaderBack = () => {
+  const handleHeaderBack = async () => {
     clearAllTimers();
+
+    // Refund escrow if room or challenge is cancelled
+    if (activeEscrowAmount.current > 0) {
+      const refundAmount = activeEscrowAmount.current;
+      activeEscrowAmount.current = 0;
+      await walletService.refundEscrow(refundAmount, 'Cancelled Battleground Room / Request');
+    }
+
     if (activeRoomId.current && (mode === 'host_waiting_room_private' || mode === 'host_waiting_room_public' || mode === 'host_private_share')) {
       battlegroundService.cancelRoom(activeRoomId.current);
       activeRoomId.current = null;
     }
+
     if (mode === 'host_type_select' || mode === 'join_type_select') {
       setMode('menu');
-    } else if (mode === 'host_private_share') {
+    } else if (mode === 'host_stakes_select') {
       setMode('host_type_select');
+    } else if (mode === 'host_private_share') {
+      setMode('host_stakes_select');
     } else if (mode === 'host_waiting_room_private' || mode === 'host_waiting_room_public') {
       setMode('menu');
     } else if (mode === 'join_private_enter_code' || mode === 'join_public_lobby') {
@@ -818,10 +962,20 @@ export const BattlegroundScreen: React.FC = () => {
     } else if (mode === 'match_in_progress') {
       showAlert({
         title: 'Leave Match',
-        message: 'Are you sure you want to forfeit this online battle and return to the menu?',
+        message: 'Are you sure you want to forfeit this online battle and return to the menu? Forfeiting will surrender the match pot.',
         buttons: [
           { text: 'Cancel', style: 'cancel' },
-          { text: 'Leave Battle', style: 'destructive', onPress: () => setMode('menu') },
+          {
+            text: 'Leave Battle',
+            style: 'destructive',
+            onPress: async () => {
+              if (activeMatchStake.current > 0) {
+                await walletService.resolveMatchPayout(activeMatchStake.current, false);
+                activeMatchStake.current = 0;
+              }
+              setMode('menu');
+            },
+          },
         ],
       });
     }
@@ -876,6 +1030,44 @@ export const BattlegroundScreen: React.FC = () => {
         rightActionLabel={mode === 'match_in_progress' ? 'Coin Toss' : undefined}
         onRightAction={mode === 'match_in_progress' ? () => setShowCoinToss(true) : undefined}
       />
+
+      {/* Top Wallet & VIP Pro Status Bar */}
+      <View style={styles.topWalletBar}>
+        <TouchableOpacity
+          style={styles.walletChip}
+          activeOpacity={0.8}
+          onPress={() => setShowWalletModal(true)}
+        >
+          <View style={styles.walletChipLeft}>
+            <WalletSvg size={15} color={colors.accent} />
+            <Text variant="caption" weight="800" color={colors.textPrimary} style={{ marginLeft: 6 }}>
+              R{userWallet ? userWallet.balance.toFixed(2) : '0.00'}
+            </Text>
+            {userWallet?.escrowedBalance ? (
+              <Text variant="caption" weight="600" color={colors.textSecondary} style={{ marginLeft: 4 }}>
+                (R{userWallet.escrowedBalance.toFixed(2)} in play)
+              </Text>
+            ) : null}
+          </View>
+
+          <View style={styles.walletChipRight}>
+            {userWallet?.isSubscriber ? (
+              <View style={styles.vipBadge}>
+                <CrownSvg size={12} color="#FFFFFF" />
+                <Text variant="label" weight="900" color="#FFFFFF" style={{ marginLeft: 4, fontSize: 9 }}>
+                  VIP PRO (0% RAKE)
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.topUpBadge}>
+                <Text variant="label" weight="800" color={colors.accentHover} style={{ fontSize: 10 }}>
+                  + Top Up
+                </Text>
+              </View>
+            )}
+          </View>
+        </TouchableOpacity>
+      </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* 1. MAIN BATTLEGROUND MENU */}
@@ -951,14 +1143,14 @@ export const BattlegroundScreen: React.FC = () => {
                 HOST A BATTLE ROOM
               </Text>
               <Text variant="caption" color={colors.textSecondary}>
-                Choose whether you want your battle room to be public or private.
+                Choose whether you want your battle room to be public or private. You will configure the match stake on the next step.
               </Text>
             </View>
 
             <TouchableOpacity
               style={styles.optionBox}
               activeOpacity={0.8}
-              onPress={handleChooseHostPublic}
+              onPress={() => handleSelectHostType('public')}
             >
               <Text variant="h3" weight="800" color={colors.textPrimary}>
                 PUBLIC ROOM
@@ -967,14 +1159,14 @@ export const BattlegroundScreen: React.FC = () => {
                 Open to all Southern African competitors. Your room is listed on the public lobby. You review the challenger's profile before accepting the match.
               </Text>
               <Text variant="label" weight="800" color={colors.accentHover} style={styles.actionTag}>
-                Create Public Room →
+                Configure Public Stakes →
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.optionBox}
               activeOpacity={0.8}
-              onPress={handleChooseHostPrivate}
+              onPress={() => handleSelectHostType('private')}
             >
               <Text variant="h3" weight="800" color={colors.textPrimary}>
                 PRIVATE ROOM
@@ -983,9 +1175,187 @@ export const BattlegroundScreen: React.FC = () => {
                 Protected by a 4-digit code. Share the PIN directly with your opponent. Only competitors who enter your code can request to join.
               </Text>
               <Text variant="label" weight="800" color={colors.accentHover} style={styles.actionTag}>
-                Create Private Room →
+                Configure Private Stakes →
               </Text>
             </TouchableOpacity>
+          </View>
+        )}
+
+        {/* 2b. HOST: SELECT MATCH STAKES */}
+        {mode === 'host_stakes_select' && (
+          <View style={styles.flowContainer}>
+            <View style={styles.flowHeader}>
+              <Text variant="h2" weight="900" color={colors.textPrimary}>
+                SELECT MATCH STAKE
+              </Text>
+              <Text variant="caption" color={colors.textSecondary}>
+                Choose your match stake (Pay As You Go). Opponents will match your exact stake to form the winner-takes-pot battle.
+              </Text>
+            </View>
+
+            {/* Wallet Info Card */}
+            <View style={styles.walletSummaryCard}>
+              <View style={styles.walletSummaryTop}>
+                <View>
+                  <Text variant="caption" color={colors.textSecondary}>Available Balance</Text>
+                  <Text variant="h2" weight="900" color={colors.textPrimary}>
+                    R{userWallet ? userWallet.balance.toFixed(2) : '0.00'}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.topUpButtonSmall}
+                  onPress={() => setShowWalletModal(true)}
+                  activeOpacity={0.8}
+                >
+                  <Text variant="caption" weight="800" color="#FFFFFF">+ TOP UP</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.rakeNoticeBanner}>
+                {userWallet?.isSubscriber ? (
+                  <View style={styles.subscriberNoticeRow}>
+                    <CrownSvg size={14} color={colors.accent} />
+                    <Text variant="caption" weight="800" color={colors.accentHover} style={{ marginLeft: 6 }}>
+                      VIP PRO MEMBER: You keep 100% of the pot (0% platform rake).
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={styles.subscriberNoticeRow}>
+                    <Text variant="caption" color={colors.textSecondary}>
+                      Standard Player: Winner receives <Text variant="caption" weight="800" color={colors.textPrimary}>88%</Text> of pot (12% platform rake).
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </View>
+
+            {/* Preset Stake Chips */}
+            <Text variant="label" weight="900" color={colors.textPrimary} style={styles.sectionLabel}>
+              CHOOSE PRESET STAKE (ZAR):
+            </Text>
+            <View style={styles.stakeChipsGrid}>
+              {[0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500].map((amount) => {
+                const isSelected = selectedStake === amount;
+                return (
+                  <TouchableOpacity
+                    key={amount}
+                    style={[styles.stakeChip, isSelected && styles.stakeChipSelected]}
+                    onPress={() => {
+                      setSelectedStake(amount);
+                      setStakeInputText(amount.toString());
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      variant="body"
+                      weight={isSelected ? '900' : '700'}
+                      color={isSelected ? '#FFFFFF' : colors.textPrimary}
+                    >
+                      {amount < 1 ? `50c` : `R${amount}`}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Custom Stake Input */}
+            <Text variant="label" weight="900" color={colors.textPrimary} style={[styles.sectionLabel, { marginTop: SPACING.md }]}>
+              OR ENTER CUSTOM STAKE (MIN R0.50):
+            </Text>
+            <View style={styles.customStakeInputRow}>
+              <View style={styles.currencyPrefix}>
+                <Text variant="body" weight="900" color={colors.textPrimary}>R</Text>
+              </View>
+              <TextInput
+                style={styles.customStakeInput}
+                keyboardType="decimal-pad"
+                value={stakeInputText}
+                onChangeText={(val) => {
+                  setStakeInputText(val);
+                  const num = parseFloat(val);
+                  if (!isNaN(num) && num >= 0) {
+                    setSelectedStake(Math.round(num * 100) / 100);
+                  }
+                }}
+                placeholder="5.00"
+                placeholderTextColor="#94A3B8"
+              />
+            </View>
+
+            {/* Pot Calculation & Payout Projection Card */}
+            <View style={styles.potProjectionCard}>
+              <View style={styles.potRow}>
+                <Text variant="caption" color={colors.textSecondary}>Your Stake:</Text>
+                <Text variant="caption" weight="800" color={colors.textPrimary}>
+                  R{selectedStake.toFixed(2)}
+                </Text>
+              </View>
+              <View style={styles.potRow}>
+                <Text variant="caption" color={colors.textSecondary}>Challenger Matches:</Text>
+                <Text variant="caption" weight="800" color={colors.textPrimary}>
+                  R{selectedStake.toFixed(2)}
+                </Text>
+              </View>
+              <View style={[styles.potRow, styles.potTotalRow]}>
+                <Text variant="body" weight="900" color={colors.textPrimary}>TOTAL MATCH POT:</Text>
+                <Text variant="body" weight="900" color={colors.accentHover}>
+                  R{(selectedStake * 2).toFixed(2)}
+                </Text>
+              </View>
+
+              <View style={styles.payoutSplitBox}>
+                <Text variant="caption" weight="800" color={colors.textPrimary}>
+                  PROJECTED WINNER PAYOUT:
+                </Text>
+                {userWallet?.isSubscriber ? (
+                  <View style={{ marginTop: 4 }}>
+                    <Text variant="h3" weight="900" color={colors.accentHover}>
+                      R{(selectedStake * 2).toFixed(2)}
+                    </Text>
+                    <Text variant="caption" color={colors.textSecondary}>
+                      100% of pot credited to winner (0% platform rake with VIP Pro).
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={{ marginTop: 4 }}>
+                    <Text variant="h3" weight="900" color={colors.accentHover}>
+                      R{(selectedStake * 2 * 0.88).toFixed(2)}
+                    </Text>
+                    <Text variant="caption" color={colors.textSecondary}>
+                      88% of pot credited to winner • R{(selectedStake * 2 * 0.12).toFixed(2)} (12% platform rake).
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </View>
+
+            {/* Confirm & Host Button */}
+            <TouchableOpacity
+              style={[
+                styles.primaryFullBtn,
+                (selectedStake < 0.5 || (userWallet && userWallet.balance < selectedStake)) && styles.primaryBtnDisabled,
+              ]}
+              disabled={selectedStake < 0.5 || (userWallet ? userWallet.balance < selectedStake : false)}
+              onPress={handleConfirmHostStake}
+              activeOpacity={0.8}
+            >
+              <Text variant="body" weight="800" color="#FFFFFF">
+                {userWallet && userWallet.balance < selectedStake
+                  ? `INSUFFICIENT BALANCE (NEED R${selectedStake.toFixed(2)})`
+                  : `CONFIRM & HOST MATCH (R${selectedStake.toFixed(2)}) →`}
+              </Text>
+            </TouchableOpacity>
+
+            {userWallet && userWallet.balance < selectedStake && (
+              <TouchableOpacity
+                style={styles.inlineTopUpPrompt}
+                onPress={() => setShowWalletModal(true)}
+              >
+                <Text variant="caption" weight="800" color={colors.accentHover} align="center">
+                  Available: R{userWallet.balance.toFixed(2)}. Tap here to top up your wallet.
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
 
@@ -1376,6 +1746,13 @@ export const BattlegroundScreen: React.FC = () => {
         tip={ruleTip}
         onClose={() => setShowRuleTip(false)}
       />
+
+      {/* Wallet & VIP Pro Subscription Modal */}
+      <WalletSubscriptionModal
+        visible={showWalletModal}
+        onClose={() => setShowWalletModal(false)}
+        onBalanceUpdated={(updated) => setUserWallet(updated)}
+      />
     </SafeAreaView>
   );
 };
@@ -1565,5 +1942,149 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: SPACING.md,
+  },
+  topWalletBar: {
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xs,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(15, 23, 42, 0.06)',
+  },
+  walletChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(15, 23, 42, 0.08)',
+  },
+  walletChipLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  walletChipRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  vipBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.accentHover,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  topUpBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    backgroundColor: 'rgba(217, 119, 6, 0.1)',
+    borderRadius: 6,
+  },
+  walletSummaryCard: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    padding: SPACING.md,
+    borderWidth: 1,
+    borderColor: 'rgba(15, 23, 42, 0.08)',
+    marginBottom: SPACING.md,
+  },
+  walletSummaryTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  topUpButtonSmall: {
+    backgroundColor: COLORS.accentHover,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  rakeNoticeBanner: {
+    marginTop: SPACING.sm,
+    paddingTop: SPACING.sm,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(15, 23, 42, 0.06)',
+  },
+  subscriberNoticeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  sectionLabel: {
+    marginBottom: SPACING.xs,
+    letterSpacing: 0.5,
+  },
+  stakeChipsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: SPACING.sm,
+  },
+  stakeChip: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: 'rgba(15, 23, 42, 0.1)',
+    minWidth: 70,
+    alignItems: 'center',
+  },
+  stakeChipSelected: {
+    backgroundColor: COLORS.accentHover,
+    borderColor: COLORS.accentHover,
+  },
+  customStakeInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: 'rgba(15, 23, 42, 0.15)',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    marginBottom: SPACING.md,
+  },
+  currencyPrefix: {
+    marginRight: 6,
+  },
+  customStakeInput: {
+    flex: 1,
+    height: 44,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  potProjectionCard: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    padding: SPACING.md,
+    borderWidth: 1,
+    borderColor: 'rgba(15, 23, 42, 0.08)',
+    marginBottom: SPACING.lg,
+  },
+  potRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  potTotalRow: {
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(15, 23, 42, 0.08)',
+    marginBottom: 10,
+  },
+  payoutSplitBox: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: SPACING.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(15, 23, 42, 0.06)',
+  },
+  inlineTopUpPrompt: {
+    marginTop: 8,
+    paddingVertical: 6,
   },
 });

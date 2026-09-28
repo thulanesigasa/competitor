@@ -336,3 +336,50 @@ export const MapPinSvg: React.FC<SvgIconProps> = ({
     <Circle cx="12" cy="10" r="3" stroke={color} strokeWidth={strokeWidth} />
   </Svg>
 );
+
+export const WalletSvg: React.FC<SvgIconProps> = ({
+  size = 20,
+  color = '#0F172A',
+  strokeWidth = 2,
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M21 7V5a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h15a2 2 0 0 0 2-2v-2"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Path
+      d="M16 11h6v4h-6a2 2 0 0 1 0-4z"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
+export const CrownSvg: React.FC<SvgIconProps> = ({
+  size = 20,
+  color = '#0F172A',
+  strokeWidth = 2,
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M2 4l3 12h14l3-12-5 5-5-7-5 7-5-5z"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Path
+      d="M4 20h16"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
