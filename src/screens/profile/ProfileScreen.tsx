@@ -34,9 +34,13 @@ import {
   TrashSvg,
   FileTextSvg,
   BlockSvg,
+  WalletSvg,
+  CrownSvg,
 } from '../../components/common/SvgIcons';
 import { PrivacyService, DesiredChallengeRegion } from '../../services/privacyService';
 import { SOUTHERN_AFRICAN_COUNTRIES } from '../../constants/regions';
+import { walletService, UserWallet } from '../../services/walletService';
+import { WalletSubscriptionModal } from '../../components/game/WalletSubscriptionModal';
 
 interface ProfileScreenProps {
   navigation?: any;
@@ -55,6 +59,10 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation: navPro
     town: 'Johannesburg',
   });
 
+  // Wallet & VIP Monetization
+  const [userWallet, setUserWallet] = useState<UserWallet | null>(null);
+  const [showWalletModal, setShowWalletModal] = useState(false);
+
   // Edit Modals State
   const [editTagVisible, setEditTagVisible] = useState(false);
   const [newTagInput, setNewTagInput] = useState('');
@@ -67,6 +75,9 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation: navPro
 
   useEffect(() => {
     loadProfile();
+    walletService.getWallet().then((w) => setUserWallet(w));
+    const unsub = walletService.subscribeWallet((w) => setUserWallet(w));
+    return () => unsub();
   }, []);
 
   const loadProfile = async () => {
@@ -256,6 +267,54 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation: navPro
         {/* ================================================================ */}
         {/* ALL SETTINGS DIRECTLY IN THE SCREEN BODY (ZERO ENCLOSING DIVS)    */}
         {/* ================================================================ */}
+
+        {/* WALLET & VIP PASS */}
+        <Text style={[styles.sectionTitle, { marginTop: SPACING.xl }]}>
+          WALLET & VIP PASS
+        </Text>
+        <View style={styles.settingsSection}>
+          <TouchableOpacity
+            style={styles.actionRow}
+            onPress={() => setShowWalletModal(true)}
+            activeOpacity={0.75}
+          >
+            <View style={styles.rowTitleBox}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <WalletSvg size={16} color={COLORS.accent} />
+                <Text style={[styles.rowTitle, { marginLeft: 8 }]}>
+                  ZAR Match Wallet
+                </Text>
+              </View>
+              <Text style={styles.rowSubtitle}>
+                Balance: R{userWallet ? userWallet.balance.toFixed(2) : '0.00'}{userWallet?.escrowedBalance ? ` • R${userWallet.escrowedBalance.toFixed(2)} in play` : ''} • Tap to top up or view transactions
+              </Text>
+            </View>
+            <ChevronRightSvg size={18} color="#94A3B8" />
+          </TouchableOpacity>
+
+          <View style={styles.rowDivider} />
+
+          <TouchableOpacity
+            style={styles.actionRow}
+            onPress={() => setShowWalletModal(true)}
+            activeOpacity={0.75}
+          >
+            <View style={styles.rowTitleBox}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <CrownSvg size={16} color={COLORS.accentHover} />
+                <Text style={[styles.rowTitle, { marginLeft: 8 }]}>
+                  {userWallet?.isSubscribed ? 'VIP Pro Pass (Active)' : 'VIP Pro Pass (R150/mo)'}
+                </Text>
+              </View>
+              <Text style={styles.rowSubtitle}>
+                {userWallet?.isSubscribed
+                  ? '0% platform rake active • You keep 100% of all pot winnings'
+                  : 'Pay-As-You-Go active (88% payout) • Upgrade to keep 100% of pot'}
+              </Text>
+            </View>
+            <ChevronRightSvg size={18} color="#94A3B8" />
+          </TouchableOpacity>
+        </View>
 
         {/* 1. PREFERENCES & CHALLENGE ARENA */}
         <Text style={[styles.sectionTitle, { marginTop: SPACING.xl }]}>
@@ -574,6 +633,13 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation: navPro
           </View>
         </View>
       </Modal>
+
+      {/* Wallet & VIP Subscription Modal */}
+      <WalletSubscriptionModal
+        visible={showWalletModal}
+        onClose={() => setShowWalletModal(false)}
+        onBalanceUpdated={setUserWallet}
+      />
     </SafeAreaView>
   );
 };

@@ -179,6 +179,35 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 - **Anti-AI Deliberation Clock:** 60-second deliberation timer preventing external solver/AI assistance and stalling tactics in ranked battles.
 - **Educational Rule Tip Modal (`RuleTipModal.tsx`):** Unobtrusive 60-30-10 modal that surfaces authentic rule tips only when a user or script attempts to violate a rule, explaining why the action was rejected without cluttering the screen during normal gameplay.
 
+### 11. Monetization & Wagering Engine: Pay-As-You-Go & VIP Pro Subscription (`walletService.ts`, `WalletSubscriptionModal.tsx`)
+- **Pre-Host Stakes Selection (`host_stakes_select`):**
+  - Before entering any public or private battle waiting room, the host must configure their match stake on a dedicated stakes selection screen.
+  - Supports rapid presets (50c, R1, R2, R5, R10, R20, R50, R100, R200, R500) and custom numeric input down to R0.50 (50 cents) up to the user's available balance.
+  - Live projection card computes the total match pot (Host Stake x 2) and displays the exact winner payout and platform rake breakdown before funds are escrowed.
+- **Matchmaking Stake Display & Real-Time Discovery:**
+  - Public battleground lobby displays each active host's required stake and total pot (`STAKE: R{...} • POT: R{...}`) directly on their `CompetitorProfileCard`.
+  - Private PIN rooms encode the match stake, ensuring challengers are informed of the stake requirements upon PIN submission.
+- **Equal Stake Matching & Escrow Protection:**
+  - Challengers must match the host's exact stake.
+  - Funds are automatically verified and locked in escrow upon hosting or challenging, preventing double-spending during active duels.
+  - If a host cancels before a match begins, or if a challenger's join request is declined or cancelled, escrowed funds are refunded instantly to available balance.
+- **Dual Monetization Architecture:**
+  - **Pay-As-You-Go (88% Winner Payout / 12% Platform Rake):**
+    - Non-subscribers battle under the Pay-As-You-Go model.
+    - Upon match victory, the winner receives 88% of the total match pot (`totalPot * 0.88`).
+    - The platform retains a 12% operational commission rake (`totalPot * 0.12`).
+    - Example: R5.00 host stake + R5.00 challenger stake = R10.00 pot. Winner receives R8.80, and the platform retains R1.20 rake.
+  - **VIP Pro Subscription (R150 / month):**
+    - High-volume competitors can activate the monthly VIP Pro Pass for R150.00/month.
+    - VIP Pro members keep **100% of all pot winnings** with **0% platform rake** (`totalPot * 1.00`).
+    - Example: R500.00 host stake + R500.00 challenger stake = R1,000.00 pot. The VIP Pro winner keeps the entire R1,000.00 pot.
+- **In-App Wallet & Subscription Modal (`WalletSubscriptionModal.tsx`):**
+  - High-precision 60-30-10 modal accessible from the Battleground top bar and Profile settings.
+  - Displays real-time available balance, active escrowed funds, and VIP Pro subscription expiry.
+  - Instant test top-up actions (+R50, +R100, +R200, +R500) for seamless staging and QA.
+  - One-tap VIP Pro Pass activation (R150/mo) and cancellation toggles.
+  - Complete chronological transaction history tracking deposits, stake escrows, stake refunds, win payouts, and subscription fees.
+
 ---
 
 ## Design System & Theme Architecture (Strict 60-30-10 & Tab-Only SVGs)
@@ -243,7 +272,8 @@ competitor/
 |   |   |   |-- CompetitorProfileCard.tsx # 60-30-10 player profile inspection card with stats & actions
 |   |   |   |-- MorabarabaBoard.tsx    # 24-vertex pure line intersection board layout
 |   |   |   |-- MorabarabaPiece.tsx    # Authentic concentric carved African tokens
-|   |   |   `-- RuleTipModal.tsx       # Unobtrusive 60-30-10 tactical rule violation tip modal
+|   |   |   |-- RuleTipModal.tsx       # Unobtrusive 60-30-10 tactical rule violation tip modal
+|   |   |   `-- WalletSubscriptionModal.tsx # 60-30-10 ZAR wallet top-up, VIP Pro pass, and transaction history
 |   |   `-- navigation/
 |   |       |-- CustomTabBar.tsx       # Centered floating pill tab bar with active indicator dot
 |   |       `-- TabIcons.tsx           # 16px bottom tab bar SVGs (Rule 20)
@@ -263,7 +293,7 @@ competitor/
 |   |   |   |-- LoginScreen.tsx        # Gamer Tag/Email credential sign in with Typography
 |   |   |   `-- SignUpScreen.tsx       # 3-step progressive Southern African registration with step connectors
 |   |   |-- battleground/
-|   |   |   `-- BattlegroundScreen.tsx # 2-Player Pass & Play and Wi-Fi match setup
+|   |   |   `-- BattlegroundScreen.tsx # 2-Player Pass & Play, stake selection, and online battleground
 |   |   |-- leaderboard/
 |   |   |   `-- LeaderboardScreen.tsx  # Regional Southern African rankings
 |   |   |-- legal/
@@ -274,7 +304,7 @@ competitor/
 |   |   |-- onboarding/
 |   |   |   `-- OnboardingScreen.tsx   # 3-slide crossfade art canvas, liquid sliding pill & SwipeToStartButton
 |   |   |-- profile/
-|   |   |   `-- ProfileScreen.tsx      # Gamer Tag career stats and settings body rows
+|   |   |   `-- ProfileScreen.tsx      # Gamer Tag career stats, wallet, and settings body rows
 |   |   `-- settings/
 |   |       |-- BlockedUsersScreen.tsx # Manage and unblock restricted competitors
 |   |       |-- DeleteAccountScreen.tsx # POPIA / GDPR irreversible account purge
@@ -287,13 +317,14 @@ competitor/
 |   |   `-- supabase.ts                # Supabase client with AsyncStorage session persistence (anon key only)
 |   |-- services/
 |   |   |-- authService.ts             # Direct authentication with gamer tag / email credential login & updates
+|   |   |-- battlegroundService.ts     # Public & private battle room creation & lobby discovery
 |   |   |-- encryptionService.ts       # Pure TypeScript FIPS 197 AES-256-CBC hardware encryption engine
 |   |   |-- gameSyncService.ts         # High-frequency WebSocket match move & coin call broadcasting
 |   |   |-- leaderboardService.ts      # Live regional Southern African leaderboard queries & stats
 |   |   |-- pinSecurityService.ts      # Pure TypeScript SHA-256 PIN hashing with brute-force lockout
 |   |   |-- privacyService.ts          # Matchmaking privacy, discovery, blocked accounts, and challenge regions
 |   |   |-- sessionSecurityService.ts  # Device session specs, audit logging, and remote session revocation
-|   |   `-- battlegroundService.ts     # Public & private battle room creation & lobby discovery
+|   |   `-- walletService.ts           # ZAR balance, escrow, refunds, 88% Pay-As-You-Go vs 100% VIP Pro pot payouts
 |   |-- store/
 |   |   `-- gameStore.ts               # Local persistence via AsyncStorage
 |   |-- theme/

@@ -9,6 +9,7 @@ export interface BattleRoomData {
   roomType: 'public' | 'private';
   status: 'waiting' | 'in_progress' | 'completed' | 'abandoned';
   hostUserId: string;
+  stakeAmount?: number;
   challengerUserId?: string | null;
   hostProfile?: CompetitorProfile;
   challengerProfile?: CompetitorProfile;
@@ -20,7 +21,8 @@ export const battlegroundService = {
    */
   async createRoom(
     host: UserProfile,
-    roomType: 'public' | 'private'
+    roomType: 'public' | 'private',
+    stakeAmount: number = 5.0
   ): Promise<{ room: BattleRoomData | null; error: string | null }> {
     try {
       // 1. Generate unique 4-digit code (ensuring no duplicate active room)
@@ -60,6 +62,7 @@ export const battlegroundService = {
             roomType,
             status: 'waiting',
             hostUserId: host.id,
+            stakeAmount,
           },
           error: null,
         };
@@ -72,6 +75,7 @@ export const battlegroundService = {
           roomType: data.room_type,
           status: data.status,
           hostUserId: data.host_user_id,
+          stakeAmount,
         },
         error: null,
       };
@@ -84,6 +88,7 @@ export const battlegroundService = {
           roomType,
           status: 'waiting',
           hostUserId: host.id,
+          stakeAmount,
         },
         error: null,
       };
@@ -148,6 +153,7 @@ export const battlegroundService = {
           winRate,
           matchesPlayed: matches,
           wins,
+          stakeAmount: Number(row.stake_amount) || 5.0,
         });
       }
 
@@ -173,6 +179,7 @@ export const battlegroundService = {
           room_type,
           status,
           host_user_id,
+          stake_amount,
           profiles:host_user_id (
             id,
             gamer_tag,
@@ -208,6 +215,7 @@ export const battlegroundService = {
       const wins = stats.wins || 0;
       const matches = stats.matches_played || (wins + (stats.losses || 0));
       const dynamicTitle = getRankTitle(winRate, wins, matches);
+      const stakeVal = Number((data as any).stake_amount) || 0;
 
       const hostProfile: CompetitorProfile = {
         id: data.host_user_id,
@@ -220,6 +228,7 @@ export const battlegroundService = {
         winRate,
         matchesPlayed: matches,
         wins,
+        stakeAmount: stakeVal,
       };
 
       return {
@@ -230,6 +239,7 @@ export const battlegroundService = {
           status: 'waiting',
           hostUserId: data.host_user_id,
           challengerUserId: challenger.id,
+          stakeAmount: stakeVal,
         },
         hostProfile,
         error: null,
