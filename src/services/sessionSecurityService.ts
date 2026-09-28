@@ -59,7 +59,7 @@ export const SessionSecurityService = {
       sessionId,
       deviceName,
       osVersion: `${Platform.OS.toUpperCase()} ${Platform.Version || '14.0'}`,
-      appVersion: 'v1.0.3 (Southern African Arena)',
+      appVersion: 'v1.0.4 (Southern African Arena)',
       lastActive: 'Active Now',
       isCurrentDevice: true,
     };

@@ -24,7 +24,7 @@ export const PrivacyPolicyScreen: React.FC<{ navigation: any }> = ({ navigation 
       >
         <View style={styles.introHeader}>
           <Text variant="caption" color={colors.textSecondary} style={styles.lastUpdated}>
-            Effective Date: September 27, 2026 • Version 1.0.3
+            Effective Date: September 28, 2026 • Version 1.0.4
           </Text>
           <Text variant="body" color={colors.textSecondary} style={styles.leadParagraph}>
             Your security, game session confidentiality, and privacy are paramount. This Privacy Policy details the exact nature of data processed across our Southern African Morabaraba network, how match records are safeguarded, and your statutory rights under POPIA and GDPR.

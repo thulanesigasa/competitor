@@ -24,7 +24,7 @@ export const TermsOfServiceScreen: React.FC<{ navigation: any }> = ({ navigation
       >
         <View style={styles.introHeader}>
           <Text variant="caption" color={colors.textSecondary} style={styles.lastUpdated}>
-            Effective Date: September 27, 2026 • Version 1.0.3
+            Effective Date: September 28, 2026 • Version 1.0.4
           </Text>
           <Text variant="body" color={colors.textSecondary} style={styles.leadParagraph}>
             Welcome to Morabaraba Competitor Arena. By participating in ranked matches, hosting battleground rooms, or utilizing our regional matchmaking, you agree to these Terms of Service.

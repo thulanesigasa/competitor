@@ -3,7 +3,7 @@
 [![React Native](https://img.shields.io/badge/React_Native-0.86.3-61DAFB?logo=react&logoColor=black)](https://reactnative.dev/)
 [![Expo](https://img.shields.io/badge/Expo_SDK-~57.0.24-000020?logo=expo&logoColor=white)](https://expo.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9.2-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Native Version](https://img.shields.io/badge/Native_Version-1.0.3-E5A93C)](https://github.com/thulanesigasa/competitor/releases)
+[![Native Version](https://img.shields.io/badge/Native_Version-1.0.4-E5A93C)](https://github.com/thulanesigasa/competitor/releases)
 [![Runtime Version](https://img.shields.io/badge/Runtime_Version-1.0.0-0F172A)](https://expo.dev/)
 [![Design System](https://img.shields.io/badge/Design_System-60--30--10_Rule-E5A93C)](https://shields.io/)
 [![Market](https://img.shields.io/badge/Target_Market-Southern_Africa-10B981)](https://shields.io/)
@@ -143,7 +143,7 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 - **Automated ELO & Stats Stored Procedure (`handle_match_completion`):** Automatically computes win rate, updates win streaks, and recalculates ELO ratings upon match completion.
 - **Automated Profile Initializer (`handle_new_user`):** Automatically provisions a profile and career statistics record when a user signs up.
 
-### 9. Settings, Privacy & Security Enclave Architecture (`v1.0.3`)
+### 9. Settings, Privacy & Security Enclave Architecture (`v1.0.4`)
 - **Gamer Tag & Challenge Arena Customization (`ProfileScreen.tsx`):**
   - **Dynamic Gamer Tag Editing:** Competitors can update their public handle with real-time uniqueness validation against PostgreSQL `profiles.gamer_tag` and local store synchronization.
   - **Target Challenge Arena (Province & City/Town):** Competitors can declare their preferred regional battleground arena (e.g. Gauteng - Johannesburg) separately from their residential location, enabling targeted regional challenges.

@@ -477,7 +477,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation: navPro
             <View style={styles.rowTitleBox}>
               <Text style={styles.rowTitle}>Privacy Policy</Text>
               <Text style={styles.rowSubtitle}>
-                Security telemetry & player data protection • Version 1.0.3
+                Security telemetry & player data protection • Version 1.0.4
               </Text>
             </View>
             <ChevronRightSvg size={18} color="#94A3B8" />
