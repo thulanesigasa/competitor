@@ -18,6 +18,7 @@ import { DeleteAccountScreen } from '../screens/settings/DeleteAccountScreen';
 import { ExportDataScreen } from '../screens/settings/ExportDataScreen';
 import { InactivityLockScreen } from '../screens/settings/InactivityLockScreen';
 import { SecurityPinScreen } from '../screens/settings/SecurityPinScreen';
+import { ChallengeArenaScreen } from '../screens/settings/ChallengeArenaScreen';
 import { PrivacyPolicyScreen } from '../screens/legal/PrivacyPolicyScreen';
 import { TermsOfServiceScreen } from '../screens/legal/TermsOfServiceScreen';
 import { ZarWalletScreen } from '../screens/wallet/ZarWalletScreen';
@@ -145,6 +146,7 @@ export const RootNavigator: React.FC = () => {
           <Stack.Screen name="ExportData" component={ExportDataScreen} />
           <Stack.Screen name="InactivityLock" component={InactivityLockScreen} />
           <Stack.Screen name="SecurityPin" component={SecurityPinScreen} />
+          <Stack.Screen name="ChallengeArena" component={ChallengeArenaScreen} />
 
           {/* Wallet & Monetization Screens */}
           <Stack.Screen name="ZarWallet" component={ZarWalletScreen} />

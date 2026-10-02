@@ -16,9 +16,7 @@ import {
   MONTHLY_SUBSCRIPTION_PRICE,
 } from '../../services/walletService';
 import {
-  CrownSvg,
   CheckCircleSvg,
-  CheckSvg,
   AlertTriangleSvg,
 } from '../../components/common/SvgIcons';
 
@@ -171,10 +169,7 @@ export const VipPassScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
             </Text>
 
             <View style={styles.statusRow}>
-              <View style={styles.crownWrap}>
-                <CrownSvg size={28} color={wallet?.isSubscribed ? colors.accentHover : colors.textTertiary} />
-              </View>
-              <View style={{ flex: 1, marginLeft: 12 }}>
+              <View style={{ flex: 1 }}>
                 <Text variant="h3" weight="800" color={colors.textPrimary}>
                   {wallet?.isSubscribed ? 'VIP Pro Member' : 'Standard Player (Pay-As-You-Go)'}
                 </Text>
@@ -233,10 +228,7 @@ export const VipPassScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
             {benefits.map((b, idx) => (
               <React.Fragment key={b.title}>
                 <View style={styles.perkRow}>
-                  <View style={styles.checkIconWrap}>
-                    <CheckSvg size={14} color={colors.accentHover} strokeWidth={2.5} />
-                  </View>
-                  <View style={{ flex: 1, marginLeft: 10 }}>
+                  <View style={{ flex: 1 }}>
                     <Text variant="h3" style={styles.rowTitle}>
                       {b.title}
                     </Text>
@@ -362,17 +354,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
     paddingVertical: 12,
-  },
-  crownWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.accentSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   compareItem: {
     flexDirection: 'row',
@@ -395,18 +377,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   perkRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
     paddingVertical: 12,
-  },
-  checkIconWrap: {
-    marginTop: 2,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: colors.accentSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   rowDivider: {
     height: 1,

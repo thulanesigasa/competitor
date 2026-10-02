@@ -144,9 +144,9 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 - **Automated Profile Initializer (`handle_new_user`):** Automatically provisions a profile and career statistics record when a user signs up.
 
 ### 9. Settings, Privacy & Security Enclave Architecture (`v1.0.4`)
-- **Gamer Tag & Challenge Arena Customization (`ProfileScreen.tsx`):**
+- **Gamer Tag & Challenge Arena Customization (`ProfileScreen.tsx`, `ChallengeArenaScreen.tsx`):**
   - **Dynamic Gamer Tag Editing:** Competitors can update their public handle with real-time uniqueness validation against PostgreSQL `profiles.gamer_tag` and local store synchronization.
-  - **Target Challenge Arena (Province & City/Town):** Competitors can declare their preferred regional battleground arena (e.g. Gauteng - Johannesburg) separately from their residential location, enabling targeted regional challenges.
+  - **Target Challenge Arena Full-Screen Route (`ChallengeArenaScreen.tsx`):** Replaces modal dialogs with a dedicated full screen in pure body typography (zero card divs), allowing competitors to configure their preferred province and city/town matchmaking territory with direct text updates.
 - **Privacy & Safety Settings (`PrivacyScreen.tsx`, `BlockedUsersScreen.tsx`):**
   - **Private Matchmaking Mode (Incognito):** Masks competitor gamer tags during casual public battles to prevent targeted scouting.
   - **Public Leaderboard Discoverability:** Controls public visibility in regional rankings.
@@ -160,8 +160,8 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
   - **Inactivity Auto-Lock:** Configurable timeout (Immediate, 1 Minute, 5 Minutes, 15 Minutes, 30 Minutes, Never) triggering security verification when the terminal is left unattended.
   - **App Switcher Privacy Shield:** Real-time `AppState` listener that immediately renders an opaque white branded privacy card when the competitor switches tasks or minimizes to background, concealing live game boards and financial balances from OS multitasker snapshots.
 - **Data Ownership & Cryptography (`ExportDataScreen.tsx`, `encryptionService.ts`):**
-  - **Hardware-Encrypted (AES-256-CBC) Backup:** Pure TypeScript implementation of FIPS 197 standard AES-256-CBC with PKCS#7 padding and SHA-256 HMAC integrity verification, zero native compiler dependencies.
-  - **Standard Open JSON Export:** Human-readable ECMA-404 JSON archive of profile and career statistics.
+  - **Hardware-Encrypted (AES-256-CBC) Backup:** Pure TypeScript implementation of FIPS 197 standard AES-256-CBC with PKCS#7 padding and SHA-256 HMAC integrity verification, presented directly in screen body typography with zero card divs or SVGs.
+  - **Standard Open JSON Export:** Human-readable ECMA-404 JSON archive of profile and career statistics with direct text action export.
 - **Device Sessions & Security Audit (`DeviceSessionsScreen.tsx`, `sessionSecurityService.ts`):**
   - **Active Terminal Session Info:** Inspects current hardware model, operating system, app build, and session token.
   - **Remote Session Revocation:** Terminate all remote competitor sessions with one tap.
@@ -320,9 +320,10 @@ competitor/
 |   |   |   `-- VipPassScreen.tsx      # Dedicated VIP Pro Pass benefits, 0% rake economics, and text activation
 |   |   `-- settings/
 |   |       |-- BlockedUsersScreen.tsx # Manage and unblock restricted competitors
+|   |       |-- ChallengeArenaScreen.tsx # Dedicated target challenge arena province & town configuration
 |   |       |-- DeleteAccountScreen.tsx # POPIA / GDPR irreversible account purge
 |   |       |-- DeviceSessionsScreen.tsx # Terminal hardware specs & security audit trail
-|   |       |-- ExportDataScreen.tsx   # Hardware-encrypted AES-256 backup & open JSON export
+|   |       |-- ExportDataScreen.tsx   # Direct body typography AES-256 encrypted backup & open JSON export
 |   |       |-- InactivityLockScreen.tsx # Inactivity lockout timer configuration
 |   |       |-- PrivacyScreen.tsx      # Incognito matchmaking & public discoverability controls
 |   |       `-- SecurityPinScreen.tsx  # 4-digit security PIN setup, change, and remove flows

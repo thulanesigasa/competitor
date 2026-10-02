@@ -10,7 +10,7 @@ import {
   TextInput,
   ActivityIndicator,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { COLORS, SPACING } from '../../constants/theme';
 import { Header } from '../../components/common/Header';
 import { useThemedAlert } from '../../components/common/ThemedAlert';
@@ -38,7 +38,6 @@ import {
   CrownSvg,
 } from '../../components/common/SvgIcons';
 import { PrivacyService, DesiredChallengeRegion } from '../../services/privacyService';
-import { SOUTHERN_AFRICAN_COUNTRIES } from '../../constants/regions';
 import { walletService, UserWallet } from '../../services/walletService';
 
 interface ProfileScreenProps {
@@ -66,10 +65,12 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation: navPro
   const [newTagInput, setNewTagInput] = useState('');
   const [isSavingTag, setIsSavingTag] = useState(false);
 
-  const [editRegionVisible, setEditRegionVisible] = useState(false);
-  const [selectedProvince, setSelectedProvince] = useState('Gauteng');
-  const [selectedTown, setSelectedTown] = useState('Johannesburg');
-  const [isSavingRegion, setIsSavingRegion] = useState(false);
+  useFocusEffect(
+    React.useCallback(() => {
+      PrivacyService.getDesiredChallengeRegion().then((region) => setDesiredRegion(region));
+      walletService.getWallet().then((w) => setUserWallet(w));
+    }, [])
+  );
 
   useEffect(() => {
     loadProfile();
@@ -87,8 +88,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation: navPro
     setUser(profile);
     setStats(career);
     setDesiredRegion(region);
-    setSelectedProvince(region.province);
-    setSelectedTown(region.town);
   };
 
   const handleLogout = () => {
@@ -144,27 +143,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation: navPro
     }
   };
 
-  const handleOpenEditRegion = () => {
-    setSelectedProvince(desiredRegion.province);
-    setSelectedTown(desiredRegion.town);
-    setEditRegionVisible(true);
-  };
-
-  const handleSaveChallengeRegion = async () => {
-    setIsSavingRegion(true);
-    await PrivacyService.setDesiredChallengeRegion({
-      province: selectedProvince,
-      town: selectedTown,
-    });
-    setDesiredRegion({ province: selectedProvince, town: selectedTown });
-    setIsSavingRegion(false);
-    setEditRegionVisible(false);
-    showAlert({
-      title: 'Challenge Arena Updated',
-      message: `Your preferred matchmaking location is now set to ${selectedTown}, ${selectedProvince}.`,
-    });
-  };
-
   const winRate =
     stats && stats.gamesPlayed > 0
       ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100)
@@ -175,11 +153,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation: navPro
     stats?.gamesWon || 0,
     stats?.gamesPlayed || 0
   );
-
-  // Available provinces and towns for South Africa
-  const saCountry = SOUTHERN_AFRICAN_COUNTRIES.find((c) => c.code === 'ZA') || SOUTHERN_AFRICAN_COUNTRIES[0];
-  const activeProvinceObj =
-    saCountry.provinces.find((p) => p.name === selectedProvince) || saCountry.provinces[0];
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -339,7 +312,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation: navPro
           {/* Target Challenge Location */}
           <TouchableOpacity
             style={styles.actionRow}
-            onPress={handleOpenEditRegion}
+            onPress={() => navigation.navigate('ChallengeArena')}
             activeOpacity={0.75}
           >
             <View style={styles.rowTitleBox}>
@@ -544,87 +517,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation: navPro
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
                   <Text style={styles.saveBtnText}>Save Tag</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Modal: Edit Challenge Arena Region */}
-      <Modal
-        visible={editRegionVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setEditRegionVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContentLarge}>
-            <Text style={styles.modalTitle}>Target Challenge Arena</Text>
-            <Text style={styles.modalSubtitle}>
-              Select the region you wish to challenge competitors in. This is separate from your residential location.
-            </Text>
-
-            <Text style={styles.pickerLabel}>SELECT PROVINCE</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pillsScroll}>
-              {saCountry.provinces.map((prov) => {
-                const isSelected = selectedProvince === prov.name;
-                return (
-                  <TouchableOpacity
-                    key={prov.name}
-                    style={[styles.pill, isSelected && styles.pillActive]}
-                    onPress={() => {
-                      setSelectedProvince(prov.name);
-                      setSelectedTown(prov.towns[0]);
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={[styles.pillText, isSelected && styles.pillTextActive]}>
-                      {prov.name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-
-            <Text style={[styles.pickerLabel, { marginTop: 14 }]}>SELECT TOWN / CITY</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pillsScroll}>
-              {activeProvinceObj.towns.map((town) => {
-                const isSelected = selectedTown === town;
-                return (
-                  <TouchableOpacity
-                    key={town}
-                    style={[styles.pill, isSelected && styles.pillActive]}
-                    onPress={() => setSelectedTown(town)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={[styles.pillText, isSelected && styles.pillTextActive]}>
-                      {town}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-
-            <View style={[styles.modalBtnRow, { marginTop: 24 }]}>
-              <TouchableOpacity
-                style={styles.cancelBtn}
-                onPress={() => setEditRegionVisible(false)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.cancelBtnText}>Cancel</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.saveBtn}
-                onPress={handleSaveChallengeRegion}
-                disabled={isSavingRegion}
-                activeOpacity={0.8}
-              >
-                {isSavingRegion ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
-                  <Text style={styles.saveBtnText}>Update Arena</Text>
                 )}
               </TouchableOpacity>
             </View>
