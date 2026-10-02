@@ -20,6 +20,8 @@ import { InactivityLockScreen } from '../screens/settings/InactivityLockScreen';
 import { SecurityPinScreen } from '../screens/settings/SecurityPinScreen';
 import { PrivacyPolicyScreen } from '../screens/legal/PrivacyPolicyScreen';
 import { TermsOfServiceScreen } from '../screens/legal/TermsOfServiceScreen';
+import { ZarWalletScreen } from '../screens/wallet/ZarWalletScreen';
+import { VipPassScreen } from '../screens/wallet/VipPassScreen';
 import { AppSwitcherShield } from '../components/common/AppSwitcherShield';
 
 const Stack = createNativeStackNavigator();
@@ -143,6 +145,10 @@ export const RootNavigator: React.FC = () => {
           <Stack.Screen name="ExportData" component={ExportDataScreen} />
           <Stack.Screen name="InactivityLock" component={InactivityLockScreen} />
           <Stack.Screen name="SecurityPin" component={SecurityPinScreen} />
+
+          {/* Wallet & Monetization Screens */}
+          <Stack.Screen name="ZarWallet" component={ZarWalletScreen} />
+          <Stack.Screen name="VipPass" component={VipPassScreen} />
 
           {/* Legal Screens */}
           <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />

@@ -40,7 +40,6 @@ import {
 import { PrivacyService, DesiredChallengeRegion } from '../../services/privacyService';
 import { SOUTHERN_AFRICAN_COUNTRIES } from '../../constants/regions';
 import { walletService, UserWallet } from '../../services/walletService';
-import { WalletSubscriptionModal } from '../../components/game/WalletSubscriptionModal';
 
 interface ProfileScreenProps {
   navigation?: any;
@@ -61,7 +60,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation: navPro
 
   // Wallet & VIP Monetization
   const [userWallet, setUserWallet] = useState<UserWallet | null>(null);
-  const [showWalletModal, setShowWalletModal] = useState(false);
 
   // Edit Modals State
   const [editTagVisible, setEditTagVisible] = useState(false);
@@ -275,7 +273,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation: navPro
         <View style={styles.settingsSection}>
           <TouchableOpacity
             style={styles.actionRow}
-            onPress={() => setShowWalletModal(true)}
+            onPress={() => navigation.navigate('ZarWallet')}
             activeOpacity={0.75}
           >
             <View style={styles.rowTitleBox}>
@@ -286,7 +284,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation: navPro
                 </Text>
               </View>
               <Text style={styles.rowSubtitle}>
-                Balance: R{userWallet ? userWallet.balance.toFixed(2) : '0.00'}{userWallet?.escrowedBalance ? ` • R${userWallet.escrowedBalance.toFixed(2)} in play` : ''} • Tap to top up or view transactions
+                Balance: R{userWallet ? userWallet.balance.toFixed(2) : '0.00'}{userWallet?.escrowedBalance ? ` • R${userWallet.escrowedBalance.toFixed(2)} in play` : ''} • Tap to view wallet & transactions
               </Text>
             </View>
             <ChevronRightSvg size={18} color="#94A3B8" />
@@ -296,7 +294,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation: navPro
 
           <TouchableOpacity
             style={styles.actionRow}
-            onPress={() => setShowWalletModal(true)}
+            onPress={() => navigation.navigate('VipPass')}
             activeOpacity={0.75}
           >
             <View style={styles.rowTitleBox}>
@@ -633,13 +631,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation: navPro
           </View>
         </View>
       </Modal>
-
-      {/* Wallet & VIP Subscription Modal */}
-      <WalletSubscriptionModal
-        visible={showWalletModal}
-        onClose={() => setShowWalletModal(false)}
-        onBalanceUpdated={setUserWallet}
-      />
     </SafeAreaView>
   );
 };

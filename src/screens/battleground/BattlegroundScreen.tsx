@@ -44,8 +44,7 @@ import {
   validateCowShot,
 } from '../../engine/morabarabaValidator';
 import { walletService, UserWallet } from '../../services/walletService';
-import { WalletSubscriptionModal } from '../../components/game/WalletSubscriptionModal';
-import { WalletSvg, CrownSvg } from '../../components/common/SvgIcons';
+import { CrownSvg } from '../../components/common/SvgIcons';
 
 type DuelMode =
   | 'menu'
@@ -74,7 +73,6 @@ export const BattlegroundScreen: React.FC = () => {
 
   // Wallet & Monetization
   const [userWallet, setUserWallet] = useState<UserWallet | null>(null);
-  const [showWalletModal, setShowWalletModal] = useState(false);
   const [pendingHostType, setPendingHostType] = useState<'public' | 'private' | null>(null);
   const [selectedStake, setSelectedStake] = useState<number>(5);
   const [stakeInputText, setStakeInputText] = useState<string>('5');
@@ -177,7 +175,7 @@ export const BattlegroundScreen: React.FC = () => {
         title: 'Insufficient Balance',
         message: `You need at least R${selectedStake.toFixed(2)} in your wallet to host with this stake. Available: R${currentBalance.toFixed(2)}.`,
         buttons: [
-          { text: 'Top Up Wallet', onPress: () => setShowWalletModal(true) },
+          { text: 'Top Up Wallet', onPress: () => navigation.navigate('ZarWallet') },
           { text: 'Cancel', style: 'cancel' },
         ],
       });
@@ -343,7 +341,7 @@ export const BattlegroundScreen: React.FC = () => {
               title: 'Insufficient Balance',
               message: `This private room requires matching a stake of R${requiredStake.toFixed(2)}. Your balance is R${currentBalance.toFixed(2)}.`,
               buttons: [
-                { text: 'Top Up Wallet', onPress: () => setShowWalletModal(true) },
+                { text: 'Top Up Wallet', onPress: () => navigation.navigate('ZarWallet') },
                 { text: 'Cancel', style: 'cancel' },
               ],
             });
@@ -402,7 +400,7 @@ export const BattlegroundScreen: React.FC = () => {
           title: 'Insufficient Balance',
           message: `This host is playing for a stake of R${requiredStake.toFixed(2)}. Your balance is R${currentBalance.toFixed(2)}.`,
           buttons: [
-            { text: 'Top Up Wallet', onPress: () => setShowWalletModal(true) },
+            { text: 'Top Up Wallet', onPress: () => navigation.navigate('ZarWallet') },
             { text: 'Cancel', style: 'cancel' },
           ],
         });
@@ -1031,43 +1029,6 @@ export const BattlegroundScreen: React.FC = () => {
         onRightAction={mode === 'match_in_progress' ? () => setShowCoinToss(true) : undefined}
       />
 
-      {/* Top Wallet & VIP Pro Status Bar */}
-      <View style={styles.topWalletBar}>
-        <TouchableOpacity
-          style={styles.walletChip}
-          activeOpacity={0.8}
-          onPress={() => setShowWalletModal(true)}
-        >
-          <View style={styles.walletChipLeft}>
-            <WalletSvg size={15} color={colors.accent} />
-            <Text variant="caption" weight="800" color={colors.textPrimary} style={{ marginLeft: 6 }}>
-              R{userWallet ? userWallet.balance.toFixed(2) : '0.00'}
-            </Text>
-            {userWallet?.escrowedBalance ? (
-              <Text variant="caption" weight="600" color={colors.textSecondary} style={{ marginLeft: 4 }}>
-                (R{userWallet.escrowedBalance.toFixed(2)} in play)
-              </Text>
-            ) : null}
-          </View>
-
-          <View style={styles.walletChipRight}>
-            {userWallet?.isSubscriber ? (
-              <View style={styles.vipBadge}>
-                <CrownSvg size={12} color="#FFFFFF" />
-                <Text variant="label" weight="900" color="#FFFFFF" style={{ marginLeft: 4, fontSize: 9 }}>
-                  VIP PRO (0% RAKE)
-                </Text>
-              </View>
-            ) : (
-              <View style={styles.topUpBadge}>
-                <Text variant="label" weight="800" color={colors.accentHover} style={{ fontSize: 10 }}>
-                  + Top Up
-                </Text>
-              </View>
-            )}
-          </View>
-        </TouchableOpacity>
-      </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* 1. MAIN BATTLEGROUND MENU */}
@@ -1204,7 +1165,7 @@ export const BattlegroundScreen: React.FC = () => {
                 </View>
                 <TouchableOpacity
                   style={styles.topUpButtonSmall}
-                  onPress={() => setShowWalletModal(true)}
+                  onPress={() => navigation.navigate('ZarWallet')}
                   activeOpacity={0.8}
                 >
                   <Text variant="caption" weight="800" color="#FFFFFF">+ TOP UP</Text>
@@ -1349,7 +1310,7 @@ export const BattlegroundScreen: React.FC = () => {
             {userWallet && userWallet.balance < selectedStake && (
               <TouchableOpacity
                 style={styles.inlineTopUpPrompt}
-                onPress={() => setShowWalletModal(true)}
+                onPress={() => navigation.navigate('ZarWallet')}
               >
                 <Text variant="caption" weight="800" color={colors.accentHover} align="center">
                   Available: R{userWallet.balance.toFixed(2)}. Tap here to top up your wallet.
@@ -1747,12 +1708,6 @@ export const BattlegroundScreen: React.FC = () => {
         onClose={() => setShowRuleTip(false)}
       />
 
-      {/* Wallet & VIP Pro Subscription Modal */}
-      <WalletSubscriptionModal
-        visible={showWalletModal}
-        onClose={() => setShowWalletModal(false)}
-        onBalanceUpdated={(updated) => setUserWallet(updated)}
-      />
     </SafeAreaView>
   );
 };
@@ -1942,46 +1897,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: SPACING.md,
-  },
-  topWalletBar: {
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(15, 23, 42, 0.06)',
-  },
-  walletChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
-  },
-  walletChipLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  walletChipRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  vipBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.accentHover,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  topUpBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    backgroundColor: 'rgba(217, 119, 6, 0.1)',
-    borderRadius: 6,
   },
   walletSummaryCard: {
     backgroundColor: '#F8FAFC',
