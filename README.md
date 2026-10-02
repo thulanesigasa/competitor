@@ -181,7 +181,7 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 - **Anti-AI Deliberation Clock:** 60-second deliberation timer preventing external solver/AI assistance and stalling tactics in ranked battles.
 - **Educational Rule Tip Modal (`RuleTipModal.tsx`):** Unobtrusive 60-30-10 modal that surfaces authentic rule tips only when a user or script attempts to violate a rule, explaining why the action was rejected without cluttering the screen during normal gameplay.
 
-### 11. Monetization & Wagering Engine: Pay-As-You-Go & VIP Pro Subscription (`walletService.ts`, `WalletSubscriptionModal.tsx`)
+### 11. Monetization & Wagering Engine: Pay-As-You-Go & VIP Pro Subscription (`walletService.ts`, `ZarWalletScreen.tsx`, `VipPassScreen.tsx`)
 - **Pre-Host Stakes Selection (`host_stakes_select`):**
   - Before entering any public or private battle waiting room, the host must configure their match stake on a dedicated stakes selection screen.
   - Supports rapid presets (50c, R1, R2, R5, R10, R20, R50, R100, R200, R500) and custom numeric input down to R0.50 (50 cents) up to the user's available balance.
@@ -203,12 +203,20 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
     - High-volume competitors can activate the monthly VIP Pro Pass for R150.00/month.
     - VIP Pro members keep **100% of all pot winnings** with **0% platform rake** (`totalPot * 1.00`).
     - Example: R500.00 host stake + R500.00 challenger stake = R1,000.00 pot. The VIP Pro winner keeps the entire R1,000.00 pot.
-- **In-App Wallet & Subscription Modal (`WalletSubscriptionModal.tsx`):**
-  - High-precision 60-30-10 modal accessible from the Battleground top bar and Profile settings.
-  - Displays real-time available balance, active escrowed funds, and VIP Pro subscription expiry.
-  - Instant test top-up actions (+R50, +R100, +R200, +R500) for seamless staging and QA.
-  - One-tap VIP Pro Pass activation (R150/mo) and cancellation toggles.
-  - Complete chronological transaction history tracking deposits, stake escrows, stake refunds, win payouts, and subscription fees.
+- **Dedicated Full-Screen ZAR Match Wallet (`ZarWalletScreen.tsx`):**
+  - Replaces pop-up modals with a dedicated full screen integrated directly into page body typography (zero enclosing card divs).
+  - Clean clickable text navigation between **BALANCE & PLANS** and **TRANSACTIONS** (zero button containers).
+  - Displays real-time available match balance and active match escrow.
+  - Instant text-based quick deposit tiers (+R50, +R100, +R200, +R500) for seamless funds top-up with direct body feedback.
+  - Comprehensive chronological transaction audit ledger tracking deposits, stake escrows, refunds, payouts, and subscription debits.
+- **Dedicated Full-Screen VIP Pro Pass Screen (`VipPassScreen.tsx`):**
+  - Dedicated full screen completely distinct from match wallet ledger (zero enclosing card divs, direct body flow).
+  - Explicit breakdown of 100% pot payouts and 0% platform rake vs standard 88% Pay-As-You-Go.
+  - Complete list of member privileges: Golden Crown insignia, unrestricted high-stakes duel hosting, and priority peer move verification.
+  - Interactive clickable text action to activate (R150/mo) or cancel VIP Pro subscriptions with real-time wallet debiting.
+- **Streamlined Battleground Arena View:**
+  - Removed top wallet bar and R100 top-up chip from battle arena to eliminate visual distraction during match selection.
+  - In-game insufficient stake alerts and host top-up prompts navigate directly to `ZarWalletScreen`.
 
 ---
 
@@ -275,8 +283,7 @@ competitor/
 |   |   |   |-- CompetitorProfileCard.tsx # 60-30-10 player profile inspection card with stats & actions
 |   |   |   |-- MorabarabaBoard.tsx    # 24-vertex pure line intersection board layout
 |   |   |   |-- MorabarabaPiece.tsx    # Authentic concentric carved African tokens
-|   |   |   |-- RuleTipModal.tsx       # Unobtrusive 60-30-10 tactical rule violation tip modal
-|   |   |   `-- WalletSubscriptionModal.tsx # 60-30-10 ZAR wallet top-up, VIP Pro pass, and transaction history
+|   |   |   `-- RuleTipModal.tsx       # Unobtrusive 60-30-10 tactical rule violation tip modal
 |   |   `-- navigation/
 |   |       |-- CustomTabBar.tsx       # Centered floating pill tab bar with active indicator dot
 |   |       `-- TabIcons.tsx           # 16px bottom tab bar SVGs (Rule 20)
@@ -308,6 +315,9 @@ competitor/
 |   |   |   `-- OnboardingScreen.tsx   # 3-slide crossfade art canvas, liquid sliding pill & SwipeToStartButton
 |   |   |-- profile/
 |   |   |   `-- ProfileScreen.tsx      # Gamer Tag career stats, wallet, and settings body rows
+|   |   |-- wallet/
+|   |   |   |-- ZarWalletScreen.tsx    # Dedicated ZAR match wallet, text-based quick deposits, and audit ledger
+|   |   |   `-- VipPassScreen.tsx      # Dedicated VIP Pro Pass benefits, 0% rake economics, and text activation
 |   |   `-- settings/
 |   |       |-- BlockedUsersScreen.tsx # Manage and unblock restricted competitors
 |   |       |-- DeleteAccountScreen.tsx # POPIA / GDPR irreversible account purge
