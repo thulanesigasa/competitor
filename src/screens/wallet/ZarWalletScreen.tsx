@@ -16,7 +16,6 @@ import {
   WalletTransaction,
 } from '../../services/walletService';
 import {
-  WalletSvg,
   CheckCircleSvg,
   ChevronRightSvg,
   AlertTriangleSvg,
@@ -177,10 +176,7 @@ export const ZarWalletScreen: React.FC<{ navigation: any }> = ({ navigation }) =
             </Text>
 
             <View style={styles.balanceDisplayRow}>
-              <View style={styles.balanceIconWrap}>
-                <WalletSvg size={28} color={colors.accent} />
-              </View>
-              <View style={{ flex: 1, marginLeft: 12 }}>
+              <View style={{ flex: 1 }}>
                 <Text variant="h1" weight="900" color={colors.textPrimary} style={styles.balanceAmountText}>
                   R{wallet ? wallet.balance.toFixed(2) : '0.00'}
                 </Text>
@@ -361,17 +357,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   balanceDisplayRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
     paddingVertical: 12,
-  },
-  balanceIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.accentSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   balanceAmountText: {
     fontSize: 32,

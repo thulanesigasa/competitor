@@ -11,7 +11,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../../theme/colors';
 import { Text } from '../../components/Typography';
 import { Header } from '../../components/common/Header';
-import { DownloadSvg, LockSvg, FileTextSvg } from '../../components/common/SvgIcons';
 import { useThemedAlert } from '../../components/common/ThemedAlert';
 import { getUserProfile, getCareerStats } from '../../store/gameStore';
 import { EncryptionService } from '../../services/encryptionService';
@@ -109,79 +108,65 @@ export const ExportDataScreen: React.FC<{ navigation: any }> = ({ navigation }) 
         </View>
 
         {/* Option 1: AES-256 Encrypted */}
-        <View style={styles.optionCard}>
-          <View style={styles.optionHeader}>
-            <View style={styles.iconCircle}>
-              <LockSvg size={20} color="#D97706" strokeWidth={2} />
-            </View>
-            <View style={styles.optionTitleBlock}>
-              <Text variant="h3" style={styles.cardTitle}>
-                Hardware-Encrypted (AES-256-CBC)
-              </Text>
-              <Text variant="caption" color={colors.textTertiary}>
-                FIPS 197 standard • SHA-256 HMAC integrity
-              </Text>
-            </View>
-          </View>
-
-          <Text variant="body" color={colors.textSecondary} style={styles.cardDesc}>
+        <View style={styles.sectionBlock}>
+          <Text variant="label" weight="800" color={colors.textTertiary} style={styles.sectionHeader}>
+            HARDWARE-ENCRYPTED (AES-256-CBC)
+          </Text>
+          <Text variant="h3" style={styles.rowTitle}>
+            Hardware-Encrypted Archive (AES-256-CBC)
+          </Text>
+          <Text variant="caption" color={colors.textTertiary} style={styles.rowSubtitle}>
+            FIPS 197 standard • SHA-256 HMAC integrity
+          </Text>
+          <Text variant="body" color={colors.textSecondary} style={styles.bodyDesc}>
             Generates a tamper-proof encrypted archive protected by your device master key. Recommended for cold-storage backups and secure offline vaulting.
           </Text>
 
           <TouchableOpacity
-            style={styles.primaryBtn}
+            style={styles.textActionRow}
             onPress={() => handleExport(true)}
-            activeOpacity={0.8}
+            activeOpacity={0.7}
             disabled={isExporting}
           >
             {isExporting ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
+              <ActivityIndicator size="small" color={colors.accent} />
             ) : (
-              <View style={styles.btnContent}>
-                <DownloadSvg size={16} color="#FFFFFF" strokeWidth={2} />
-                <Text variant="body" weight="700" color="#FFFFFF">
-                  Export AES-256 Backup
-                </Text>
-              </View>
+              <Text variant="body" weight="800" color={colors.accentHover}>
+                Export AES-256 Backup →
+              </Text>
             )}
           </TouchableOpacity>
         </View>
 
-        {/* Option 2: Standard JSON */}
-        <View style={styles.optionCard}>
-          <View style={styles.optionHeader}>
-            <View style={styles.iconCircle}>
-              <FileTextSvg size={20} color="#0F172A" strokeWidth={2} />
-            </View>
-            <View style={styles.optionTitleBlock}>
-              <Text variant="h3" style={styles.cardTitle}>
-                Standard Open JSON
-              </Text>
-              <Text variant="caption" color={colors.textTertiary}>
-                ECMA-404 universal portable format
-              </Text>
-            </View>
-          </View>
+        <View style={styles.rowDivider} />
 
-          <Text variant="body" color={colors.textSecondary} style={styles.cardDesc}>
+        {/* Option 2: Standard JSON */}
+        <View style={styles.sectionBlock}>
+          <Text variant="label" weight="800" color={colors.textTertiary} style={styles.sectionHeader}>
+            STANDARD OPEN JSON FORMAT
+          </Text>
+          <Text variant="h3" style={styles.rowTitle}>
+            Standard JSON Export
+          </Text>
+          <Text variant="caption" color={colors.textTertiary} style={styles.rowSubtitle}>
+            ECMA-404 universal portable format
+          </Text>
+          <Text variant="body" color={colors.textSecondary} style={styles.bodyDesc}>
             Human-readable, unencrypted data file containing your match totals, win rate %, and identity metadata for integration with external analysis spreadsheets.
           </Text>
 
           <TouchableOpacity
-            style={styles.secondaryBtn}
+            style={styles.textActionRow}
             onPress={() => handleExport(false)}
-            activeOpacity={0.8}
+            activeOpacity={0.7}
             disabled={isExporting}
           >
             {isExporting ? (
-              <ActivityIndicator size="small" color="#0F172A" />
+              <ActivityIndicator size="small" color={colors.accent} />
             ) : (
-              <View style={styles.btnContent}>
-                <DownloadSvg size={16} color="#0F172A" strokeWidth={2} />
-                <Text variant="body" weight="700" color="#0F172A">
-                  Export Standard JSON
-                </Text>
-              </View>
+              <Text variant="body" weight="800" color={colors.accentHover}>
+                Export Standard JSON →
+              </Text>
             )}
           </TouchableOpacity>
         </View>
@@ -211,64 +196,36 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
-  optionCard: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
-    padding: 20,
-    marginBottom: 20,
+  sectionBlock: {
+    paddingVertical: 12,
   },
-  optionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    marginBottom: 12,
+  sectionHeader: {
+    fontSize: 12,
+    letterSpacing: 1,
+    marginBottom: 8,
   },
-  iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  optionTitleBlock: {
-    flex: 1,
-  },
-  cardTitle: {
+  rowTitle: {
     fontSize: 16,
     fontWeight: '700',
     color: '#0F172A',
     marginBottom: 2,
   },
-  cardDesc: {
+  rowSubtitle: {
+    fontSize: 12,
+    marginBottom: 8,
+  },
+  bodyDesc: {
     fontSize: 13,
-    lineHeight: 18,
-    marginBottom: 20,
+    lineHeight: 19,
+    marginBottom: 12,
   },
-  primaryBtn: {
-    height: 48,
-    backgroundColor: '#0F172A',
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
+  textActionRow: {
+    paddingVertical: 8,
   },
-  secondaryBtn: {
-    height: 48,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  btnContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  rowDivider: {
+    height: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.06)',
+    marginVertical: 12,
   },
 });
 
