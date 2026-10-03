@@ -448,3 +448,150 @@ export const FingerprintSvg: React.FC<SvgIconProps> = ({
   </Svg>
 );
 
+export const TrophySvg: React.FC<SvgIconProps> = ({
+  size = 20,
+  color = '#0F172A',
+  strokeWidth = 2,
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Path
+      d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Path
+      d="M4 22h16"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Path
+      d="M10 14.66V17c0 .55-.45 1-1 1H8c-.55 0-1 .45-1 1v1c0 .55.45 1 1 1h8c.55 0 1-.45 1-1v-1c0-.55-.45-1-1-1h-1c-.55 0-1-.45-1-1v-2.34"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Path
+      d="M18 2H6v7a6 6 0 0 0 12 0V2z"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
+export const ClockSvg: React.FC<SvgIconProps> = ({
+  size = 20,
+  color = '#0F172A',
+  strokeWidth = 2,
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Circle cx="12" cy="12" r="10" stroke={color} strokeWidth={strokeWidth} />
+    <Path
+      d="M12 6v6l4 2"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
+export const CloseSvg: React.FC<SvgIconProps> = ({
+  size = 20,
+  color = '#0F172A',
+  strokeWidth = 2,
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M18 6L6 18M6 6l12 12"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
+export const ChessKnightSvg: React.FC<SvgIconProps> = ({
+  size = 20,
+  color = '#0F172A',
+  strokeWidth = 2,
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M19 22H5v-2h14v2zm-2-4H7v-1.5c0-1.5 1-3 3-4l.5-.25C9 11 9 9 9.5 7.5c.3-1 .8-2 2-3 1.5-1.2 3.5-1.5 5-1 .5 1.5.5 3.5 0 5 1.5 1 2 2.5 1.5 4.5-.5 2-1 3-1 5z"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Circle cx="13" cy="9" r="1" fill={color} />
+  </Svg>
+);
+
+export const CheckersSvg: React.FC<SvgIconProps> = ({
+  size = 20,
+  color = '#0F172A',
+  strokeWidth = 2,
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Circle cx="12" cy="12" r="9" stroke={color} strokeWidth={strokeWidth} />
+    <Circle cx="12" cy="12" r="5" stroke={color} strokeWidth={strokeWidth} />
+    <Circle cx="12" cy="12" r="2" fill={color} />
+  </Svg>
+);
+
+export const GlobeSvg: React.FC<SvgIconProps> = ({
+  size = 20,
+  color = '#0F172A',
+  strokeWidth = 2,
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Circle cx="12" cy="12" r="10" stroke={color} strokeWidth={strokeWidth} />
+    <Path
+      d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
+export const UsersSvg: React.FC<SvgIconProps> = ({
+  size = 20,
+  color = '#0F172A',
+  strokeWidth = 2,
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Circle cx="9" cy="7" r="4" stroke={color} strokeWidth={strokeWidth} />
+    <Path
+      d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+

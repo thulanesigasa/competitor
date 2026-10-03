@@ -21,7 +21,6 @@ import { SecurityPinScreen } from '../screens/settings/SecurityPinScreen';
 import { ChallengeArenaScreen } from '../screens/settings/ChallengeArenaScreen';
 import { PrivacyPolicyScreen } from '../screens/legal/PrivacyPolicyScreen';
 import { TermsOfServiceScreen } from '../screens/legal/TermsOfServiceScreen';
-import { ZarWalletScreen } from '../screens/wallet/ZarWalletScreen';
 import { VipPassScreen } from '../screens/wallet/VipPassScreen';
 import { AppSwitcherShield } from '../components/common/AppSwitcherShield';
 
@@ -148,8 +147,7 @@ export const RootNavigator: React.FC = () => {
           <Stack.Screen name="SecurityPin" component={SecurityPinScreen} />
           <Stack.Screen name="ChallengeArena" component={ChallengeArenaScreen} />
 
-          {/* Wallet & Monetization Screens */}
-          <Stack.Screen name="ZarWallet" component={ZarWalletScreen} />
+          {/* VIP Pro Tournament Pass Screen */}
           <Stack.Screen name="VipPass" component={VipPassScreen} />
 
           {/* Legal Screens */}

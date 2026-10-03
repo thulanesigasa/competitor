@@ -84,16 +84,6 @@ export const CompetitorProfileCard: React.FC<CompetitorProfileCardProps> = ({
         </View>
       </View>
 
-      {profile.stakeAmount !== undefined && (
-        <View style={styles.stakeRow}>
-          <Text variant="caption" weight="800" color={colors.accentHover}>
-            STAKE: R{profile.stakeAmount.toFixed(2)}
-          </Text>
-          <Text variant="caption" weight="800" color={colors.textPrimary}>
-            POT: R{(profile.stakeAmount * 2).toFixed(2)}
-          </Text>
-        </View>
-      )}
 
       {subtitle && (
         <Text variant="caption" color={colors.textSecondary} style={styles.customSubtitle}>
@@ -186,17 +176,7 @@ const styles = StyleSheet.create({
   statItem: {
     alignItems: 'center',
   },
-  stakeRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: spacing.sm,
-    paddingVertical: 6,
-    paddingHorizontal: 8,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
-  },
+
   customSubtitle: {
     marginTop: spacing.sm,
     fontStyle: 'italic',
