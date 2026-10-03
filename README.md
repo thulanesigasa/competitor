@@ -181,44 +181,37 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 - **Anti-AI Deliberation Clock:** 60-second deliberation timer preventing external solver/AI assistance and stalling tactics in ranked battles.
 - **Educational Rule Tip Modal (`RuleTipModal.tsx`):** Unobtrusive 60-30-10 modal that surfaces authentic rule tips only when a user or script attempts to violate a rule, explaining why the action was rejected without cluttering the screen during normal gameplay.
 
-### 11. Monetization & Wagering Engine: Pay-As-You-Go & VIP Pro Subscription (`walletService.ts`, `ZarWalletScreen.tsx`, `VipPassScreen.tsx`)
-- **Pre-Host Stakes Selection (`host_stakes_select`):**
-  - Before entering any public or private battle waiting room, the host must configure their match stake on a dedicated stakes selection screen.
-  - Supports rapid presets (50c, R1, R2, R5, R10, R20, R50, R100, R200, R500) and custom numeric input down to R0.50 (50 cents) up to the user's available balance.
-  - Live projection card computes the total match pot (Host Stake x 2) and displays the exact winner payout and platform rake breakdown before funds are escrowed.
-- **Matchmaking Stake Display & Real-Time Discovery:**
-  - Public battleground lobby displays each active host's required stake and total pot (`STAKE: R{...} • POT: R{...}`) directly on their `CompetitorProfileCard`.
-  - Private PIN rooms encode the match stake, ensuring challengers are informed of the stake requirements upon PIN submission.
-- **Equal Stake Matching & Escrow Protection:**
-  - Challengers must match the host's exact stake.
-  - Funds are automatically verified and locked in escrow upon hosting or challenging, preventing double-spending during active duels.
-  - If a host cancels before a match begins, or if a challenger's join request is declined or cancelled, escrowed funds are refunded instantly to available balance.
-- **Dual Monetization Architecture:**
-  - **Pay-As-You-Go (88% Winner Payout / 12% Platform Rake):**
-    - Non-subscribers battle under the Pay-As-You-Go model.
-    - Upon match victory, the winner receives 88% of the total match pot (`totalPot * 0.88`).
-    - The platform retains a 12% operational commission rake (`totalPot * 0.12`).
-    - Example: R5.00 host stake + R5.00 challenger stake = R10.00 pot. Winner receives R8.80, and the platform retains R1.20 rake.
-  - **VIP Pro Subscription (R150 / month):**
-    - High-volume competitors can activate the monthly VIP Pro Pass for R150.00/month.
-    - VIP Pro members keep **100% of all pot winnings** with **0% platform rake** (`totalPot * 1.00`).
-    - Example: R500.00 host stake + R500.00 challenger stake = R1,000.00 pot. The VIP Pro winner keeps the entire R1,000.00 pot.
-- **Dedicated Full-Screen ZAR Match Wallet (`ZarWalletScreen.tsx`):**
-  - Replaces pop-up modals with a dedicated full screen integrated directly into page body typography (zero enclosing card divs).
-  - Clean clickable text navigation between **BALANCE & PLANS** and **TRANSACTIONS** (zero button containers).
-  - Displays real-time available match balance and active match escrow.
-  - Instant text-based quick deposit tiers (+R50, +R100, +R200, +R500) for seamless funds top-up with direct body feedback.
-  - Comprehensive chronological transaction audit ledger tracking deposits, stake escrows, refunds, payouts, and subscription debits.
-- **Dedicated Full-Screen VIP Pro Pass Screen (`VipPassScreen.tsx`):**
-  - Dedicated full screen completely distinct from match wallet ledger (zero enclosing card divs, direct body flow).
-  - Explicit breakdown of 100% pot payouts and 0% platform rake vs standard 88% Pay-As-You-Go.
-  - Complete list of member privileges: Golden Crown insignia, unrestricted high-stakes duel hosting, and priority peer move verification.
-  - Interactive clickable text action to activate (R150/mo) or cancel VIP Pro subscriptions with real-time wallet debiting.
-- **Streamlined Battleground Arena View:**
-  - Removed top wallet bar and R100 top-up chip from battle arena to eliminate visual distraction during match selection.
-  - In-game insufficient stake alerts and host top-up prompts navigate directly to `ZarWalletScreen`.
+### 11. Tournament & Subscription Engine: R500 Weekly Tournaments & VIP Pro Tournament Pass (`tournamentService.ts`, `VipPassScreen.tsx`, `LeaderboardScreen.tsx`)
+- **R500 Weekly Tournament Engine (`tournamentService.ts`):**
+  - Continuous weekly tournament cycles starting **Monday 00:00:00 SAST** and freezing on **Sunday 23:59:59 SAST**.
+  - Live ticking countdown timer ticking down to Sunday midnight settlement embedded directly on the Regional Leaderboard banner.
+  - **R500 Grand Prize Pool Distributed to Top 8 Global Leaderboard Competitors:**
+    - **Rank 1:** R200 (Grand Champion)
+    - **Rank 2:** R100 (Runner-Up)
+    - **Rank 3:** R60 (Podium Bronze)
+    - **Rank 4:** R40 (Contender Elite)
+    - **Rank 5:** R30 (Challenger Rank)
+    - **Rank 6:** R30 (Challenger Rank)
+    - **Rank 7:** R20 (Arena Warrior)
+    - **Rank 8:** R20 (Arena Warrior)
+  - **Automated Sunday Settlement & Winner Notification:**
+    - Standings lock automatically at Sunday 23:59:59 SAST.
+    - Verified Top 8 winners receive automated email disbursement notifications for payout processing.
+- **Online Match Ranking Source of Truth:**
+  - Standings, victories, and win rates are driven exclusively by **Online Matches** (Public Battleground Rooms and Private PIN Rooms).
+  - Offline Pass & Play and Solo vs CPU duels function as casual practice without affecting competitive standings.
+- **VIP Pro Tournament Pass (R150 / month) (`VipPassScreen.tsx`):**
+  - Retained monthly subscription model granting exclusive qualification to claim Top 8 Weekly Tournament cash prizes.
+  - Grants the prestigious golden crown emblem and verified competitive standing.
+  - Seamless in-app activation and status management.
+- **Multi-Game Strategy Hub on Battleground (`BattlegroundScreen.tsx`):**
+  - **Morabaraba (Live Arena - Play Now):** Direct action tiles to **Host Public Room**, **Browse Public Lobby**, **Create 4-Digit PIN**, or **Join Private PIN** with zero stake selections or wallet balances.
+  - **Chess (Coming Soon - Classic Strategy):** Teaser card featuring FIDE standard rules, online matchmaking, and Swiss tournament preview.
+  - **Checkers (Coming Soon - Traditional Draughts):** Teaser card featuring standard 8x8 draughts, forced captures, and knockout brackets preview.
+  - Completely purged ZAR match stake wagering, cash escrow locks, pot rake, and deposit presets from client components.
 
 ---
+
 
 ## Design System & Theme Architecture (Strict 60-30-10 & Tab-Only SVGs)
 
@@ -316,8 +309,7 @@ competitor/
 |   |   |-- profile/
 |   |   |   `-- ProfileScreen.tsx      # Gamer Tag career stats, wallet, and settings body rows
 |   |   |-- wallet/
-|   |   |   |-- ZarWalletScreen.tsx    # Dedicated ZAR match wallet, text-based quick deposits, and audit ledger
-|   |   |   `-- VipPassScreen.tsx      # Dedicated VIP Pro Pass benefits, 0% rake economics, and text activation
+|   |   |   `-- VipPassScreen.tsx      # Dedicated VIP Pro Tournament Pass benefits, prize eligibility, and text activation
 |   |   `-- settings/
 |   |       |-- BlockedUsersScreen.tsx # Manage and unblock restricted competitors
 |   |       |-- ChallengeArenaScreen.tsx # Dedicated target challenge arena province & town configuration
@@ -339,7 +331,8 @@ competitor/
 |   |   |-- pinSecurityService.ts      # Pure TypeScript SHA-256 PIN hashing with brute-force lockout
 |   |   |-- privacyService.ts          # Matchmaking privacy, discovery, blocked accounts, and challenge regions
 |   |   |-- sessionSecurityService.ts  # Device session specs, audit logging, and remote session revocation
-|   |   `-- walletService.ts           # ZAR balance, escrow, refunds, 88% Pay-As-You-Go vs 100% VIP Pro pot payouts
+|   |   |-- tournamentService.ts       # Weekly Monday-Sunday tournament cycle calculation, R500 Top 8 prize breakdown, and automated winner settlement
+|   |   `-- walletService.ts           # VIP Pro Tournament Pass subscription management
 |   |-- store/
 |   |   `-- gameStore.ts               # Local persistence via AsyncStorage
 |   |-- theme/

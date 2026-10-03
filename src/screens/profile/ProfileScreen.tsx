@@ -239,32 +239,11 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation: navPro
         {/* ALL SETTINGS DIRECTLY IN THE SCREEN BODY (ZERO ENCLOSING DIVS)    */}
         {/* ================================================================ */}
 
-        {/* WALLET & VIP PASS */}
+        {/* TOURNAMENT & VIP PRO PASS */}
         <Text style={[styles.sectionTitle, { marginTop: SPACING.xl }]}>
-          WALLET & VIP PASS
+          TOURNAMENT & VIP PRO PASS
         </Text>
         <View style={styles.settingsSection}>
-          <TouchableOpacity
-            style={styles.actionRow}
-            onPress={() => navigation.navigate('ZarWallet')}
-            activeOpacity={0.75}
-          >
-            <View style={styles.rowTitleBox}>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <WalletSvg size={16} color={COLORS.accent} />
-                <Text style={[styles.rowTitle, { marginLeft: 8 }]}>
-                  ZAR Match Wallet
-                </Text>
-              </View>
-              <Text style={styles.rowSubtitle}>
-                Balance: R{userWallet ? userWallet.balance.toFixed(2) : '0.00'}{userWallet?.escrowedBalance ? ` • R${userWallet.escrowedBalance.toFixed(2)} in play` : ''} • Tap to view wallet & transactions
-              </Text>
-            </View>
-            <ChevronRightSvg size={18} color="#94A3B8" />
-          </TouchableOpacity>
-
-          <View style={styles.rowDivider} />
-
           <TouchableOpacity
             style={styles.actionRow}
             onPress={() => navigation.navigate('VipPass')}
@@ -274,13 +253,13 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation: navPro
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <CrownSvg size={16} color={COLORS.accentHover} />
                 <Text style={[styles.rowTitle, { marginLeft: 8 }]}>
-                  {userWallet?.isSubscribed ? 'VIP Pro Pass (Active)' : 'VIP Pro Pass (R150/mo)'}
+                  {userWallet?.isSubscribed ? 'VIP Pro Member' : 'VIP Pro Tournament Pass (R150/mo)'}
                 </Text>
               </View>
               <Text style={styles.rowSubtitle}>
                 {userWallet?.isSubscribed
-                  ? '0% platform rake active • You keep 100% of all pot winnings'
-                  : 'Pay-As-You-Go active (88% payout) • Upgrade to keep 100% of pot'}
+                  ? 'Eligible for R500 Weekly Tournament cash prizes (Positions 1 to 8)'
+                  : 'Upgrade to claim weekly cash prizes • Mon 00:00 to Sun 23:59'}
               </Text>
             </View>
             <ChevronRightSvg size={18} color="#94A3B8" />
