@@ -208,8 +208,8 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
   - Monthly subscription model granting exclusive qualification to claim Top 8 Weekly Tournament cash prizes.
 - **Strategy Games Section under Profile (`ProfileScreen.tsx`, `GameDetailScreen.tsx`):**
   - **Morabaraba:** Full traditional Southern African board strategy guide, board setup (24 vertices, 3 concentric squares), placing/moving/flying phases, and tactical advice with direct entry to the live battleground.
-  - **Chess:** Classic 64-square grandmaster strategy guide covering piece dynamics, special rules, opening principles, and "COMING SOON" Season 2 launch announcement.
-  - **Checkers / Draughts (`CheckersScreen.tsx`):** Full playable Checkers and Draughts arena built with `react-native-gesture-handler` and `react-native-reanimated` for smooth drag-and-drop piece interactions. Features dual-mode support for 8×8 Classic Checkers and 10×10 International Draughts (powered by the headless `draughts` engine), spring snap-back physics on illegal moves, real-time turn tracking, and promoted King gold crown emblems.
+  - **Chess:** Classic 64-square grandmaster strategy guide covering piece dynamics, special rules, opening principles, and direct entry into the live battleground.
+  - **Checkers / Draughts (`CheckersScreen.tsx`):** Full playable Checkers and Draughts arena built with `react-native-gesture-handler` and `react-native-reanimated` for smooth drag-and-drop piece interactions. Features dual-mode support for 8×8 Classic Checkers and 10×10 International Draughts (powered by the headless `draughts` engine), spring snap-back physics on illegal moves, real-time turn tracking, promoted King gold crown emblems, and direct battleground launch.
   - **Pure Body Architecture:** All game guides and screens follow pure body typography without card enclosures or panel divs.
 - **Streamlined Battleground (`BattlegroundScreen.tsx`):**
   - Pure body action rows on `#FFFFFF` canvas for **Host Public Room**, **Browse Public Lobby**, **Create 4-Digit PIN**, and **Join Private PIN**.

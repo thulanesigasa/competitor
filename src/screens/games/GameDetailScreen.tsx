@@ -96,9 +96,7 @@ const GAME_DATA: Record<GameId, GameContent> = {
       'Castle early to protect your King and connect your Rooks.',
       'Always calculate your opponent’s forcing moves (checks, captures, threats).',
     ],
-    isComingSoon: true,
-    comingSoonText:
-      'Chess online matchmaking, blitz/rapid time controls, and Swiss tournaments will launch in Season 2.',
+    isComingSoon: false,
   },
   checkers: {
     title: 'CHECKERS / DRAUGHTS',
@@ -231,35 +229,24 @@ export const GameDetailScreen: React.FC = () => {
 
         <View style={styles.divider} />
 
-        {/* Bottom Section */}
-        {game.isComingSoon ? (
-          <View style={styles.comingSoonContainer}>
-            <Text variant="h2" weight="900" color={colors.accentHover} style={styles.comingSoonTitle}>
-              COMING SOON
+        {/* Bottom Section: Enter Battleground */}
+        <View style={styles.playActionContainer}>
+          <TouchableOpacity
+            style={styles.playButton}
+            activeOpacity={0.8}
+            onPress={() => {
+              if (gameId === 'checkers') {
+                navigation.navigate('CheckersGame');
+              } else {
+                navigation.navigate('MainTabs', { screen: 'Battleground' });
+              }
+            }}
+          >
+            <Text variant="body" weight="900" color="#FFFFFF" style={styles.playButtonText}>
+              ENTER BATTLEGROUND NOW →
             </Text>
-            <Text variant="body" color={colors.textSecondary} style={styles.comingSoonDescription}>
-              {game.comingSoonText}
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.playActionContainer}>
-            <TouchableOpacity
-              style={styles.playButton}
-              activeOpacity={0.8}
-              onPress={() => {
-                if (gameId === 'checkers') {
-                  navigation.navigate('CheckersGame');
-                } else {
-                  navigation.navigate('MainTabs', { screen: 'Battleground' });
-                }
-              }}
-            >
-              <Text variant="body" weight="900" color="#FFFFFF" style={styles.playButtonText}>
-                {gameId === 'checkers' ? 'PLAY CHECKERS NOW →' : 'ENTER BATTLEGROUND NOW →'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -327,20 +314,6 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 20,
     fontSize: 13,
-  },
-  comingSoonContainer: {
-    alignItems: 'center',
-    paddingVertical: SPACING.lg,
-  },
-  comingSoonTitle: {
-    letterSpacing: 1.5,
-    fontSize: 18,
-    marginBottom: 6,
-  },
-  comingSoonDescription: {
-    textAlign: 'center',
-    lineHeight: 20,
-    fontSize: 12.5,
   },
   playActionContainer: {
     paddingVertical: SPACING.md,
