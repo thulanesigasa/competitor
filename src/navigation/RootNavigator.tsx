@@ -24,6 +24,7 @@ import { TermsOfServiceScreen } from '../screens/legal/TermsOfServiceScreen';
 import { VipPassScreen } from '../screens/wallet/VipPassScreen';
 import { GameDetailScreen } from '../screens/games/GameDetailScreen';
 import { TournamentInfoScreen } from '../screens/tournament/TournamentInfoScreen';
+import { CheckersScreen } from '../screens/checkers/CheckersScreen';
 import { AppSwitcherShield } from '../components/common/AppSwitcherShield';
 
 const Stack = createNativeStackNavigator();
@@ -157,6 +158,9 @@ export const RootNavigator: React.FC = () => {
 
           {/* Games Guide Screen */}
           <Stack.Screen name="GameDetail" component={GameDetailScreen} />
+
+          {/* Checkers Game Screen */}
+          <Stack.Screen name="CheckersGame" component={CheckersScreen} />
 
           {/* Legal Screens */}
           <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />

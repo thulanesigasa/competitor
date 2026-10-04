@@ -209,7 +209,7 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 - **Strategy Games Section under Profile (`ProfileScreen.tsx`, `GameDetailScreen.tsx`):**
   - **Morabaraba:** Full traditional Southern African board strategy guide, board setup (24 vertices, 3 concentric squares), placing/moving/flying phases, and tactical advice with direct entry to the live battleground.
   - **Chess:** Classic 64-square grandmaster strategy guide covering piece dynamics, special rules, opening principles, and "COMING SOON" Season 2 launch announcement.
-  - **Checkers / Draughts:** 8x8 diagonal strategy guide covering mandatory multi-jump sequences, king crowning, tactical sacrifices, and "COMING SOON" tournament launch announcement.
+  - **Checkers / Draughts (`CheckersScreen.tsx`):** Full playable Checkers and Draughts arena built with `react-native-gesture-handler` and `react-native-reanimated` for smooth drag-and-drop piece interactions. Features dual-mode support for 8×8 Classic Checkers and 10×10 International Draughts (powered by the headless `draughts` engine), spring snap-back physics on illegal moves, real-time turn tracking, and promoted King gold crown emblems.
   - **Pure Body Architecture:** All game guides and screens follow pure body typography without card enclosures or panel divs.
 - **Streamlined Battleground (`BattlegroundScreen.tsx`):**
   - Pure body action rows on `#FFFFFF` canvas for **Host Public Room**, **Browse Public Lobby**, **Create 4-Digit PIN**, and **Join Private PIN**.
@@ -266,6 +266,10 @@ competitor/
 |-- src/
 |   |-- components/
 |   |   |-- Typography.tsx             # Standardized Text component with variants & weights
+|   |   |-- checkers/
+|   |   |   |-- CheckersBoard.tsx      # Alternating 8x8 / 10x10 flexbox grid with piece layouts
+|   |   |   |-- checkersMapping.ts     # Coordinate math: converts (row, col) <-> notation
+|   |   |   `-- DraggablePiece.tsx     # Reanimated + Gesture.Pan piece with elevation & spring physics
 |   |   |-- common/
 |   |   |   |-- AppSwitcherShield.tsx  # Multitasking privacy shield with Morabaraba branding
 |   |   |   |-- ErrorBoundary.tsx      # Graceful crash shield with reload & cache reset actions
@@ -293,6 +297,7 @@ competitor/
 |   |   `-- theme.ts                   # Legacy theme metrics re-exported to src/theme
 |   |-- engine/
 |   |   |-- ai.ts                      # Heuristic & Minimax AI across 3 difficulties
+|   |   |-- checkersEngine.ts          # Headless draughts & 8x8 classic checkers engine adapter
 |   |   |-- morabaraba.ts              # Mathematical board model and mill triplets
 |   |   `-- morabarabaValidator.ts     # Strict rules, anti-bot speed limiter, and violation tips
 |   |-- navigation/
@@ -304,6 +309,8 @@ competitor/
 |   |   |   `-- SignUpScreen.tsx       # 3-step progressive Southern African registration with step connectors
 |   |   |-- battleground/
 |   |   |   `-- BattlegroundScreen.tsx # 2-Player Pass & Play, stake selection, and online battleground
+|   |   |-- checkers/
+|   |   |   `-- CheckersScreen.tsx     # Full interactive mobile checkers arena with 8x8 and 10x10 support
 |   |   |-- games/
 |   |   |   `-- GameDetailScreen.tsx   # Comprehensive guides for Morabaraba, Chess, and Checkers with coming soon state
 |   |   |-- leaderboard/
@@ -351,6 +358,7 @@ competitor/
 |   |   `-- index.ts                   # Spacing (multiples of 8), platformSpecs, radius, shadow
 |   `-- types/
 |       |-- auth.ts                    # User profile and registration models
+|       |-- draughts.d.ts              # Headless draughts engine TypeScript module declaration
 |       `-- game.ts                    # Game state, phase, player, and board types
 |-- supabase/
 |   |-- config.toml                    # Supabase local and remote configuration
