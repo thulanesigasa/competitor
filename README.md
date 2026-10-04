@@ -181,10 +181,9 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 - **Anti-AI Deliberation Clock:** 60-second deliberation timer preventing external solver/AI assistance and stalling tactics in ranked battles.
 - **Educational Rule Tip Modal (`RuleTipModal.tsx`):** Unobtrusive 60-30-10 modal that surfaces authentic rule tips only when a user or script attempts to violate a rule, explaining why the action was rejected without cluttering the screen during normal gameplay.
 
-### 11. Tournament & Subscription Engine: R500 Weekly Tournaments & VIP Pro Tournament Pass (`tournamentService.ts`, `VipPassScreen.tsx`, `LeaderboardScreen.tsx`)
+### 11. Tournament & Subscription Engine: R500 Weekly Tournaments & VIP Pro Tournament Pass (`tournamentService.ts`, `VipPassScreen.tsx`, `TournamentInfoScreen.tsx`)
 - **R500 Weekly Tournament Engine (`tournamentService.ts`):**
-  - Continuous weekly tournament cycles starting **Monday 00:00:00 SAST** and freezing on **Sunday 23:59:59 SAST**.
-  - Live ticking countdown timer ticking down to Sunday midnight settlement embedded directly on the Regional Leaderboard banner.
+  - Continuous weekly tournament cycles starting **Monday 08:00:00 SAST** and concluding on **Sunday 23:59:59 SAST**.
   - **R500 Grand Prize Pool Distributed to Top 8 Global Leaderboard Competitors:**
     - **Rank 1:** R200 (Grand Champion)
     - **Rank 2:** R100 (Runner-Up)
@@ -197,6 +196,14 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
   - **Automated Sunday Settlement & Winner Notification:**
     - Standings lock automatically at Sunday 23:59:59 SAST.
     - Verified Top 8 winners receive automated email disbursement notifications for payout processing.
+- **Dedicated Weekly Tournament Guide Screen (`TournamentInfoScreen.tsx`):**
+  - Accessible directly from VIP Pro Pass (`VipPassScreen.tsx`).
+  - Outlines tournament concept, active window (Monday 8:00 AM to Sunday 23:59:59), 5-step operational mechanics, prize breakdown, and fair play standards.
+  - Rendered in pure body typography on the `#FFFFFF` canvas without card/div enclosures.
+- **VIP Pro Tournament Pass (`VipPassScreen.tsx`):**
+  - Consolidates the R500.00 Weekly Tournament prize pool, tournament guide link, and Top 8 cash allocations.
+  - Designed in pure body typography with subtle hairline dividers, completely free of card div wrappers (`statusCard`, `prizeGrid`).
+  - Monthly subscription model granting exclusive qualification to claim Top 8 Weekly Tournament cash prizes.
 - **Strategy Games Section under Profile (`ProfileScreen.tsx`, `GameDetailScreen.tsx`):**
   - **Morabaraba:** Full traditional Southern African board strategy guide, board setup (24 vertices, 3 concentric squares), placing/moving/flying phases, and tactical advice with direct entry to the live battleground.
   - **Chess:** Classic 64-square grandmaster strategy guide covering piece dynamics, special rules, opening principles, and "COMING SOON" Season 2 launch announcement.
@@ -207,10 +214,6 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
   - Purged boxed card divs, multi-game tabs, and tournament notices from the battleground lobby.
 - **Clean Leaderboard Standings (`LeaderboardScreen.tsx`):**
   - Removed tournament banners and prize pills from competitor rank rows, presenting clean, live Southern African standings.
-- **VIP Pro Tournament Pass (`VipPassScreen.tsx`):**
-  - Consolidates the R500.00 Weekly Tournament prize pool and Top 8 cash allocations.
-  - Designed in pure body typography with subtle hairline dividers, completely free of card div wrappers (`statusCard`, `prizeGrid`).
-  - Monthly subscription model granting exclusive qualification to claim Top 8 Weekly Tournament cash prizes.
 
 ---
 
@@ -312,6 +315,8 @@ competitor/
 |   |   |   `-- OnboardingScreen.tsx   # 3-slide crossfade art canvas, liquid sliding pill & SwipeToStartButton
 |   |   |-- profile/
 |   |   |   `-- ProfileScreen.tsx      # Gamer Tag career stats, wallet, and settings body rows
+|   |   |-- tournament/
+|   |   |   `-- TournamentInfoScreen.tsx # Dedicated weekly tournament guide, 8am Mon - 23:59:59 Sun schedule, and prize breakdown
 |   |   |-- wallet/
 |   |   |   `-- VipPassScreen.tsx      # Dedicated VIP Pro Tournament Pass benefits, prize eligibility, and text activation
 |   |   `-- settings/

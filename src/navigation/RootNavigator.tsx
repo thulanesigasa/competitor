@@ -23,6 +23,7 @@ import { PrivacyPolicyScreen } from '../screens/legal/PrivacyPolicyScreen';
 import { TermsOfServiceScreen } from '../screens/legal/TermsOfServiceScreen';
 import { VipPassScreen } from '../screens/wallet/VipPassScreen';
 import { GameDetailScreen } from '../screens/games/GameDetailScreen';
+import { TournamentInfoScreen } from '../screens/tournament/TournamentInfoScreen';
 import { AppSwitcherShield } from '../components/common/AppSwitcherShield';
 
 const Stack = createNativeStackNavigator();
@@ -150,6 +151,9 @@ export const RootNavigator: React.FC = () => {
 
           {/* VIP Pro Tournament Pass Screen */}
           <Stack.Screen name="VipPass" component={VipPassScreen} />
+
+          {/* Tournament Guide Screen */}
+          <Stack.Screen name="TournamentInfo" component={TournamentInfoScreen} />
 
           {/* Games Guide Screen */}
           <Stack.Screen name="GameDetail" component={GameDetailScreen} />

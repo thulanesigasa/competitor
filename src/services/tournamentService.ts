@@ -55,7 +55,7 @@ export function getPrizeForRank(rank: number): number | null {
 }
 
 /**
- * Calculates the current weekly tournament window (Monday 00:00:00 to Sunday 23:59:59).
+ * Calculates the current weekly tournament window (Monday 08:00:00 to Sunday 23:59:59).
  */
 export function calculateTournamentWindow(referenceDate: Date = new Date()): {
   start: Date;
@@ -71,7 +71,7 @@ export function calculateTournamentWindow(referenceDate: Date = new Date()): {
   
   const monday = new Date(current);
   monday.setDate(current.getDate() + diffToMonday);
-  monday.setHours(0, 0, 0, 0);
+  monday.setHours(8, 0, 0, 0);
 
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate() + 6);
