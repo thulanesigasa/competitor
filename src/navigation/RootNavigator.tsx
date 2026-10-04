@@ -22,6 +22,7 @@ import { ChallengeArenaScreen } from '../screens/settings/ChallengeArenaScreen';
 import { PrivacyPolicyScreen } from '../screens/legal/PrivacyPolicyScreen';
 import { TermsOfServiceScreen } from '../screens/legal/TermsOfServiceScreen';
 import { VipPassScreen } from '../screens/wallet/VipPassScreen';
+import { GameDetailScreen } from '../screens/games/GameDetailScreen';
 import { AppSwitcherShield } from '../components/common/AppSwitcherShield';
 
 const Stack = createNativeStackNavigator();
@@ -149,6 +150,9 @@ export const RootNavigator: React.FC = () => {
 
           {/* VIP Pro Tournament Pass Screen */}
           <Stack.Screen name="VipPass" component={VipPassScreen} />
+
+          {/* Games Guide Screen */}
+          <Stack.Screen name="GameDetail" component={GameDetailScreen} />
 
           {/* Legal Screens */}
           <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />

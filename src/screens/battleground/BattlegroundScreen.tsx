@@ -20,7 +20,6 @@ import { CoinTossModal } from '../../components/game/CoinTossModal';
 import { CompetitorProfileCard } from '../../components/game/CompetitorProfileCard';
 import { Text } from '../../components/Typography';
 import { colors } from '../../theme/colors';
-import { spacing } from '../../theme';
 import {
   GamePhase,
   GameState,
@@ -47,27 +46,14 @@ import {
   validateCowMove,
   validateCowShot,
 } from '../../engine/morabarabaValidator';
-import {
-  ChessKnightSvg,
-  CheckersSvg,
-  GlobeSvg,
-  UsersSvg,
-  LockSvg,
-  SmartphoneSvg,
-  TrophySvg,
-  CrownSvg,
-  ChevronRightSvg,
-  ShieldSvg,
-  ClockSvg,
-} from '../../components/common/SvgIcons';
-
-type StrategyGame = 'morabaraba' | 'chess' | 'checkers';
 
 type DuelMode =
   | 'menu'
+  | 'host_type_select'
   | 'host_private_share'
   | 'host_waiting_room_private'
   | 'host_waiting_room_public'
+  | 'join_type_select'
   | 'join_private_enter_code'
   | 'join_public_lobby'
   | 'join_waiting_approval'
@@ -77,8 +63,6 @@ export const BattlegroundScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { showAlert } = useThemedAlert();
 
-  // Multi-game hub state
-  const [selectedGame, setSelectedGame] = useState<StrategyGame>('morabaraba');
   const [mode, setMode] = useState<DuelMode>('menu');
 
   // Room PIN & Lobby State
@@ -331,7 +315,6 @@ export const BattlegroundScreen: React.FC = () => {
         setOpponentName(host.gamerTag);
         setMode('join_waiting_approval');
 
-        // Subscribe to host approval in real-time
         if (roomSubscription.current) roomSubscription.current();
         roomSubscription.current = battlegroundService.subscribeToRoom(room.id, {
           onMatchAccepted: () => {
@@ -354,7 +337,6 @@ export const BattlegroundScreen: React.FC = () => {
       activeRoomId.current = host.id;
       await battlegroundService.challengePublicHost(host.id, currentUser.id);
 
-      // Subscribe to host approval in real-time
       if (roomSubscription.current) roomSubscription.current();
       roomSubscription.current = battlegroundService.subscribeToRoom(host.id, {
         onMatchAccepted: () => {
@@ -385,10 +367,8 @@ export const BattlegroundScreen: React.FC = () => {
     showAlert({
       title: 'Victory!',
       message:
-        'Congratulations! Undisputed triumph on the battleground.\n\nYour match win and win rate have been officially recorded on the Global Leaderboard standings towards the R500 Weekly Tournament!',
-      buttons: [
-        { text: 'Return to Hub', onPress: () => setMode('menu') },
-      ],
+        'Congratulations! Undisputed triumph on the battleground.\n\nYour match win and win rate have been officially recorded on the Southern African Leaderboard standings!',
+      buttons: [{ text: 'Return to Menu', onPress: () => setMode('menu') }],
     });
   };
 
@@ -397,7 +377,7 @@ export const BattlegroundScreen: React.FC = () => {
     showAlert({
       title: 'Defeated',
       message: `${opponentName} ${reason}.\n\nPractice in Pass & Play or challenge another competitor to climb the Southern African Leaderboard!`,
-      buttons: [{ text: 'Return to Hub', onPress: () => setMode('menu') }],
+      buttons: [{ text: 'Return to Menu', onPress: () => setMode('menu') }],
     });
   };
 
@@ -604,7 +584,6 @@ export const BattlegroundScreen: React.FC = () => {
   const handleVertexPress = (vertexId: number) => {
     if (gameState.winner) return;
 
-    // 1. Turn Authorization Check
     if (gameState.currentPlayer !== localPlayer) {
       setRuleTip({
         code: 'NOT_PLAYER_TURN',
@@ -615,7 +594,6 @@ export const BattlegroundScreen: React.FC = () => {
       return;
     }
 
-    // 2. Anti-Bot / Rapid Reaction Speed Check
     const rateCheck = validateHumanReactionRate(lastActionTimestamp.current);
     if (!rateCheck.isValid) {
       setRuleTip(rateCheck.tip);
@@ -748,7 +726,6 @@ export const BattlegroundScreen: React.FC = () => {
     }
 
     // Case 3: Moving / Flying Phase
-    // Sub-case A: Select or change selected cow
     if (gameState.selectedVertex === null || gameState.board[vertexId] === current) {
       const selectCheck = validateCowSelection(gameState, current, vertexId);
       if (!selectCheck.isValid) {
@@ -762,7 +739,6 @@ export const BattlegroundScreen: React.FC = () => {
       return;
     }
 
-    // Sub-case B: Moving selected cow to destination
     if (gameState.selectedVertex !== null) {
       const moveCheck = validateCowMove(
         gameState,
@@ -855,20 +831,26 @@ export const BattlegroundScreen: React.FC = () => {
       activeRoomId.current = null;
     }
 
-    if (
+    if (mode === 'host_type_select' || mode === 'join_type_select') {
+      setMode('menu');
+    } else if (mode === 'host_private_share') {
+      setMode('host_type_select');
+    } else if (
       mode === 'host_waiting_room_private' ||
-      mode === 'host_waiting_room_public' ||
-      mode === 'host_private_share' ||
+      mode === 'host_waiting_room_public'
+    ) {
+      setMode('menu');
+    } else if (
       mode === 'join_private_enter_code' ||
       mode === 'join_public_lobby'
     ) {
-      setMode('menu');
+      setMode('join_type_select');
     } else if (mode === 'join_waiting_approval') {
       setMode('join_public_lobby');
     } else if (mode === 'match_in_progress') {
       showAlert({
         title: 'Leave Match',
-        message: 'Are you sure you want to forfeit this online battle and return to the Strategy Hub?',
+        message: 'Are you sure you want to forfeit this online battle and return to the menu?',
         buttons: [
           { text: 'Cancel', style: 'cancel' },
           {
@@ -922,7 +904,7 @@ export const BattlegroundScreen: React.FC = () => {
         title="BATTLEGROUND"
         subtitle={
           mode === 'menu'
-            ? 'STRATEGY HUB'
+            ? 'ONLINE BATTLE'
             : mode === 'match_in_progress'
             ? 'LIVE MATCH'
             : 'ROOM LOBBY'
@@ -934,274 +916,166 @@ export const BattlegroundScreen: React.FC = () => {
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* 1. MULTI-GAME STRATEGY HUB (MENU) */}
+        {/* 1. MAIN BATTLEGROUND MENU (PURE BODY TYPOGRAPHY, ZERO CARD DIVS) */}
         {mode === 'menu' && (
           <View style={styles.menuContainer}>
-            {/* Game Selector Tabs */}
-            <View style={styles.gameTabsContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.gameTab,
-                  selectedGame === 'morabaraba' && styles.gameTabActive,
-                ]}
-                activeOpacity={0.8}
-                onPress={() => setSelectedGame('morabaraba')}
-              >
-                <View style={styles.tabBadgeRow}>
-                  <Text
-                    style={[
-                      styles.gameTabTitle,
-                      selectedGame === 'morabaraba' && styles.gameTabTitleActive,
-                    ]}
-                  >
-                    MORABARABA
-                  </Text>
-                  <View style={styles.liveTagBadge}>
-                    <Text style={styles.liveTagText}>LIVE</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.gameTab,
-                  selectedGame === 'chess' && styles.gameTabActive,
-                ]}
-                activeOpacity={0.8}
-                onPress={() => setSelectedGame('chess')}
-              >
-                <View style={styles.tabBadgeRow}>
-                  <Text
-                    style={[
-                      styles.gameTabTitle,
-                      selectedGame === 'chess' && styles.gameTabTitleActive,
-                    ]}
-                  >
-                    CHESS
-                  </Text>
-                  <View style={styles.soonTagBadge}>
-                    <Text style={styles.soonTagText}>SOON</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.gameTab,
-                  selectedGame === 'checkers' && styles.gameTabActive,
-                ]}
-                activeOpacity={0.8}
-                onPress={() => setSelectedGame('checkers')}
-              >
-                <View style={styles.tabBadgeRow}>
-                  <Text
-                    style={[
-                      styles.gameTabTitle,
-                      selectedGame === 'checkers' && styles.gameTabTitleActive,
-                    ]}
-                  >
-                    CHECKERS
-                  </Text>
-                  <View style={styles.soonTagBadge}>
-                    <Text style={styles.soonTagText}>SOON</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
+            <View style={styles.introSection}>
+              <Text variant="h2" weight="900" color={colors.textPrimary}>
+                ONLINE BATTLEGROUND
+              </Text>
+              <Text variant="caption" color={colors.textSecondary} style={styles.sectionDesc}>
+                Compete across Southern Africa. Host or join public battleground rooms, challenge opponents via private codes, or play tabletop Pass & Play.
+              </Text>
             </View>
 
-            {/* CHESS TEASER CARD */}
-            {selectedGame === 'chess' && (
-              <View style={styles.teaserCard}>
-                <View style={styles.teaserIconBox}>
-                  <ChessKnightSvg size={48} color={COLORS.accent} />
-                </View>
-                <Text style={styles.teaserTitle}>CHESS ARENA</Text>
-                <View style={styles.seasonBadge}>
-                  <Text style={styles.seasonBadgeText}>SEASON 2 COMING SOON</Text>
-                </View>
-                <Text style={styles.teaserDesc}>
-                  Master classic 64-square grandmaster tactics. Real-time blitz, rapid matchmaking, and Southern African rating ladders are currently in active development.
-                </Text>
+            {/* HOST ONLINE BATTLE */}
+            <TouchableOpacity
+              style={styles.actionRow}
+              activeOpacity={0.7}
+              onPress={() => setMode('host_type_select')}
+            >
+              <Text variant="h3" weight="800" color={colors.textPrimary}>
+                HOST ROOM
+              </Text>
+              <Text variant="caption" color={colors.textSecondary} style={styles.actionDescText}>
+                Create a public room visible to regional challengers or a private locked battle room with a shareable code.
+              </Text>
+              <Text variant="label" weight="800" color={colors.accentHover} style={styles.actionTag}>
+                Host Battle →
+              </Text>
+            </TouchableOpacity>
 
-                <View style={styles.teaserFeatureList}>
-                  <View style={styles.teaserFeatureItem}>
-                    <ShieldSvg size={16} color={COLORS.accent} />
-                    <Text style={styles.teaserFeatureText}>FIDE standard time controls & ELO ratings</Text>
-                  </View>
-                  <View style={styles.teaserFeatureItem}>
-                    <TrophySvg size={16} color={COLORS.accent} />
-                    <Text style={styles.teaserFeatureText}>Weekly Swiss Tournaments with cash prize pools</Text>
-                  </View>
-                  <View style={styles.teaserFeatureItem}>
-                    <GlobeSvg size={16} color={COLORS.accent} />
-                    <Text style={styles.teaserFeatureText}>Cross-border Southern African competitor matchmaking</Text>
-                  </View>
-                </View>
+            {/* JOIN ONLINE BATTLE */}
+            <TouchableOpacity
+              style={styles.actionRow}
+              activeOpacity={0.7}
+              onPress={() => setMode('join_type_select')}
+            >
+              <Text variant="h3" weight="800" color={colors.textPrimary}>
+                JOIN ROOM
+              </Text>
+              <Text variant="caption" color={colors.textSecondary} style={styles.actionDescText}>
+                Browse active public hosters and inspect their profiles, or enter a private 4-digit PIN code to connect.
+              </Text>
+              <Text variant="label" weight="800" color={colors.accentHover} style={styles.actionTag}>
+                Find Battle →
+              </Text>
+            </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.switchGameBtn}
-                  activeOpacity={0.8}
-                  onPress={() => setSelectedGame('morabaraba')}
-                >
-                  <Text style={styles.switchGameBtnText}>PLAY LIVE MORABARABA →</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {/* CHECKERS TEASER CARD */}
-            {selectedGame === 'checkers' && (
-              <View style={styles.teaserCard}>
-                <View style={styles.teaserIconBox}>
-                  <CheckersSvg size={48} color={COLORS.accent} />
-                </View>
-                <Text style={styles.teaserTitle}>CHECKERS / DRAUGHTS</Text>
-                <View style={styles.seasonBadge}>
-                  <Text style={styles.seasonBadgeText}>SEASON 2 COMING SOON</Text>
-                </View>
-                <Text style={styles.teaserDesc}>
-                  Fast-paced diagonal captures and flying kings. Compete in traditional African draughts and English checkers tournaments across Southern Africa.
-                </Text>
-
-                <View style={styles.teaserFeatureList}>
-                  <View style={styles.teaserFeatureItem}>
-                    <ShieldSvg size={16} color={COLORS.accent} />
-                    <Text style={styles.teaserFeatureText}>Standard 8x8 draughts with mandatory captures</Text>
-                  </View>
-                  <View style={styles.teaserFeatureItem}>
-                    <TrophySvg size={16} color={COLORS.accent} />
-                    <Text style={styles.teaserFeatureText}>Weekly knockout brackets and ranking points</Text>
-                  </View>
-                  <View style={styles.teaserFeatureItem}>
-                    <UsersSvg size={16} color={COLORS.accent} />
-                    <Text style={styles.teaserFeatureText}>Direct PIN rooms & public lobby challenges</Text>
-                  </View>
-                </View>
-
-                <TouchableOpacity
-                  style={styles.switchGameBtn}
-                  activeOpacity={0.8}
-                  onPress={() => setSelectedGame('morabaraba')}
-                >
-                  <Text style={styles.switchGameBtnText}>PLAY LIVE MORABARABA →</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {/* LIVE MORABARABA STRATEGY HUB */}
-            {selectedGame === 'morabaraba' && (
-              <View>
-                {/* Weekly Tournament Notice */}
-                <View style={styles.tournamentNoticeCard}>
-                  <View style={styles.tournamentNoticeHeader}>
-                    <TrophySvg size={18} color={COLORS.accent} />
-                    <Text style={styles.tournamentNoticeTitle}>R500 WEEKLY TOURNAMENT ACTIVE</Text>
-                  </View>
-                  <Text style={styles.tournamentNoticeDesc}>
-                    Online matches (Public & Private) directly determine your Southern African ranking and win rate. Top 8 competitors at Sunday 23:59:59 SAST win cash prizes!
-                  </Text>
-                </View>
-
-                {/* ACTION 1: PLAY PUBLIC ONLINE */}
-                <View style={styles.actionCard}>
-                  <View style={styles.actionCardHeader}>
-                    <View style={styles.actionIconBox}>
-                      <GlobeSvg size={22} color={COLORS.accent} />
-                    </View>
-                    <View style={styles.actionCardTextCol}>
-                      <Text style={styles.actionCardTitle}>PLAY PUBLIC ONLINE</Text>
-                      <Text style={styles.actionCardDesc}>
-                        Compete against regional players. Public matches are recorded on the live database.
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.dualActionRow}>
-                    <TouchableOpacity
-                      style={styles.actionPrimaryBtn}
-                      activeOpacity={0.8}
-                      disabled={isCreatingRoom}
-                      onPress={handleHostPublicRoom}
-                    >
-                      {isCreatingRoom ? (
-                        <ActivityIndicator size="small" color="#FFFFFF" />
-                      ) : (
-                        <Text style={styles.actionPrimaryBtnText}>HOST PUBLIC ROOM →</Text>
-                      )}
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={styles.actionSecondaryBtn}
-                      activeOpacity={0.8}
-                      onPress={handleOpenPublicLobby}
-                    >
-                      <Text style={styles.actionSecondaryBtnText}>BROWSE HOSTS</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                {/* ACTION 2: PLAY PRIVATE ROOM */}
-                <View style={styles.actionCard}>
-                  <View style={styles.actionCardHeader}>
-                    <View style={styles.actionIconBox}>
-                      <LockSvg size={22} color={COLORS.accent} />
-                    </View>
-                    <View style={styles.actionCardTextCol}>
-                      <Text style={styles.actionCardTitle}>PLAY PRIVATE ROOM</Text>
-                      <Text style={styles.actionCardDesc}>
-                        Challenge friends directly using a 4-digit code. Verified online match ranking.
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.dualActionRow}>
-                    <TouchableOpacity
-                      style={styles.actionPrimaryBtn}
-                      activeOpacity={0.8}
-                      disabled={isCreatingRoom}
-                      onPress={handleHostPrivateRoom}
-                    >
-                      {isCreatingRoom ? (
-                        <ActivityIndicator size="small" color="#FFFFFF" />
-                      ) : (
-                        <Text style={styles.actionPrimaryBtnText}>CREATE 4-DIGIT PIN →</Text>
-                      )}
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={styles.actionSecondaryBtn}
-                      activeOpacity={0.8}
-                      onPress={handleOpenPrivatePinEntry}
-                    >
-                      <Text style={styles.actionSecondaryBtnText}>ENTER PIN CODE</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                {/* ACTION 3: PASS & PLAY (TABLETOP OFFLINE) */}
-                <TouchableOpacity
-                  style={styles.offlineActionRow}
-                  activeOpacity={0.7}
-                  onPress={handleStartPassAndPlay}
-                >
-                  <View style={styles.offlineLeftCol}>
-                    <View style={styles.offlineIconBox}>
-                      <SmartphoneSvg size={18} color={COLORS.accent} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.offlineTitle}>PASS & PLAY (OFFLINE)</Text>
-                      <Text style={styles.offlineDesc}>
-                        Face-to-face tabletop match with coin toss turn selection. Practice mode (no ranking impact).
-                      </Text>
-                    </View>
-                  </View>
-                  <ChevronRightSvg size={18} color={COLORS.accent} />
-                </TouchableOpacity>
-              </View>
-            )}
+            {/* PASS & PLAY */}
+            <TouchableOpacity
+              style={styles.actionRow}
+              activeOpacity={0.7}
+              onPress={handleStartPassAndPlay}
+            >
+              <Text variant="h3" weight="800" color={colors.textPrimary}>
+                PASS & PLAY
+              </Text>
+              <Text variant="caption" color={colors.textSecondary} style={styles.actionDescText}>
+                Take turns making moves with fair coin toss turn selection on one screen. Perfect for face-to-face tactical duels anywhere.
+              </Text>
+              <Text variant="label" weight="800" color={colors.accentHover} style={styles.actionTag}>
+                Instant Start →
+              </Text>
+            </TouchableOpacity>
           </View>
         )}
 
-        {/* 2. HOST PRIVATE: SHARE CODE */}
+        {/* 2. HOST: CHOOSE PUBLIC OR PRIVATE (PURE BODY TYPOGRAPHY) */}
+        {mode === 'host_type_select' && (
+          <View style={styles.flowContainer}>
+            <View style={styles.flowHeader}>
+              <Text variant="h2" weight="900" color={colors.textPrimary}>
+                HOST A BATTLE ROOM
+              </Text>
+              <Text variant="caption" color={colors.textSecondary}>
+                Choose whether you want your battle room to be public or private.
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.actionRow}
+              activeOpacity={0.7}
+              disabled={isCreatingRoom}
+              onPress={handleHostPublicRoom}
+            >
+              <Text variant="h3" weight="800" color={colors.textPrimary}>
+                PUBLIC ROOM
+              </Text>
+              <Text variant="caption" color={colors.textSecondary} style={styles.actionDescText}>
+                Open to all Southern African competitors. Your room is listed on the public lobby. You review the challenger's profile before accepting the match.
+              </Text>
+              <Text variant="label" weight="800" color={colors.accentHover} style={styles.actionTag}>
+                {isCreatingRoom ? 'Creating Room...' : 'Launch Public Room →'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionRow}
+              activeOpacity={0.7}
+              disabled={isCreatingRoom}
+              onPress={handleHostPrivateRoom}
+            >
+              <Text variant="h3" weight="800" color={colors.textPrimary}>
+                PRIVATE ROOM
+              </Text>
+              <Text variant="caption" color={colors.textSecondary} style={styles.actionDescText}>
+                Protected by a 4-digit code. Share the PIN directly with your opponent. Only competitors who enter your code can request to join.
+              </Text>
+              <Text variant="label" weight="800" color={colors.accentHover} style={styles.actionTag}>
+                {isCreatingRoom ? 'Creating Room...' : 'Generate Private PIN →'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* 3. JOIN: CHOOSE PUBLIC OR PRIVATE (PURE BODY TYPOGRAPHY) */}
+        {mode === 'join_type_select' && (
+          <View style={styles.flowContainer}>
+            <View style={styles.flowHeader}>
+              <Text variant="h2" weight="900" color={colors.textPrimary}>
+                JOIN AN ONLINE BATTLE
+              </Text>
+              <Text variant="caption" color={colors.textSecondary}>
+                Choose whether you want to browse public hosters or enter a private code.
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.actionRow}
+              activeOpacity={0.7}
+              onPress={handleOpenPublicLobby}
+            >
+              <Text variant="h3" weight="800" color={colors.textPrimary}>
+                JOIN PUBLIC ROOM
+              </Text>
+              <Text variant="caption" color={colors.textSecondary} style={styles.actionDescText}>
+                Browse all competitors who are currently hosting public rooms, inspect their profiles and win rates, and request to challenge them.
+              </Text>
+              <Text variant="label" weight="800" color={colors.accentHover} style={styles.actionTag}>
+                Browse Public Hosts →
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionRow}
+              activeOpacity={0.7}
+              onPress={handleOpenPrivatePinEntry}
+            >
+              <Text variant="h3" weight="800" color={colors.textPrimary}>
+                JOIN PRIVATE ROOM
+              </Text>
+              <Text variant="caption" color={colors.textSecondary} style={styles.actionDescText}>
+                Enter the 4-digit battle code given to you by a competitor hosting privately.
+              </Text>
+              <Text variant="label" weight="800" color={colors.accentHover} style={styles.actionTag}>
+                Enter PIN Code →
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* 4. HOST PRIVATE: SHARE CODE */}
         {mode === 'host_private_share' && (
           <View style={styles.flowContainer}>
             <View style={styles.flowHeader}>
@@ -1251,7 +1125,7 @@ export const BattlegroundScreen: React.FC = () => {
           </View>
         )}
 
-        {/* 3. HOST WAITING ROOM (PRIVATE) */}
+        {/* 5. HOST WAITING ROOM (PRIVATE) */}
         {mode === 'host_waiting_room_private' && (
           <View style={styles.flowContainer}>
             <View style={styles.flowHeader}>
@@ -1291,7 +1165,7 @@ export const BattlegroundScreen: React.FC = () => {
           </View>
         )}
 
-        {/* 4. HOST WAITING ROOM (PUBLIC) */}
+        {/* 6. HOST WAITING ROOM (PUBLIC) */}
         {mode === 'host_waiting_room_public' && (
           <View style={styles.flowContainer}>
             <View style={styles.flowHeader}>
@@ -1331,7 +1205,7 @@ export const BattlegroundScreen: React.FC = () => {
           </View>
         )}
 
-        {/* 5. JOIN PRIVATE: ENTER CODE */}
+        {/* 7. JOIN PRIVATE: ENTER CODE */}
         {mode === 'join_private_enter_code' && (
           <View style={styles.flowContainer}>
             <View style={styles.flowHeader}>
@@ -1368,7 +1242,7 @@ export const BattlegroundScreen: React.FC = () => {
           </View>
         )}
 
-        {/* 6. JOIN PUBLIC: LOBBY OF ACTIVE HOSTS */}
+        {/* 8. JOIN PUBLIC: LOBBY OF ACTIVE HOSTS */}
         {mode === 'join_public_lobby' && (
           <View style={styles.flowContainer}>
             <View style={styles.flowHeader}>
@@ -1407,7 +1281,7 @@ export const BattlegroundScreen: React.FC = () => {
                 <TouchableOpacity
                   style={[styles.primaryFullBtn, { marginTop: 8 }]}
                   activeOpacity={0.8}
-                  onPress={handleHostPublicRoom}
+                  onPress={() => setMode('host_type_select')}
                 >
                   <Text variant="body" weight="800" color="#FFFFFF">
                     HOST A ROOM NOW →
@@ -1418,7 +1292,7 @@ export const BattlegroundScreen: React.FC = () => {
           </View>
         )}
 
-        {/* 7. JOIN WAITING FOR HOST APPROVAL */}
+        {/* 9. JOIN WAITING FOR HOST APPROVAL */}
         {mode === 'join_waiting_approval' && selectedHostProfile && (
           <View style={styles.flowContainer}>
             <View style={styles.flowHeader}>
@@ -1457,7 +1331,7 @@ export const BattlegroundScreen: React.FC = () => {
           </View>
         )}
 
-        {/* 8. LIVE MORABARABA MATCH IN PROGRESS */}
+        {/* 10. LIVE MORABARABA MATCH IN PROGRESS */}
         {mode === 'match_in_progress' && (
           <View style={styles.matchContainer}>
             {/* Status Bar */}
@@ -1534,7 +1408,6 @@ export const BattlegroundScreen: React.FC = () => {
         onSideCalled={handleSideCalled}
       />
 
-
       {/* Strict Tactical Rule Tip Modal */}
       <RuleTipModal
         visible={showRuleTip}
@@ -1555,283 +1428,33 @@ const styles = StyleSheet.create({
     paddingBottom: 90,
   },
   menuContainer: {
-    gap: SPACING.md,
+    gap: 0,
   },
-
-  // Game Selector Tabs
-  gameTabsContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  introSection: {
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.xs,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(15, 23, 42, 0.08)',
-    paddingBottom: SPACING.sm,
+    marginBottom: SPACING.xs,
   },
-  gameTab: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
+  sectionDesc: {
+    marginTop: 4,
+    lineHeight: 20,
   },
-  gameTabActive: {
-    borderBottomColor: COLORS.accent,
+  actionRow: {
+    paddingVertical: SPACING.lg,
+    paddingHorizontal: SPACING.xs,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(15, 23, 42, 0.08)',
   },
-  tabBadgeRow: {
-    alignItems: 'center',
-    gap: 3,
+  actionDescText: {
+    marginTop: 4,
+    lineHeight: 19,
   },
-  gameTabTitle: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: COLORS.textSecondary,
+  actionTag: {
+    marginTop: SPACING.sm,
     letterSpacing: 0.5,
   },
-  gameTabTitleActive: {
-    color: COLORS.accentHover,
-    fontWeight: '900',
-  },
-  liveTagBadge: {
-    backgroundColor: COLORS.accent,
-    paddingHorizontal: 5,
-    paddingVertical: 1.5,
-  },
-  liveTagText: {
-    fontSize: 8,
-    fontWeight: '900',
-    color: '#FFFFFF',
-    letterSpacing: 0.5,
-  },
-  soonTagBadge: {
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 5,
-    paddingVertical: 1.5,
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
-  },
-  soonTagText: {
-    fontSize: 8,
-    fontWeight: '800',
-    color: '#64748B',
-    letterSpacing: 0.4,
-  },
-
-  // Teaser Cards (Chess & Checkers)
-  teaserCard: {
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
-    padding: SPACING.xl,
-    alignItems: 'center',
-  },
-  teaserIconBox: {
-    width: 80,
-    height: 80,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: SPACING.md,
-  },
-  teaserTitle: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: COLORS.textPrimary,
-    letterSpacing: 0.8,
-  },
-  seasonBadge: {
-    backgroundColor: 'rgba(229, 169, 60, 0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(229, 169, 60, 0.3)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    marginTop: 6,
-    marginBottom: SPACING.sm,
-  },
-  seasonBadgeText: {
-    fontSize: 9,
-    fontWeight: '900',
-    color: COLORS.accentHover,
-    letterSpacing: 0.6,
-  },
-  teaserDesc: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    textAlign: 'center',
-    lineHeight: 18,
-    marginBottom: SPACING.lg,
-  },
-  teaserFeatureList: {
-    width: '100%',
-    gap: 10,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(15, 23, 42, 0.08)',
-    paddingTop: SPACING.md,
-    marginBottom: SPACING.lg,
-  },
-  teaserFeatureItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  teaserFeatureText: {
-    fontSize: 11.5,
-    fontWeight: '600',
-    color: COLORS.textPrimary,
-    flex: 1,
-  },
-  switchGameBtn: {
-    width: '100%',
-    height: 46,
-    backgroundColor: COLORS.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  switchGameBtnText: {
-    fontSize: 11.5,
-    fontWeight: '900',
-    color: '#FFFFFF',
-    letterSpacing: 0.6,
-  },
-
-  // Morabaraba Hub Sections
-  tournamentNoticeCard: {
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: 'rgba(229, 169, 60, 0.35)',
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
-  },
-  tournamentNoticeHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 4,
-  },
-  tournamentNoticeTitle: {
-    fontSize: 12,
-    fontWeight: '900',
-    color: COLORS.accentHover,
-    letterSpacing: 0.5,
-  },
-  tournamentNoticeDesc: {
-    fontSize: 11,
-    color: COLORS.textSecondary,
-    lineHeight: 16,
-  },
-
-  // Primary Action Cards
-  actionCard: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
-  },
-  actionCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
-    marginBottom: SPACING.md,
-  },
-  actionIconBox: {
-    width: 44,
-    height: 44,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionCardTextCol: {
-    flex: 1,
-  },
-  actionCardTitle: {
-    fontSize: 13.5,
-    fontWeight: '900',
-    color: COLORS.textPrimary,
-    letterSpacing: 0.5,
-  },
-  actionCardDesc: {
-    fontSize: 11,
-    color: COLORS.textSecondary,
-    marginTop: 2,
-    lineHeight: 15,
-  },
-  dualActionRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  actionPrimaryBtn: {
-    flex: 1.4,
-    height: 44,
-    backgroundColor: COLORS.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionPrimaryBtnText: {
-    fontSize: 11,
-    fontWeight: '900',
-    color: '#FFFFFF',
-    letterSpacing: 0.5,
-  },
-  actionSecondaryBtn: {
-    flex: 1,
-    height: 44,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionSecondaryBtnText: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: COLORS.textPrimary,
-    letterSpacing: 0.4,
-  },
-
-  // Offline Pass & Play Row
-  offlineActionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
-    padding: SPACING.md,
-    marginBottom: SPACING.sm,
-  },
-  offlineLeftCol: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
-    flex: 1,
-  },
-  offlineIconBox: {
-    width: 36,
-    height: 36,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.08)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  offlineTitle: {
-    fontSize: 12,
-    fontWeight: '900',
-    color: COLORS.textPrimary,
-    letterSpacing: 0.4,
-  },
-  offlineDesc: {
-    fontSize: 10.5,
-    color: COLORS.textSecondary,
-    marginTop: 2,
-    lineHeight: 14,
-  },
-
-  // Flow Containers
   flowContainer: {
     paddingVertical: SPACING.sm,
   },
@@ -1973,3 +1596,5 @@ const styles = StyleSheet.create({
     marginTop: SPACING.md,
   },
 });
+
+export default BattlegroundScreen;
