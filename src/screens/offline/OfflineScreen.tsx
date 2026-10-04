@@ -7,7 +7,7 @@ import {
   ScrollView,
   SafeAreaView,
 } from 'react-native';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import { COLORS, SPACING } from '../../constants/theme';
 import { Header } from '../../components/common/Header';
 import { useThemedAlert } from '../../components/common/ThemedAlert';
@@ -41,6 +41,7 @@ import {
 
 export const OfflineScreen: React.FC = () => {
   const route = useRoute<any>();
+  const navigation = useNavigation<any>();
   const { showAlert } = useThemedAlert();
   const [offlineMode, setOfflineMode] = useState<'ai' | 'pass_and_play'>('ai');
   const [gameState, setGameState] = useState<GameState>(createInitialGameState());
@@ -440,6 +441,38 @@ export const OfflineScreen: React.FC = () => {
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Top Strategy Game Selector Tabs */}
+        <View style={styles.gameTabsRow}>
+          <TouchableOpacity
+            style={[styles.gameTabBtn, styles.gameTabBtnActive]}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.gameTabText, styles.gameTabTextActive]}>
+              MORABARABA
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.gameTabBtn}
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('CheckersGame')}
+          >
+            <Text style={styles.gameTabText}>
+              CHECKERS →
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.gameTabBtn}
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('ChessGame')}
+          >
+            <Text style={styles.gameTabText}>
+              CHESS →
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Mode Selector Row */}
         <View style={styles.modeToggleRow}>
           <TouchableOpacity
@@ -542,6 +575,59 @@ export const OfflineScreen: React.FC = () => {
         >
           <Text style={styles.reTossBtnText}>New Match (Coin Toss) ↺</Text>
         </TouchableOpacity>
+
+        {/* MORE OFFLINE STRATEGY GAMES */}
+        <View style={styles.offlineGamesSection}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionKicker}>
+              OFFLINE BOARD ARENAS
+            </Text>
+            <Text style={styles.sectionTitle}>
+              MORE OFFLINE STRATEGY GAMES
+            </Text>
+            <Text style={styles.sectionSubtitle}>
+              Compete locally on this device with zero data usage or internet requirement.
+            </Text>
+          </View>
+
+          {/* CHECKERS / DRAUGHTS */}
+          <TouchableOpacity
+            style={styles.offlineGameRow}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('CheckersGame')}
+          >
+            <View style={styles.offlineGameInfo}>
+              <Text style={styles.offlineGameTitle}>
+                CHECKERS & DRAUGHTS
+              </Text>
+              <Text style={styles.offlineGameDesc}>
+                8×8 Classic Checkers and 10×10 International Draughts with smooth drag-and-drop physics, king crowning, and mandatory jumping.
+              </Text>
+            </View>
+            <Text style={styles.offlineGameAction}>
+              Play Checkers →
+            </Text>
+          </TouchableOpacity>
+
+          {/* CHESS GRANDMASTER */}
+          <TouchableOpacity
+            style={styles.offlineGameRow}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('ChessGame')}
+          >
+            <View style={styles.offlineGameInfo}>
+              <Text style={styles.offlineGameTitle}>
+                CHESS GRANDMASTER
+              </Text>
+              <Text style={styles.offlineGameDesc}>
+                64-square grandmaster arena with real-time legal move dots, check & checkmate detection, captured piece counts, and move history.
+              </Text>
+            </View>
+            <Text style={styles.offlineGameAction}>
+              Play Chess →
+            </Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
 
       <CoinTossModal
@@ -693,5 +779,88 @@ const styles = StyleSheet.create({
     color: COLORS.accentHover,
     fontSize: 13,
     fontWeight: '700',
+  },
+  gameTabsRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(15, 23, 42, 0.08)',
+    marginBottom: SPACING.sm,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 8,
+    padding: 3,
+  },
+  gameTabBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 6,
+  },
+  gameTabBtnActive: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: 'rgba(15, 23, 42, 0.08)',
+  },
+  gameTabText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.textSecondary,
+    letterSpacing: 0.5,
+  },
+  gameTabTextActive: {
+    color: COLORS.accentHover,
+    fontWeight: '900',
+  },
+  offlineGamesSection: {
+    marginTop: SPACING.xl,
+    paddingTop: SPACING.md,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(15, 23, 42, 0.08)',
+  },
+  sectionHeaderRow: {
+    marginBottom: SPACING.sm,
+  },
+  sectionKicker: {
+    fontSize: 10.5,
+    fontWeight: '900',
+    color: COLORS.accentHover,
+    letterSpacing: 1,
+    marginBottom: 3,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: COLORS.textPrimary,
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  sectionSubtitle: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    lineHeight: 18,
+  },
+  offlineGameRow: {
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(15, 23, 42, 0.08)',
+  },
+  offlineGameInfo: {
+    marginBottom: 6,
+  },
+  offlineGameTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+    marginBottom: 3,
+  },
+  offlineGameDesc: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    lineHeight: 18,
+  },
+  offlineGameAction: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: COLORS.accentHover,
   },
 });

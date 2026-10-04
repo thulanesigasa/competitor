@@ -978,55 +978,6 @@ export const BattlegroundScreen: React.FC = () => {
                 Instant Start →
               </Text>
             </TouchableOpacity>
-
-            {/* STRATEGY BATTLEGROUND ARENAS (CHECKERS & CHESS) */}
-            <View style={styles.sectionDivider} />
-
-            <View style={styles.arenaHeaderSection}>
-              <Text variant="label" weight="900" color={colors.accentHover} style={styles.arenaKicker}>
-                STRATEGY ARENAS
-              </Text>
-              <Text variant="h2" weight="900" color={colors.textPrimary}>
-                CHECKERS & CHESS ARENAS
-              </Text>
-              <Text variant="caption" color={colors.textSecondary} style={styles.sectionDesc}>
-                Jump directly into dedicated board arenas with real-time turn tracking, official rules, and responsive piece mechanics.
-              </Text>
-            </View>
-
-            {/* CHECKERS / DRAUGHTS ARENA */}
-            <TouchableOpacity
-              style={styles.actionRow}
-              activeOpacity={0.7}
-              onPress={() => navigation.navigate('CheckersGame')}
-            >
-              <Text variant="h3" weight="800" color={colors.textPrimary}>
-                CHECKERS & DRAUGHTS ARENA
-              </Text>
-              <Text variant="caption" color={colors.textSecondary} style={styles.actionDescText}>
-                Play 8×8 Classic Checkers and 10×10 International Draughts with smooth drag-and-drop physics, king crowning, and mandatory jumping.
-              </Text>
-              <Text variant="label" weight="800" color={colors.accentHover} style={styles.actionTag}>
-                Enter Checkers Arena →
-              </Text>
-            </TouchableOpacity>
-
-            {/* CHESS GRANDMASTER ARENA */}
-            <TouchableOpacity
-              style={styles.actionRow}
-              activeOpacity={0.7}
-              onPress={() => navigation.navigate('ChessGame')}
-            >
-              <Text variant="h3" weight="800" color={colors.textPrimary}>
-                CHESS GRANDMASTER ARENA
-              </Text>
-              <Text variant="caption" color={colors.textSecondary} style={styles.actionDescText}>
-                Classic 64-square grandmaster battlefield with legal move indicators, check and checkmate detection, move history, and captured piece tallies.
-              </Text>
-              <Text variant="label" weight="800" color={colors.accentHover} style={styles.actionTag}>
-                Enter Chess Arena →
-              </Text>
-            </TouchableOpacity>
           </View>
         )}
 
@@ -1643,19 +1594,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: SPACING.md,
-  },
-  sectionDivider: {
-    height: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.08)',
-    marginVertical: SPACING.lg,
-  },
-  arenaHeaderSection: {
-    marginBottom: SPACING.sm,
-  },
-  arenaKicker: {
-    letterSpacing: 1,
-    marginBottom: 4,
-    fontSize: 10.5,
   },
 });
 
