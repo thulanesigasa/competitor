@@ -259,7 +259,21 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation: navPro
               <Text style={styles.rowSubtitle}>
                 {userWallet?.isSubscribed
                   ? 'Eligible for R500 Weekly Tournament cash prizes (Positions 1 to 8)'
-                  : 'Upgrade to claim weekly cash prizes • Mon 00:00 to Sun 23:59'}
+                  : 'Upgrade to claim weekly cash prizes • Mon 08:00 to Sun 23:59:59'}
+              </Text>
+            </View>
+            <ChevronRightSvg size={18} color="#94A3B8" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionRow}
+            onPress={() => navigation.navigate('TournamentInfo')}
+            activeOpacity={0.75}
+          >
+            <View style={styles.rowTitleBox}>
+              <Text style={styles.rowTitle}>Tournament</Text>
+              <Text style={styles.rowSubtitle}>
+                Weekly rules, active window (Mon 08:00 - Sun 23:59:59) & mechanics
               </Text>
             </View>
             <ChevronRightSvg size={18} color="#94A3B8" />

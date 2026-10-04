@@ -195,13 +195,15 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
     - **Rank 8:** R20 (Arena Warrior)
   - **Automated Sunday Settlement & Winner Notification:**
     - Standings lock automatically at Sunday 23:59:59 SAST.
-    - Verified Top 8 winners receive automated email disbursement notifications for payout processing.
+- **TOURNAMENT & VIP PRO PASS Section under Profile (`ProfileScreen.tsx`):**
+  - **VIP Pro Tournament Pass:** Direct access to `VipPassScreen.tsx` showcasing member status, auto-renewal controls, and full Top 8 prize breakdown.
+  - **Tournament:** Direct access to `TournamentInfoScreen.tsx` outlining the weekly contest concept, schedule, and rules.
 - **Dedicated Weekly Tournament Guide Screen (`TournamentInfoScreen.tsx`):**
-  - Accessible directly from VIP Pro Pass (`VipPassScreen.tsx`).
+  - Accessible directly under the **TOURNAMENT & VIP PRO PASS** section in `ProfileScreen.tsx`.
   - Outlines tournament concept, active window (Monday 8:00 AM to Sunday 23:59:59), 5-step operational mechanics, prize breakdown, and fair play standards.
   - Rendered in pure body typography on the `#FFFFFF` canvas without card/div enclosures.
 - **VIP Pro Tournament Pass (`VipPassScreen.tsx`):**
-  - Consolidates the R500.00 Weekly Tournament prize pool, tournament guide link, and Top 8 cash allocations.
+  - Consolidates the R500.00 Weekly Tournament prize pool and Top 8 cash allocations.
   - Designed in pure body typography with subtle hairline dividers, completely free of card div wrappers (`statusCard`, `prizeGrid`).
   - Monthly subscription model granting exclusive qualification to claim Top 8 Weekly Tournament cash prizes.
 - **Strategy Games Section under Profile (`ProfileScreen.tsx`, `GameDetailScreen.tsx`):**
