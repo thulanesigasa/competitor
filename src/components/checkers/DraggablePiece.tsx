@@ -22,8 +22,8 @@ interface DraggablePieceProps {
   onDrop: (fromNotation: number, translationX: number, translationY: number) => boolean;
 }
 
-const CrownSvgIcon = () => (
-  <Svg width={18} height={18} viewBox="0 0 24 24" fill={colors.accent}>
+const CrownSvgIcon: React.FC<{ isGoldPiece?: boolean }> = ({ isGoldPiece = false }) => (
+  <Svg width={18} height={18} viewBox="0 0 24 24" fill={isGoldPiece ? '#78350F' : '#E5A93C'}>
     <Path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z" />
   </Svg>
 );
@@ -109,7 +109,7 @@ export const DraggablePiece: React.FC<DraggablePieceProps> = ({
             isWhite ? styles.whiteGroove : styles.blackGroove,
           ]}
         >
-          {piece.isKing && <CrownSvgIcon />}
+          {piece.isKing && <CrownSvgIcon isGoldPiece={isWhite} />}
         </View>
       </Animated.View>
     </GestureDetector>
@@ -126,14 +126,14 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
   },
   whitePiece: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#E5A93C',
     borderWidth: 2,
-    borderColor: '#CBD5E1',
+    borderColor: '#D97706',
   },
   blackPiece: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#0F172A',
     borderWidth: 2,
-    borderColor: '#0F172A',
+    borderColor: '#334155',
   },
   innerGroove: {
     alignItems: 'center',
@@ -141,11 +141,11 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   whiteGroove: {
-    borderColor: '#E2E8F0',
-    backgroundColor: '#FFFFFF',
+    borderColor: '#FDE68A',
+    backgroundColor: '#D97706',
   },
   blackGroove: {
-    borderColor: '#334155',
+    borderColor: '#475569',
     backgroundColor: '#1E293B',
   },
 });

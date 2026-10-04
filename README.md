@@ -72,15 +72,27 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 - **Automatic Head-Back-To-Game Transition:** Upon landing on the winning face and announcing the starting player, the coin toss automatically dismisses after 1.2s and heads directly into the live match.
 - **In-Game Re-Toss:** Competitors can trigger a new coin toss at any time from the match header controls or during victory rematch flows.
 
-### 3. Intelligent Offline AI & Pass & Play Arena (`OfflineScreen.tsx`)
-- **Dual Offline Modes:**
-  - **VS CPU (AI Engine):** Solo arena with 3 skill tiers:
-    - **Novice (*Dumela*):** Balanced learning AI that recognizes basic mills with casual play.
-    - **Warrior (*Inkosi*):** 2-ply search minimax evaluating material advantage, mill potential, and blocking traps.
-    - **Grandmaster (*Isangoma*):** Deep alpha-beta pruning minimax with tactical board dominance evaluation.
-    - **Autonomous First-Move AI:** When the offline competitor loses the coin toss, the CPU takes the first move automatically.
-  - **Pass & Play (2-Player Local Duel):** 1-on-1 tabletop battle on the same device with Player 1 (Gold) vs Player 2 (Charcoal), fair coin toss turn decider, and live scoreboard.
-- **Dynamic Cross-Screen Rerouting:** Starting a Pass & Play match from the Battleground automatically switches tabs and navigates directly to the Offline arena with match parameters and instant coin toss initialization.
+### 3. Unified Offline Arenas & Embedded Strategy Games (`OfflineScreen.tsx`)
+- **Triple Embedded Strategy Arenas:**
+  - **In-Place Game Switching:** Integrated top strategy game selector (`[ MORABARABA ] [ CHECKERS ] [ CHESS ]`) switching game engines directly in-place without page reload or departing to external fullscreen stack screens, preserving the persistent floating pill bottom navigation (Rule 20).
+  - **Morabaraba Arena:** Authentic 24-vertex line graph with 20 collinear mill detection, placing/moving/flying phases, and dual modes:
+    - **VS CPU (AI Engine):** Solo arena with 3 skill tiers: *Dumela* (Novice), *Inkosi* (Warrior with 2-ply minimax), and *Isangoma* (Grandmaster with alpha-beta pruning and dynamic board dominance evaluation).
+    - **Pass & Play (2-Player Local Duel):** 1-on-1 tabletop battle on the same device with fair coin toss turn decider and live scoreboard.
+  - **Checkers Arena (`CheckersArena.tsx`):**
+    - Headless draughts engine integration supporting classic 8x8 checkers.
+    - Strict 60-30-10 Gold & Charcoal Visual Calibration:
+      - Player 1 (Gold): `#E5A93C` body with `#D97706` inner groove and `#78350F` contrast stroke; Gold Kings crowned with `#78350F` royal crowns.
+      - Player 2 (Charcoal): `#0F172A` body with `#1E293B` inner groove and `#334155` contrast stroke; Charcoal Kings crowned with `#E5A93C` royal crowns.
+      - Board Squares: Alternating `#FFFFFF` (60% background) and `#F1F5F9` (30% panel surface) with subtle hairline borders (`rgba(15, 23, 42, 0.12)`).
+      - Visual Indicators: Selected piece highlighting (`#FEF3C7` / `#E5A93C`), legal jump target dots (`#E5A93C`), and dynamic Gold vs Charcoal turn pill.
+  - **Chess Arena (`ChessArena.tsx`):**
+    - High-performance `chess.js` headless engine integration supporting full FIDE rules (castling, en passant, promotion, checkmate, stalemate).
+    - High-Precision Staunton Vector SVGs (`ChessPieceSvg.tsx`):
+      - Gold White Pieces: `#E5A93C` body with `#78350F` contour strokes.
+      - Charcoal Black Pieces: `#0F172A` body with `#FFFFFF` inner contour highlights.
+      - Board Squares: Alternating `#FFFFFF` and `#F1F5F9` with clean notation coordinates (A-H, 1-8).
+      - Visual Indicators: Selected square highlight (`#FEF3C7` with `#E5A93C` border), legal move destination rings, captured piece counters, and dynamic turn pill.
+- **Dynamic Cross-Screen Rerouting:** Starting any strategy game from `GameDetailScreen.tsx` ("ENTER BATTLEGROUND NOW ->") routes seamlessly to `MainTabs -> Offline` with route parameters `{ game: 'morabaraba' | 'checkers' | 'chess' }`, switching the arena in-place without page departure.
 - **Zero Internet Requirement:** Completely operational offline without consuming cellular data.
 
 ### 4. Zero-Data Local Battleground & Pure Live Online Rooms (`BattlegroundScreen.tsx`)
@@ -268,10 +280,12 @@ competitor/
 |   |-- components/
 |   |   |-- Typography.tsx             # Standardized Text component with variants & weights
 |   |   |-- checkers/
+|   |   |   |-- CheckersArena.tsx      # Embedded 60-30-10 checkers arena with turn indicator and controls
 |   |   |   |-- CheckersBoard.tsx      # Alternating 8x8 / 10x10 flexbox grid with piece layouts
 |   |   |   |-- checkersMapping.ts     # Coordinate math: converts (row, col) <-> notation
 |   |   |   `-- DraggablePiece.tsx     # Reanimated + Gesture.Pan piece with elevation & spring physics
 |   |   |-- chess/
+|   |   |   |-- ChessArena.tsx         # Embedded 60-30-10 chess arena with Staunton SVGs, captured counters and controls
 |   |   |   |-- ChessBoard.tsx         # 8x8 alternating grid with legal move indicators and coordinates
 |   |   |   `-- ChessPieceSvg.tsx      # High-precision Staunton chess vector piece SVGs
 |   |   |-- common/
@@ -318,6 +332,8 @@ competitor/
 |   |   |-- chess/
 |   |   |   `-- ChessScreen.tsx        # 64-square grandmaster chess arena powered by chess.js
 |   |   |-- games/
+|   |   |   |-- CheckersGameScreen.tsx # Standalone checkers game screen
+|   |   |   |-- ChessGameScreen.tsx    # Standalone chess game screen
 |   |   |   `-- GameDetailScreen.tsx   # Comprehensive guides for Morabaraba, Chess, and Checkers with direct battleground entry
 |   |   |-- leaderboard/
 |   |   |   `-- LeaderboardScreen.tsx  # Regional Southern African rankings

@@ -235,13 +235,10 @@ export const GameDetailScreen: React.FC = () => {
             style={styles.playButton}
             activeOpacity={0.8}
             onPress={() => {
-              if (gameId === 'checkers') {
-                navigation.navigate('CheckersGame');
-              } else if (gameId === 'chess') {
-                navigation.navigate('ChessGame');
-              } else {
-                navigation.navigate('MainTabs', { screen: 'Battleground' });
-              }
+              navigation.navigate('MainTabs', {
+                screen: 'Offline',
+                params: { game: gameId },
+              });
             }}
           >
             <Text variant="body" weight="900" color="#FFFFFF" style={styles.playButtonText}>

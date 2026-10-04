@@ -87,10 +87,11 @@ export const CheckersBoard: React.FC<CheckersBoardProps> = ({
 
 const styles = StyleSheet.create({
   boardContainer: {
-    borderWidth: 2,
-    borderColor: '#0F172A',
-    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: 'rgba(15, 23, 42, 0.12)',
+    borderRadius: 10,
     overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
   },
   gridRow: {
     flexDirection: 'row',
@@ -101,10 +102,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   lightSquare: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FFFFFF',
   },
   darkSquare: {
-    backgroundColor: '#475569',
+    backgroundColor: '#F1F5F9',
   },
 });
 
