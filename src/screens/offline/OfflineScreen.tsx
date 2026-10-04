@@ -809,11 +809,11 @@ const styles = StyleSheet.create({
   },
   gameTabsRow: {
     flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(15, 23, 42, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(15, 23, 42, 0.08)',
     marginBottom: SPACING.sm,
     backgroundColor: '#F8FAFC',
-    borderRadius: 8,
+    borderRadius: 0,
     padding: 3,
   },
   gameTabBtn: {
@@ -821,12 +821,13 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 6,
+    borderRadius: 0,
   },
   gameTabBtnActive: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: 'rgba(15, 23, 42, 0.08)',
+    borderRadius: 0,
   },
   gameTabText: {
     fontSize: 11,

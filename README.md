@@ -74,7 +74,7 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
 
 ### 3. Unified Offline Arenas & Embedded Strategy Games (`OfflineScreen.tsx`)
 - **Triple Embedded Strategy Arenas:**
-  - **In-Place Game Switching:** Integrated top strategy game selector (`[ MORABARABA ] [ CHECKERS ] [ CHESS ]`) switching game engines directly in-place without page reload or departing to external fullscreen stack screens, preserving the persistent floating pill bottom navigation (Rule 20).
+  - **In-Place Game Switching:** Integrated top strategy game selector (`[ MORABARABA ] [ CHECKERS ] [ CHESS ]`) featuring crisp, sharp rectangular geometry with zero border radius (`borderRadius: 0`), switching game engines directly in-place without page reload or departing to external fullscreen stack screens, preserving the persistent floating pill bottom navigation (Rule 20).
   - **Morabaraba Arena:** Authentic 24-vertex line graph with 20 collinear mill detection, placing/moving/flying phases, and dual modes:
     - **VS CPU (AI Engine):** Solo arena with 3 skill tiers: *Dumela* (Novice), *Inkosi* (Warrior with 2-ply minimax), and *Isangoma* (Grandmaster with alpha-beta pruning and dynamic board dominance evaluation).
     - **Pass & Play (2-Player Local Duel):** 1-on-1 tabletop battle on the same device with fair coin toss turn decider and live scoreboard.
