@@ -237,6 +237,8 @@ export const GameDetailScreen: React.FC = () => {
             onPress={() => {
               if (gameId === 'checkers') {
                 navigation.navigate('CheckersGame');
+              } else if (gameId === 'chess') {
+                navigation.navigate('ChessGame');
               } else {
                 navigation.navigate('MainTabs', { screen: 'Battleground' });
               }

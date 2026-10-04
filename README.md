@@ -206,9 +206,10 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
   - Consolidates the R500.00 Weekly Tournament prize pool and Top 8 cash allocations.
   - Designed in pure body typography with subtle hairline dividers, completely free of card div wrappers (`statusCard`, `prizeGrid`).
   - Monthly subscription model granting exclusive qualification to claim Top 8 Weekly Tournament cash prizes.
-- **Strategy Games Section under Profile (`ProfileScreen.tsx`, `GameDetailScreen.tsx`):**
+- **Strategy Games Section & Multi-Game Battleground Arenas (`ProfileScreen.tsx`, `GameDetailScreen.tsx`, `BattlegroundScreen.tsx`):**
+  - **Multi-Game Battleground Hub (`BattlegroundScreen.tsx`):** Competitors can choose their battleground arena directly from the primary Battleground screen: online/local Morabaraba rooms, Checkers & Draughts Arena, or Chess Grandmaster Arena.
   - **Morabaraba:** Full traditional Southern African board strategy guide, board setup (24 vertices, 3 concentric squares), placing/moving/flying phases, and tactical advice with direct entry to the live battleground.
-  - **Chess:** Classic 64-square grandmaster strategy guide covering piece dynamics, special rules, opening principles, and direct entry into the live battleground.
+  - **Chess (`ChessScreen.tsx`):** Full playable 64-square grandmaster chess arena powered by `chess.js`. Features legal move calculation, check/checkmate/draw detection, interactive piece selection with destination dots, captured piece lists with material count, move history in SAN notation, board perspective flip, and step-back undo support.
   - **Checkers / Draughts (`CheckersScreen.tsx`):** Full playable Checkers and Draughts arena built with `react-native-gesture-handler` and `react-native-reanimated` for smooth drag-and-drop piece interactions. Features dual-mode support for 8×8 Classic Checkers and 10×10 International Draughts (powered by the headless `draughts` engine), spring snap-back physics on illegal moves, real-time turn tracking, promoted King gold crown emblems, and direct battleground launch.
   - **Pure Body Architecture:** All game guides and screens follow pure body typography without card enclosures or panel divs.
 - **Streamlined Battleground (`BattlegroundScreen.tsx`):**
@@ -270,6 +271,9 @@ competitor/
 |   |   |   |-- CheckersBoard.tsx      # Alternating 8x8 / 10x10 flexbox grid with piece layouts
 |   |   |   |-- checkersMapping.ts     # Coordinate math: converts (row, col) <-> notation
 |   |   |   `-- DraggablePiece.tsx     # Reanimated + Gesture.Pan piece with elevation & spring physics
+|   |   |-- chess/
+|   |   |   |-- ChessBoard.tsx         # 8x8 alternating grid with legal move indicators and coordinates
+|   |   |   `-- ChessPieceSvg.tsx      # High-precision Staunton chess vector piece SVGs
 |   |   |-- common/
 |   |   |   |-- AppSwitcherShield.tsx  # Multitasking privacy shield with Morabaraba branding
 |   |   |   |-- ErrorBoundary.tsx      # Graceful crash shield with reload & cache reset actions
@@ -311,8 +315,10 @@ competitor/
 |   |   |   `-- BattlegroundScreen.tsx # 2-Player Pass & Play, stake selection, and online battleground
 |   |   |-- checkers/
 |   |   |   `-- CheckersScreen.tsx     # Full interactive mobile checkers arena with 8x8 and 10x10 support
+|   |   |-- chess/
+|   |   |   `-- ChessScreen.tsx        # 64-square grandmaster chess arena powered by chess.js
 |   |   |-- games/
-|   |   |   `-- GameDetailScreen.tsx   # Comprehensive guides for Morabaraba, Chess, and Checkers with coming soon state
+|   |   |   `-- GameDetailScreen.tsx   # Comprehensive guides for Morabaraba, Chess, and Checkers with direct battleground entry
 |   |   |-- leaderboard/
 |   |   |   `-- LeaderboardScreen.tsx  # Regional Southern African rankings
 |   |   |-- legal/
