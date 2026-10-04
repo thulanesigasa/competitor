@@ -139,7 +139,7 @@ export const VipPassScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
             VIP Pro Pass
           </Text>
           <Text variant="body" color={colors.textSecondary} style={styles.subtitle}>
-            Unlock Top 8 cash prize claiming privileges in the R{WEEKLY_PRIZE_POOL_ZAR}.00 weekly grand tournament (Monday 00:00 to Sunday 23:59).
+            Unlock Top 8 cash prize claiming privileges in the R{WEEKLY_PRIZE_POOL_ZAR}.00 weekly grand tournament (Monday 08:00 to Sunday 23:59:59).
           </Text>
         </View>
 
@@ -201,6 +201,30 @@ export const VipPassScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
                 </Text>
               )}
             </View>
+
+            <View style={styles.divider} />
+
+            {/* Tournament Guide Link */}
+            <TouchableOpacity
+              style={styles.tournamentActionRow}
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('TournamentInfo')}
+            >
+              <View style={styles.tournamentRowLeft}>
+                <Text variant="label" weight="900" color={colors.accentHover} style={styles.tournamentKicker}>
+                  WEEKLY TOURNAMENT
+                </Text>
+                <Text variant="body" weight="800" color={colors.textPrimary} style={styles.tournamentTitle}>
+                  Tournament Guide & Schedule
+                </Text>
+                <Text variant="caption" color={colors.textSecondary} style={styles.tournamentSubtitle}>
+                  Starts 8:00 AM Monday to 23:59:59 Sunday • How it works →
+                </Text>
+              </View>
+              <Text variant="body" weight="800" color={colors.accentHover} style={styles.tournamentArrow}>
+                →
+              </Text>
+            </TouchableOpacity>
 
             <View style={styles.divider} />
 
@@ -373,6 +397,32 @@ const styles = StyleSheet.create({
   expiryText: {
     marginTop: 8,
     fontSize: 12,
+  },
+  tournamentActionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  tournamentRowLeft: {
+    flex: 1,
+  },
+  tournamentKicker: {
+    letterSpacing: 0.8,
+    marginBottom: 3,
+    fontSize: 10.5,
+  },
+  tournamentTitle: {
+    fontSize: 14,
+    marginBottom: 3,
+  },
+  tournamentSubtitle: {
+    lineHeight: 18,
+    fontSize: 12,
+  },
+  tournamentArrow: {
+    fontSize: 18,
+    marginLeft: 12,
   },
   prizeSection: {
     paddingVertical: 4,
