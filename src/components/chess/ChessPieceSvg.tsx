@@ -16,8 +16,8 @@ export const ChessPieceSvg: React.FC<ChessPieceSvgProps> = ({
   size = 36,
 }) => {
   const isWhite = color === 'w';
-  const fillColor = isWhite ? '#FFFFFF' : '#0F172A';
-  const strokeColor = isWhite ? '#0F172A' : '#F8FAFC';
+  const fillColor = isWhite ? '#E5A93C' : '#0F172A';
+  const strokeColor = isWhite ? '#78350F' : '#FFFFFF';
   const strokeWidth = 1.5;
 
   switch (type) {
@@ -71,7 +71,7 @@ export const ChessPieceSvg: React.FC<ChessPieceSvgProps> = ({
           >
             <Path d="M 22,10 C 32.5,11 38.5,18 38,39 L 15,39 C 15,30 25,32.5 23,18" />
             <Path d="M 24,18 C 24.38,20.91 18.45,25.37 16,27 C 13,29 13.18,31.34 11,31 C 9.958,30.06 12.41,27.96 11,28 C 10,28 11.19,29.23 10,30 C 9,30 5.997,31 6,26 C 6,24 12,14 12,14 C 12,14 13.89,12.1 14,10.5 C 13.27,7.4 17.07,8.07 18,9 C 18,9 21.05,8.05 22,10 z" />
-            <Circle cx="9.5" cy="25.5" r="1" fill={isWhite ? '#0F172A' : '#FFFFFF'} />
+            <Circle cx="9.5" cy="25.5" r="1" fill={isWhite ? '#78350F' : '#FFFFFF'} />
           </G>
         </Svg>
       );

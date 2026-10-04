@@ -79,7 +79,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                     <RNText
                       style={[
                         styles.coordRankText,
-                        { color: isDarkSquare ? '#F1F5F9' : '#64748B' },
+                        { color: isDarkSquare ? '#94A3B8' : '#CBD5E1' },
                       ]}
                     >
                       {rankLabel}
@@ -91,7 +91,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                     <RNText
                       style={[
                         styles.coordFileText,
-                        { color: isDarkSquare ? '#F1F5F9' : '#64748B' },
+                        { color: isDarkSquare ? '#94A3B8' : '#CBD5E1' },
                       ]}
                     >
                       {fileLabel}
@@ -131,11 +131,11 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
 
 const styles = StyleSheet.create({
   boardContainer: {
-    borderWidth: 2,
-    borderColor: '#0F172A',
-    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: 'rgba(15, 23, 42, 0.12)',
+    borderRadius: 10,
     overflow: 'hidden',
-    backgroundColor: '#0F172A',
+    backgroundColor: '#FFFFFF',
   },
   boardRow: {
     flexDirection: 'row',
@@ -146,21 +146,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   lightSquare: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#FFFFFF',
   },
   darkSquare: {
-    backgroundColor: '#94A3B8',
+    backgroundColor: '#F1F5F9',
   },
   selectedSquare: {
-    backgroundColor: '#FDE68A',
+    backgroundColor: '#FEF3C7',
     borderWidth: 2,
     borderColor: '#E5A93C',
   },
   lastMoveSquare: {
-    backgroundColor: 'rgba(229, 169, 60, 0.3)',
+    backgroundColor: 'rgba(229, 169, 60, 0.18)',
   },
   inCheckSquare: {
-    backgroundColor: 'rgba(239, 68, 68, 0.4)',
+    backgroundColor: 'rgba(239, 68, 68, 0.25)',
   },
   coordRankText: {
     position: 'absolute',
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: 'rgba(229, 169, 60, 0.85)',
+    backgroundColor: '#E5A93C',
   },
   legalCaptureRing: {
     position: 'absolute',

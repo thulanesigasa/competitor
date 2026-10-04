@@ -29,6 +29,8 @@ import {
 import { computeAiMove } from '../../engine/ai';
 import { recordGameResult } from '../../store/gameStore';
 import { RuleTipModal } from '../../components/game/RuleTipModal';
+import { CheckersArena } from '../../components/checkers/CheckersArena';
+import { ChessArena } from '../../components/chess/ChessArena';
 import {
   RuleTip,
   MoveRecord,
@@ -43,6 +45,7 @@ export const OfflineScreen: React.FC = () => {
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
   const { showAlert } = useThemedAlert();
+  const [selectedGame, setSelectedGame] = useState<'morabaraba' | 'checkers' | 'chess'>('morabaraba');
   const [offlineMode, setOfflineMode] = useState<'ai' | 'pass_and_play'>('ai');
   const [gameState, setGameState] = useState<GameState>(createInitialGameState());
   const [difficulty, setDifficulty] = useState<AiDifficulty>('warrior');
@@ -54,13 +57,17 @@ export const OfflineScreen: React.FC = () => {
   const lastActionTimestamp = React.useRef<number | null>(null);
   const recentMoves = React.useRef<MoveRecord[]>([]);
 
-  // Sync route params when routed from Battleground
+  // Sync route params when routed from Battleground or GameDetail
   useEffect(() => {
+    if (route.params?.game) {
+      setSelectedGame(route.params.game);
+    }
     if (route.params?.mode === 'pass_and_play') {
+      setSelectedGame('morabaraba');
       setOfflineMode('pass_and_play');
       setShowCoinToss(true);
     }
-  }, [route.params?.timestamp, route.params?.mode]);
+  }, [route.params?.timestamp, route.params?.game, route.params?.mode]);
 
   const resetGame = () => {
     setShowCoinToss(true);
@@ -435,46 +442,58 @@ export const OfflineScreen: React.FC = () => {
     <SafeAreaView style={styles.safeArea}>
       <Header
         title="OFFLINE ARENA"
-        subtitle={offlineMode === 'ai' ? '1P VS CPU ENGINE' : 'PASS & PLAY • 2-PLAYER LOCAL'}
-        rightActionLabel="Coin Toss"
-        onRightAction={() => setShowCoinToss(true)}
+        subtitle={
+          selectedGame === 'checkers'
+            ? 'CHECKERS & DRAUGHTS ARENA'
+            : selectedGame === 'chess'
+            ? 'CHESS GRANDMASTER ARENA'
+            : offlineMode === 'ai'
+            ? '1P VS CPU ENGINE'
+            : 'PASS & PLAY • 2-PLAYER LOCAL'
+        }
+        rightActionLabel={selectedGame === 'morabaraba' ? 'Coin Toss' : undefined}
+        onRightAction={selectedGame === 'morabaraba' ? () => setShowCoinToss(true) : undefined}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Top Strategy Game Selector Tabs */}
         <View style={styles.gameTabsRow}>
           <TouchableOpacity
-            style={[styles.gameTabBtn, styles.gameTabBtnActive]}
+            style={[styles.gameTabBtn, selectedGame === 'morabaraba' && styles.gameTabBtnActive]}
             activeOpacity={0.8}
+            onPress={() => setSelectedGame('morabaraba')}
           >
-            <Text style={[styles.gameTabText, styles.gameTabTextActive]}>
+            <Text style={[styles.gameTabText, selectedGame === 'morabaraba' && styles.gameTabTextActive]}>
               MORABARABA
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.gameTabBtn}
+            style={[styles.gameTabBtn, selectedGame === 'checkers' && styles.gameTabBtnActive]}
             activeOpacity={0.8}
-            onPress={() => navigation.navigate('CheckersGame')}
+            onPress={() => setSelectedGame('checkers')}
           >
-            <Text style={styles.gameTabText}>
-              CHECKERS →
+            <Text style={[styles.gameTabText, selectedGame === 'checkers' && styles.gameTabTextActive]}>
+              CHECKERS
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.gameTabBtn}
+            style={[styles.gameTabBtn, selectedGame === 'chess' && styles.gameTabBtnActive]}
             activeOpacity={0.8}
-            onPress={() => navigation.navigate('ChessGame')}
+            onPress={() => setSelectedGame('chess')}
           >
-            <Text style={styles.gameTabText}>
-              CHESS →
+            <Text style={[styles.gameTabText, selectedGame === 'chess' && styles.gameTabTextActive]}>
+              CHESS
             </Text>
           </TouchableOpacity>
         </View>
 
-        {/* Mode Selector Row */}
-        <View style={styles.modeToggleRow}>
+        {/* 1. MORABARABA ARENA */}
+        {selectedGame === 'morabaraba' && (
+          <>
+            {/* Mode Selector Row */}
+            <View style={styles.modeToggleRow}>
           <TouchableOpacity
             style={[styles.modeToggleBtn, offlineMode === 'ai' && styles.modeToggleBtnActive]}
             onPress={() => {
@@ -594,7 +613,7 @@ export const OfflineScreen: React.FC = () => {
           <TouchableOpacity
             style={styles.offlineGameRow}
             activeOpacity={0.7}
-            onPress={() => navigation.navigate('CheckersGame')}
+            onPress={() => setSelectedGame('checkers')}
           >
             <View style={styles.offlineGameInfo}>
               <Text style={styles.offlineGameTitle}>
@@ -605,7 +624,7 @@ export const OfflineScreen: React.FC = () => {
               </Text>
             </View>
             <Text style={styles.offlineGameAction}>
-              Play Checkers →
+              Switch to Checkers →
             </Text>
           </TouchableOpacity>
 
@@ -613,7 +632,7 @@ export const OfflineScreen: React.FC = () => {
           <TouchableOpacity
             style={styles.offlineGameRow}
             activeOpacity={0.7}
-            onPress={() => navigation.navigate('ChessGame')}
+            onPress={() => setSelectedGame('chess')}
           >
             <View style={styles.offlineGameInfo}>
               <Text style={styles.offlineGameTitle}>
@@ -624,11 +643,19 @@ export const OfflineScreen: React.FC = () => {
               </Text>
             </View>
             <Text style={styles.offlineGameAction}>
-              Play Chess →
+              Switch to Chess →
             </Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
+      </>
+    )}
+
+    {/* 2. CHECKERS OFFLINE ARENA */}
+    {selectedGame === 'checkers' && <CheckersArena />}
+
+    {/* 3. CHESS OFFLINE ARENA */}
+    {selectedGame === 'chess' && <ChessArena />}
+  </ScrollView>
 
       <CoinTossModal
         visible={showCoinToss}
