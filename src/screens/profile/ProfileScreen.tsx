@@ -266,6 +266,58 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation: navPro
           </TouchableOpacity>
         </View>
 
+        {/* GAMES */}
+        <Text style={[styles.sectionTitle, { marginTop: SPACING.lg }]}>
+          GAMES
+        </Text>
+        <View style={styles.settingsSection}>
+          <TouchableOpacity
+            style={styles.actionRow}
+            onPress={() => navigation.navigate('GameDetail', { gameId: 'morabaraba' })}
+            activeOpacity={0.75}
+          >
+            <View style={styles.rowTitleBox}>
+              <Text style={styles.rowTitle}>Morabaraba</Text>
+              <Text style={styles.rowSubtitle}>
+                Traditional Southern African board strategy • Rules & heritage
+              </Text>
+            </View>
+            <ChevronRightSvg size={18} color="#94A3B8" />
+          </TouchableOpacity>
+
+          <View style={styles.rowDivider} />
+
+          <TouchableOpacity
+            style={styles.actionRow}
+            onPress={() => navigation.navigate('GameDetail', { gameId: 'chess' })}
+            activeOpacity={0.75}
+          >
+            <View style={styles.rowTitleBox}>
+              <Text style={styles.rowTitle}>Chess</Text>
+              <Text style={styles.rowSubtitle}>
+                Classic 64-square grandmaster strategy • Pieces, rules & openings
+              </Text>
+            </View>
+            <ChevronRightSvg size={18} color="#94A3B8" />
+          </TouchableOpacity>
+
+          <View style={styles.rowDivider} />
+
+          <TouchableOpacity
+            style={styles.actionRow}
+            onPress={() => navigation.navigate('GameDetail', { gameId: 'checkers' })}
+            activeOpacity={0.75}
+          >
+            <View style={styles.rowTitleBox}>
+              <Text style={styles.rowTitle}>Checkers</Text>
+              <Text style={styles.rowSubtitle}>
+                Traditional 8x8 draughts • Diagonal captures, kings & strategy
+              </Text>
+            </View>
+            <ChevronRightSvg size={18} color="#94A3B8" />
+          </TouchableOpacity>
+        </View>
+
         {/* 1. PREFERENCES & CHALLENGE ARENA */}
         <Text style={[styles.sectionTitle, { marginTop: SPACING.xl }]}>
           PREFERENCES & CHALLENGE ARENA

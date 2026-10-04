@@ -197,18 +197,20 @@ Morabaraba is a premier competitive two-player mobile strategy game built with R
   - **Automated Sunday Settlement & Winner Notification:**
     - Standings lock automatically at Sunday 23:59:59 SAST.
     - Verified Top 8 winners receive automated email disbursement notifications for payout processing.
-- **Online Match Ranking Source of Truth:**
-  - Standings, victories, and win rates are driven exclusively by **Online Matches** (Public Battleground Rooms and Private PIN Rooms).
-  - Offline Pass & Play and Solo vs CPU duels function as casual practice without affecting competitive standings.
-- **VIP Pro Tournament Pass (R150 / month) (`VipPassScreen.tsx`):**
-  - Retained monthly subscription model granting exclusive qualification to claim Top 8 Weekly Tournament cash prizes.
-  - Grants the prestigious golden crown emblem and verified competitive standing.
-  - Seamless in-app activation and status management.
-- **Multi-Game Strategy Hub on Battleground (`BattlegroundScreen.tsx`):**
-  - **Morabaraba (Live Arena - Play Now):** Direct action tiles to **Host Public Room**, **Browse Public Lobby**, **Create 4-Digit PIN**, or **Join Private PIN** with zero stake selections or wallet balances.
-  - **Chess (Coming Soon - Classic Strategy):** Teaser card featuring FIDE standard rules, online matchmaking, and Swiss tournament preview.
-  - **Checkers (Coming Soon - Traditional Draughts):** Teaser card featuring standard 8x8 draughts, forced captures, and knockout brackets preview.
-  - Completely purged ZAR match stake wagering, cash escrow locks, pot rake, and deposit presets from client components.
+- **Strategy Games Section under Profile (`ProfileScreen.tsx`, `GameDetailScreen.tsx`):**
+  - **Morabaraba:** Full traditional Southern African board strategy guide, board setup (24 vertices, 3 concentric squares), placing/moving/flying phases, and tactical advice with direct entry to the live battleground.
+  - **Chess:** Classic 64-square grandmaster strategy guide covering piece dynamics, special rules, opening principles, and "COMING SOON" Season 2 launch announcement.
+  - **Checkers / Draughts:** 8x8 diagonal strategy guide covering mandatory multi-jump sequences, king crowning, tactical sacrifices, and "COMING SOON" tournament launch announcement.
+  - **Pure Body Architecture:** All game guides and screens follow pure body typography without card enclosures or panel divs.
+- **Streamlined Battleground (`BattlegroundScreen.tsx`):**
+  - Pure body action rows on `#FFFFFF` canvas for **Host Public Room**, **Browse Public Lobby**, **Create 4-Digit PIN**, and **Join Private PIN**.
+  - Purged boxed card divs, multi-game tabs, and tournament notices from the battleground lobby.
+- **Clean Leaderboard Standings (`LeaderboardScreen.tsx`):**
+  - Removed tournament banners and prize pills from competitor rank rows, presenting clean, live Southern African standings.
+- **VIP Pro Tournament Pass (`VipPassScreen.tsx`):**
+  - Consolidates the R500.00 Weekly Tournament prize pool and Top 8 cash allocations.
+  - Designed in pure body typography with subtle hairline dividers, completely free of card div wrappers (`statusCard`, `prizeGrid`).
+  - Monthly subscription model granting exclusive qualification to claim Top 8 Weekly Tournament cash prizes.
 
 ---
 
@@ -297,6 +299,8 @@ competitor/
 |   |   |   `-- SignUpScreen.tsx       # 3-step progressive Southern African registration with step connectors
 |   |   |-- battleground/
 |   |   |   `-- BattlegroundScreen.tsx # 2-Player Pass & Play, stake selection, and online battleground
+|   |   |-- games/
+|   |   |   `-- GameDetailScreen.tsx   # Comprehensive guides for Morabaraba, Chess, and Checkers with coming soon state
 |   |   |-- leaderboard/
 |   |   |   `-- LeaderboardScreen.tsx  # Regional Southern African rankings
 |   |   |-- legal/
