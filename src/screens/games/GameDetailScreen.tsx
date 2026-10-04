@@ -133,9 +133,7 @@ const GAME_DATA: Record<GameId, GameContent> = {
       'Sacrifice a piece to force an opponent into a multi-jump capture trap.',
       'Advance pieces in pairs or triangular formations to avoid isolated captures.',
     ],
-    isComingSoon: true,
-    comingSoonText:
-      'Checkers online battleground and regional elimination tournaments will launch in Season 2.',
+    isComingSoon: false,
   },
 };
 
@@ -248,10 +246,16 @@ export const GameDetailScreen: React.FC = () => {
             <TouchableOpacity
               style={styles.playButton}
               activeOpacity={0.8}
-              onPress={() => navigation.navigate('MainTabs', { screen: 'Battleground' })}
+              onPress={() => {
+                if (gameId === 'checkers') {
+                  navigation.navigate('CheckersGame');
+                } else {
+                  navigation.navigate('MainTabs', { screen: 'Battleground' });
+                }
+              }}
             >
               <Text variant="body" weight="900" color="#FFFFFF" style={styles.playButtonText}>
-                ENTER BATTLEGROUND NOW →
+                {gameId === 'checkers' ? 'PLAY CHECKERS NOW →' : 'ENTER BATTLEGROUND NOW →'}
               </Text>
             </TouchableOpacity>
           </View>
